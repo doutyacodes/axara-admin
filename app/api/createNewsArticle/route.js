@@ -28,8 +28,6 @@ export async function POST(request) {
     wordDefinitions,
   } = await request.json();
   
-  console.log(categoryId, title, summary, description, age, showInHome, questions, wordDefinitions )
-
   // Define the local temp directory dynamically based on platform
   const localTempDir = os.tmpdir();
   const fileName = `${Date.now()}-${categoryId}-${age}.png`;
@@ -66,6 +64,7 @@ export async function POST(request) {
       summary,
       description,
       age,
+      show_in_home: showInHome,
     });
 
     const newsId = newsRecord[0].insertId

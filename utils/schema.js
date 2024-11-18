@@ -1343,6 +1343,7 @@ export const NEWS = mysqlTable("news", {
   summary: text("summary"), // Brief summary, nullable
   description: text("description").notNull(), // Detailed description of the article
   age: int("age").notNull(), // Age-related parameter
+  show_in_home: boolean("show_in_home").default(false).notNull(),
   created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
 });
