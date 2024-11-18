@@ -81,12 +81,12 @@ export function Login() {
             </Button>
           </form>
         </Form>
-        <p className="text-center mt-4">
+        {/* <p className="text-center mt-4">
           Don’t have an account?{" "}
           <Link href="/signup" className="text-[#1e5f9f] font-medium hover:underline">
             Sign up
           </Link>
-        </p>
+        </p> */}
       </div>
     </div>
   );
