@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import AddNews from './_components/AddNews/AddNews';
 import AddCategories from './_components/AddCategories/AddCategories';
+import AddNews from './_components/AddNews/AddNews';
 
 const NewsAdminPanel = () => {
 

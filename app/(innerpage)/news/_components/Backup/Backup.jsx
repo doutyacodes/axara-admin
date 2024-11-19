@@ -15,11 +15,10 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import GlobalApi from '@/app/api/GlobalApi';
 import toast, { Toaster } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import { useData } from '@/context/DataContext';
 
 function AddNews() {
     const [categories, setCategories] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [categorySearchTerm, setCategorySearchTerm] = useState('');
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,16 +27,14 @@ function AddNews() {
     const [questions, setQuestions] = useState([{ id: 1, question: '' }]);
     const [wordDefinitions, setWordDefinitions] = useState([{ id: 1, word: '', definition: '' }]);
     const [categoryLoading, setCategoryLoading] = useState(false)
-    const router = useRouter();
+ 
     
-    const { setDataFromPage } = useData(); 
-
     const [newsForm, setNewsForm] = useState({
       category: '',
       title: '',
       summary: '',
       description: '',
-      // age: '',
+      age: '',
       showInHome: false,
       image: null
     });
@@ -88,20 +85,20 @@ function AddNews() {
         newErrors.description = 'Description is required';
       }
 
-      // if (!newsForm.age) {
-      //   newErrors.age = 'Age is required';
-      // } else if (newsForm.age < 1 || newsForm.age > 12) {
-      //   newErrors.age = 'Age must be between 1 and 12';
-      // }
+      if (!newsForm.age) {
+        newErrors.age = 'Age is required';
+      } else if (newsForm.age < 1 || newsForm.age > 12) {
+        newErrors.age = 'Age must be between 1 and 12';
+      }
 
       if (!newsForm.image) {
         newErrors.image = 'Image is required';
       }
 
-      // const validQuestions = questions.filter(q => q.question.trim());
-      // if (validQuestions.length === 0) {
-      //   newErrors.questions = 'At least one question is required';
-      // }
+      const validQuestions = questions.filter(q => q.question.trim());
+      if (validQuestions.length === 0) {
+        newErrors.questions = 'At least one question is required';
+      }
       // // Validate word definitions
       // const validWordDefinitions = wordDefinitions.filter(wd => 
       //   wd.word.trim() && wd.definition.trim()
@@ -136,7 +133,44 @@ function AddNews() {
         return wd;
       }));
     };
+
+    const handleAddQuestion = () => {
+      setQuestions([
+        ...questions,
+        {
+          id: questions.length + 1,
+          question: ''
+        }
+      ]);
+    };
   
+    const handleRemoveQuestion = (questionId) => {
+      if (questions.length > 1) {
+        setQuestions(questions.filter(q => q.id !== questionId));
+      } else {
+        setErrors({
+          ...errors,
+          questions: 'At least one question is required'
+        });
+      }
+    };
+  
+    const handleQuestionChange = (questionId, value) => {
+      setQuestions(questions.map(q => {
+        if (q.id === questionId) {
+          return { ...q, question: value };
+        }
+        return q;
+      }));
+
+      // Clear questions error if exists
+      if (value.trim()) {
+        const newErrors = { ...errors };
+        delete newErrors.questions;
+        setErrors(newErrors);
+      }
+    };
+
     const handleNewsImage = (event) => {
       const selectedFile = event.target.files[0];
 
@@ -176,7 +210,7 @@ function AddNews() {
             setBase64Image(reader.result); // Save base64 encoded image
           };
           reader.readAsDataURL(selectedFile);
-     
+    
           console.log("Image uploaded:", selectedFile);
         } else {
           alert("Please upload a valid image file.");
@@ -200,13 +234,13 @@ function AddNews() {
           title: newsForm.title,
           summary: newsForm.summary,
           description: newsForm.description,
-          // age: newsForm.age,
+          age: newsForm.age,
           showInHome: newsForm.showInHome,
           questions: questions.filter(q => q.question.trim()).map(q => q.question),
           wordDefinitions: wordDefinitions.filter(wd => 
                             wd.word.trim() && wd.definition.trim()
                           ),
-          // image: base64Image,
+          image: base64Image,
         };
         
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -219,33 +253,23 @@ function AddNews() {
           },
           body: JSON.stringify(body),
         });
-        // console.log(response.data,"response.data")
+
         if (!response.ok) {
-          console.log("not ok")
           throw new Error('Failed to submit article');
         }
-        // console.log()
-        const data = await response.json();
-        const payload = { ...data, image: base64Image }; // Include the image in the payload
-        setDataFromPage(payload);
-        router.push('/news/news-preview');
-        // const serializedData = encodeURIComponent(JSON.stringify(payload));
-        // console.log("pusgh ok")
-        // router.push(`/news-preview?data=${serializedData}`);
         // Reset form on success
         setNewsForm({
           category: '',
           title: '',
           summary: '',
           description: '',
-          // age: '',
+          age: '',
           showInHome: false,
           image: null
         });
         setQuestions([{ id: 1, question: '' }]);
         setErrors({});
         toast.success('News Added Successfully')
-        
  
       } catch (error) {
         setErrors({
@@ -270,7 +294,7 @@ function AddNews() {
         <div className="fixed inset-0 bg-black/10 shadow-lg z-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg shadow-xl flex flex-col items-center">
             <Loader2 className="h-12 w-12 animate-spin text-orange-500 mb-4" />
-            <p className="text-xl font-semibold">Generating news for all Age Groups...</p>
+            <p className="text-xl font-semibold">Submitting your article...</p>
             <p className="text-gray-500 mt-2">Please do not close the page</p>
           </div>
         </div>
@@ -438,7 +462,7 @@ function AddNews() {
             </div>
 
             {/* Age Input */}
-            {/* <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="age">Age* (3-12 years)</Label>
               <Input 
                 id="age"
@@ -458,7 +482,7 @@ function AddNews() {
                 className={`border-gray-200 ${errors.age ? 'border-red-500' : ''}`}
               />
               {errors.age && <p className="text-sm text-red-500">{errors.age}</p>}
-            </div> */}
+            </div>
 
             {/* Show in Home Checkbox */}
             <div className="flex items-center space-x-2">
@@ -471,70 +495,114 @@ function AddNews() {
             </div>
 
             {/* Word Definitions Section */}
-            <div className="space-y-4 mt-6">
+          <div className="space-y-4 mt-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Word Definitions</h3>
+              <Button
+                type="button"
+                onClick={handleAddWordDefinition}
+                variant="outline"
+                className="border-orange-500 text-orange-500 hover:bg-orange-50"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Word
+              </Button>
+            </div>
+
+            {wordDefinitions.map((def, index) => (
+              <Card key={def.id} className="p-4 border border-gray-200">
+                <div className="flex justify-between items-start mb-4">
+                  <h4 className="font-medium">Word {index + 1}</h4>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => handleRemoveWordDefinition(def.id)}
+                    className="text-gray-500 hover:text-red-500"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Word</Label>
+                  <Input
+                    value={def.word}
+                    onChange={(e) => handleWordDefinitionChange(def.id, 'word', e.target.value)}
+                    placeholder="Enter word"
+                    className="border-gray-200"
+                  />
+                  
+                  <Label className="mt-2">Definition</Label>
+                  <textarea
+                    value={def.definition}
+                    onChange={(e) => handleWordDefinitionChange(def.id, 'definition', e.target.value)}
+                    placeholder="Enter word definition"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[100px] border-gray-200"
+                  />
+                </div>
+              </Card>
+            ))}
+          </div>
+
+            {/* Questions Section */}
+            <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Word Definitions</h3>
+                <h3 className="text-lg font-semibold">Questions*</h3>
                 <Button
                   type="button"
-                  onClick={handleAddWordDefinition}
+                  onClick={handleAddQuestion}
                   variant="outline"
                   className="border-orange-500 text-orange-500 hover:bg-orange-50"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Word
+                  Add Question
                 </Button>
               </div>
 
-              {wordDefinitions.map((def, index) => (
-                <Card key={def.id} className="p-4 border border-gray-200">
+              {questions.map((q, qIndex) => (
+                <Card key={q.id} className={`p-4 border ${
+                  errors.questions ? 'border-red-500' : 'border-gray-200'
+                }`}>
                   <div className="flex justify-between items-start mb-4">
-                    <h4 className="font-medium">Word {index + 1}</h4>
+                    <h4 className="font-medium">Question {qIndex + 1}</h4>
                     <Button
                       type="button"
                       variant="ghost"
-                      onClick={() => handleRemoveWordDefinition(def.id)}
+                      onClick={() => handleRemoveQuestion(q.id)}
                       className="text-gray-500 hover:text-red-500"
                     >
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Word</Label>
-                    <Input
-                      value={def.word}
-                      onChange={(e) => handleWordDefinitionChange(def.id, 'word', e.target.value)}
-                      placeholder="Enter word"
+                  <Input
+                    value={q.question}
+                  //   onChange={(e) => handleQuestionChange(q.id, e
+                      onChange={(e) => handleQuestionChange(q.id, e.target.value)}
+                      placeholder="Enter your question"
                       className="border-gray-200"
-                    />
-                    
-                    <Label className="mt-2">Definition</Label>
-                    <textarea
-                      value={def.definition}
-                      onChange={(e) => handleWordDefinitionChange(def.id, 'definition', e.target.value)}
-                      placeholder="Enter word definition"
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[100px] border-gray-200"
-                    />
-                  </div>
-                </Card>
+                  />
+                  </Card>
               ))}
-            </div>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-              className={`w-full bg-orange-500 hover:bg-orange-600 ${
-                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                'Submit Article'
-              )}
-            </Button>
+              {errors.questions && <p className="text-sm text-red-500">{errors.questions}</p>}
+              </div>
+
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className={`w-full bg-orange-500 hover:bg-orange-600 ${
+                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Article'
+                )}
+              </Button>
           </form>
           </CardContent>
       </Card>

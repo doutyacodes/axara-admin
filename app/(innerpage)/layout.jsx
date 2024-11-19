@@ -1,6 +1,5 @@
 import React from "react";
 import ProtectedRoute from "../_components/ProtectedRoute";
-import { ChildrenProvider } from "@/context/CreateContext";
 import Navbar from "../_components/Navbar";
 import SideBar from "../_components/SideBar";
 import RightSideBar from "../_components/RightSideBar";

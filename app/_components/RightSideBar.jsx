@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import useAuth from "../hooks/useAuth";
-import { useChildren } from "@/context/CreateContext";
 import ChildSelector from "./ChildSelecter";
 
 const RightSideBar = () => {

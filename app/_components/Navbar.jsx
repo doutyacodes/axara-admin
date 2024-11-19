@@ -3,7 +3,6 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu } from "lucide-react";
-import { useChildren } from "@/context/CreateContext";
 import useAuth from "../hooks/useAuth";
 
 const Navbar = () => {
