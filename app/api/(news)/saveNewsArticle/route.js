@@ -88,12 +88,14 @@ console.log('entries', entries)
 
       const newsId = newsRecord[0].insertId;
       console.log("newsId", newsId);
+
+      console.log("questions", questions);
       
       // Save questions in NEWS_QUESTIONS table
       if (questions && questions.length > 0) {
         const questionRecords = questions.map((question) => ({
           news_id: newsId,
-          question: question.question,
+          questions: question.question,
         }));
 
         await db.insert(NEWS_QUESTIONS).values(questionRecords);
