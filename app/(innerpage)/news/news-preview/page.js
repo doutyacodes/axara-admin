@@ -228,16 +228,27 @@ function AddNews() {
       });
 
       if (!response.ok) {
+        // throw new Error('Failed to submit article');
+        const errorData = await response.json(); // Parse response body for detailed error
+        if (response.status === 400 && errorData.duplicateAges && errorData.duplicateWords) {
+          const duplicateAges = errorData.duplicateAges.join(', ');
+          const duplicateWords = errorData.duplicateWords.join(', ');
+          setErrors({
+            ...errors,
+            submit: `Word Definitions are already present for the given ages and Words Ages: ${duplicateAges}, Words: ${duplicateWords}.
+              Please Remove them and try submitting again`
+          });
+        }
         throw new Error('Failed to submit article');
       }
       // Reset form on success
       toast.success('News Added Successfully')
       router.push('/news')
     } catch (error) {
-      setErrors({
-        ...errors,
-        submit: 'Failed to submit article. Please try again.'
-      });
+      let errorMessage = 'Failed to submit article. Please try again.';
+      if (error.message.includes('Duplicate entries detected')) {
+        errorMessage = error.message;
+      }
       console.error(error)
       toast.error('Failed to submit article. Please try again.')
     } finally {
@@ -302,6 +313,12 @@ function AddNews() {
         <Card className="border-none shadow-lg">
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Error Alert */}
+              {errors.submit && (
+                <Alert variant="destructive">
+                  <AlertDescription>{errors.submit}</AlertDescription>
+                </Alert>
+              )}
               {/* Category Select */}
               <div className="space-y-2">
                 <Label>Category</Label>

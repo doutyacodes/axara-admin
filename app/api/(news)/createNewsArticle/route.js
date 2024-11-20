@@ -202,23 +202,23 @@ export async function POST(request) {
     }
 
     // Filter word definitions for relevance
-    const filteredResults = parsedData.map((result) => {
-      const relevantWords = result.description
-        .toLowerCase()
-        .split(/\s+/)
-        .filter((word) =>
-          wordDefinitions.some((w) => w.word.toLowerCase() === word)
-        );
+    // const filteredResults = parsedData.map((result) => {
+    //   const relevantWords = result.description
+    //     .toLowerCase()
+    //     .split(/\s+/)
+    //     .filter((word) =>
+    //       wordDefinitions.some((w) => w.word.toLowerCase() === word)
+    //     );
 
-      return {
-        ...result,
-        wordDefinitions: result.wordDefinitions.filter((def) =>
-          relevantWords.includes(def.word.toLowerCase())
-        ),
-      };
-    });
+    //   return {
+    //     ...result,
+    //     wordDefinitions: result.wordDefinitions.filter((def) =>
+    //       relevantWords.includes(def.word.toLowerCase())
+    //     ),
+    //   };
+    // });
 
-    return NextResponse.json({ results: filteredResults, originalData: data }, { status: 200 });
+    return NextResponse.json({ results: parsedData, originalData: data }, { status: 200 });
   } catch (error) {
     console.error('Error processing OpenAI API:', error);
     return NextResponse.json(

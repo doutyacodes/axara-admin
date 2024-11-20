@@ -1360,11 +1360,12 @@ export const NEWS_QUESTIONS = mysqlTable("news_questions", {
 
 export const WORDS_MEANINGS = mysqlTable("words_meanings", {
   id: int("id").primaryKey().autoincrement(), // Primary key
+  age: int("age").notNull(),
   word: varchar("word", { length: 255 }).notNull(), // The word
   description: text("description").notNull(), // Description or meaning of the word
-  news_id: int("news_id")
-    .notNull()
-    .references(() => NEWS.id), // Foreign key referencing the NEWS table
+  // news_id: int("news_id")
+  //   .notNull()
+  //   .references(() => NEWS.id), 
   created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
 });
