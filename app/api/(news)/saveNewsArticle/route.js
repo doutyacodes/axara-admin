@@ -7,8 +7,8 @@ import { authenticate } from '@/lib/jwtMiddleware';
 import os from 'os';
 import { db } from '@/utils';
 
-export const maxDuration = 60;
-export const dynamic = "force-dynamic";
+// export const maxDuration = 60;
+// export const dynamic = "force-dynamic";
 
 export async function POST(request) {
   const authResult = await authenticate(request, true);
