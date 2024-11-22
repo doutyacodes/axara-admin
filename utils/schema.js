@@ -1310,6 +1310,16 @@ export const LEARN_SUBJECTS = mysqlTable("learn_subjects", {
   grade: varchar("grade", { length: 255 }).default(null), // Grade field, nullable by default
 });
 
+export const LEARN_TESTS = mysqlTable("learn_tests", {
+  id: int("id").primaryKey().autoincrement(), // Unique identifier for each test
+  learn_subject_id: int("learn_subject_id") // Foreign key referencing 'learn_subjects' table
+    .references(() => LEARN_SUBJECTS.id, { onDelete: "cascade" })
+    .notNull(),
+  show_date: date("show_date").notNull(), // Date when the test is visible
+  created_at: timestamp("created_at").defaultNow(), // Timestamp for when the record is created
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for when the record is updated
+});
+
 export const LEARN_DATAS = mysqlTable("learn_datas", {
   id: int("id").primaryKey().autoincrement(),      // Unique identifier for each record
   learn_subject_id: int("learn_subject_id")        // Foreign key to learn_subjects table

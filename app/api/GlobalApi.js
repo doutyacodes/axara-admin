@@ -40,6 +40,23 @@ const CreateNewsCategory = (data) => {
   });
 };
 
+const GetLearnSubjects = (token) => {
+  return axios.get(`/api/getLearnSubjects`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    }
+  });
+};
+
+const CreateLearnQuiz = (formData) => {
+
+  return axios.post(`/api/createLearnQuiz`, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
 
 
 
@@ -54,5 +71,9 @@ export default {
   CreateNewsArticle,
   GetNewsCategories,
   CreateNewsCategory,
+
+  /* Learn */
+  GetLearnSubjects,
+  CreateLearnQuiz,
 
 };
