@@ -106,7 +106,7 @@ const TopicQuizForm = () => {
     const getAvailableSubjects = (selectedGrade) => {
         const gradeSubjects = initialData.filter(item => item.grade === selectedGrade);
         return gradeSubjects.map(item => ({
-        id: item.subject_id.toString(),
+        id: item.id.toString(),
         name: item.subject
         }));
     };
@@ -194,7 +194,7 @@ const TopicQuizForm = () => {
         return "Each question must have one correct answer";
       }
       if (question.options.some(opt => !opt.text)) {
-        return "All options must have text";
+        return "All options must have some text";
       }
     }
     return null;
@@ -354,7 +354,7 @@ const TopicQuizForm = () => {
 
         {/* Test Date */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">Test Date</label>
+          <label className="block text-gray-700 font-medium mb-2">Show Date</label>
           <input
             type="date"
             className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"

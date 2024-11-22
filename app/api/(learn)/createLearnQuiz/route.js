@@ -9,7 +9,7 @@ export async function POST(req) {
   try {
     const body = await req.json();
     const { subjectId, grade, topic, description, testDate, questions } = body;
-
+    
     // Format the testDate to 'YYYY-MM-DD'
     const formattedTestDate = format(new Date(testDate), 'yyyy-MM-dd');
 
@@ -42,11 +42,13 @@ export async function POST(req) {
         show_date: formattedTestDate,
       })
 
+    const testId = testRecord[0].insertId;
+
     // Step 3: Insert into LEARN_DATAS
     const learnDataRecord = await db
       .insert(LEARN_DATAS)
       .values({
-        learn_subject_id: subjectId,
+        learn_test_id: testId,
         topic,
         description,
       })
@@ -56,18 +58,18 @@ export async function POST(req) {
       const questionRecord = await db
         .insert(QUESTIONS)
         .values({
-          learn_topic_id: subjectId, // Link to the correct subject
+          learn_test_id: testId, // Link to the correct subject
           question_text: question.question,
           type: "text", // As per the requirement
         })
 
-      const questionId = questionRecord[0].id;
+      const questionId = questionRecord[0].insertId;
 
       // Insert options for each question
       for (const option of question.options) {
         await db.insert(OPTIONS2).values({
           question_id: questionId,
-          learn_topic_id: subjectId, // Redundant but requested
+          learn_test_id: testId, // Redundant but requested
           option_text: option.text,
           is_answer: option.isCorrect,
         });
