@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, gte, lte, or } from "drizzle-orm";
 import { db } from "@/utils";
 import { LEARN_DATAS, LEARN_TESTS, OPTIONS2, QUESTIONS } from "@/utils/schema";
 import { format } from "date-fns";
@@ -8,73 +8,85 @@ import { format } from "date-fns";
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { subjectId, grade, topic, description, testDate, questions } = body;
-    
-    // Format the testDate to 'YYYY-MM-DD'
-    const formattedTestDate = format(new Date(testDate), 'yyyy-MM-dd');
+    const { subjectId, questions, startDate, endDate } = body;
+
+    // Format the start and end dates to 'YYYY-MM-DD'
+    const formattedStartDate = format(new Date(startDate), "yyyy-MM-dd");
+    const formattedEndDate = format(new Date(endDate), "yyyy-MM-dd");
 
     // Step 1: Check for existing test
-    const existingTest = await db
-      .select()
-      .from(LEARN_TESTS)
-      .where(
-        and(
-            eq(LEARN_TESTS.learn_subject_id, subjectId),
-            eq(LEARN_TESTS.show_date, formattedTestDate),
-        )
-    );
+     // Check for overlapping tests
+     const overlappingTests = await db
+     .select()
+     .from(LEARN_TESTS)
+     .where(
+       and(
+         eq(LEARN_TESTS.learn_subject_id, subjectId),
+         or(
+           and(
+             lte(LEARN_TESTS.start_date, formattedEndDate), // Start date is before or on the new end date
+             gte(LEARN_TESTS.end_date, formattedStartDate) // End date is after or on the new start date
+           ),
+           and(
+             lte(LEARN_TESTS.start_date, formattedStartDate), // New start date is within an existing range
+             gte(LEARN_TESTS.end_date, formattedEndDate) // New end date is within an existing range
+           )
+         )
+       )
+     );
 
-    console.log(existingTest);
-    
+     if (overlappingTests.length > 0) {
+      // Extract overlapping ranges
+      // const overlappingRanges = overlappingTests.map(
+      //   (test) => `(${test.start_date} to ${test.end_date})`
+      // );
+      const dateRange = overlappingTests.map(
+        (test) => `(${format(new Date(test.start_date), "EEE MMM dd yyyy")} to ${format(new Date(test.end_date), "EEE MMM dd yyyy")})`
+      );
 
-    if (existingTest.length > 0) {
       return NextResponse.json(
-        { message: "Test already exists for this subject and date." },
+        {
+          message: "Test already exists for this subject in the given date range.",
+          dateRange,
+        },
         { status: 400 }
       );
     }
 
-    // Step 2: Insert into LEARN_TESTS
+    // Insert into LEARN_TESTS
     const testRecord = await db
       .insert(LEARN_TESTS)
       .values({
         learn_subject_id: subjectId,
-        show_date: formattedTestDate,
+        // show_date: formattedTestDate,
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
       })
 
     const testId = testRecord[0].insertId;
 
-    // Step 3: Insert into LEARN_DATAS
-    const learnDataRecord = await db
-      .insert(LEARN_DATAS)
+  // Insert Questions and Options
+  for (const question of questions) {
+    const questionRecord = await db
+      .insert(QUESTIONS)
       .values({
-        learn_test_id: testId,
-        topic,
-        description,
+        learn_test_id: testId, 
+        question_text: question.question,
+        type: "text", 
       })
 
-    // Step 4: Insert Questions and Options
-    for (const question of questions) {
-      const questionRecord = await db
-        .insert(QUESTIONS)
-        .values({
-          learn_test_id: testId, // Link to the correct subject
-          question_text: question.question,
-          type: "text", // As per the requirement
-        })
+    const questionId = questionRecord[0].insertId;
 
-      const questionId = questionRecord[0].insertId;
-
-      // Insert options for each question
-      for (const option of question.options) {
-        await db.insert(OPTIONS2).values({
-          question_id: questionId,
-          learn_test_id: testId, // Redundant but requested
-          option_text: option.text,
-          is_answer: option.isCorrect,
-        });
-      }
+    // Insert options for each question
+    for (const option of question.options) {
+      await db.insert(OPTIONS2).values({
+        question_id: questionId,
+        learn_test_id: testId,
+        option_text: option.text,
+        is_answer: option.isCorrect,
+      });
     }
+  }
 
     // Return success response
     return NextResponse.json({

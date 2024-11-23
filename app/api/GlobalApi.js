@@ -40,6 +40,15 @@ const CreateNewsCategory = (data) => {
   });
 };
 
+const DeleteNewsCategory = (data) => {
+  return axios.delete(`/api/deleteNewsCategory`, {
+    data,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
 const GetLearnSubjects = (token) => {
   return axios.get(`/api/getLearnSubjects`, {
     headers: {
@@ -57,6 +66,16 @@ const CreateLearnQuiz = (formData) => {
   });
 };
 
+const CreateLearnTopic = (formData) => {
+
+  return axios.post(`/api/CreateLearnTopic`, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+
 
 
 
@@ -71,9 +90,11 @@ export default {
   CreateNewsArticle,
   GetNewsCategories,
   CreateNewsCategory,
+  DeleteNewsCategory,
 
   /* Learn */
   GetLearnSubjects,
   CreateLearnQuiz,
+  CreateLearnTopic,
 
 };

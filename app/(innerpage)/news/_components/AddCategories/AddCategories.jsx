@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import GlobalApi from '@/app/api/GlobalApi';
 import AddCategoryModal from '../AddCategoryModal/AddCategoryModal';
 import { Toaster } from 'react-hot-toast';
+import DeleteCategoryModal from '../DeleteCategoryModal/DeleteCategoryModal';
 
 function AddCategories() {
     const [categories, setCategories] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryLoading, setCategoryLoading] = useState(false)
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState(null)
 
     const getNewsCategories = async () => {
       setCategoryLoading(true);
@@ -47,6 +49,11 @@ function AddCategories() {
     const handleCategoryAdded = () => {
       getNewsCategories();
     };
+
+    const handleDeleteCategory = (category) =>{
+      setIsDeleteModalOpen(true)
+      setSelectedCategory(category)
+    }
   
   return (
     <>
@@ -84,7 +91,8 @@ function AddCategories() {
                   <CardContent className="p-4">
                       <div className="flex justify-between items-center">
                       <span className="font-medium">{category.name}</span>
-                      <Button 
+                      <Button
+                          onClick={()=>handleDeleteCategory(category)}
                           variant="ghost" 
                           className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-red-500"
                       >
@@ -104,6 +112,17 @@ function AddCategories() {
           onClose={() => setIsAddModalOpen(false)}
           onCategoryAdded={handleCategoryAdded}
       />
+
+      {
+        selectedCategory && (
+          <DeleteCategoryModal 
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onCategoryDeleted={handleCategoryAdded}
+          selectedCategory = {selectedCategory}
+        />
+        )
+      }
     </>
   )
 }
