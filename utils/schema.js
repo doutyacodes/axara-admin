@@ -1345,7 +1345,6 @@ export const NEWS_CATEGORIES = mysqlTable("news_categories", {
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
 });
 
-
 export const NEWS = mysqlTable("news", {
   id: int("id").primaryKey().autoincrement(),
   news_category_id: int("news_category_id")

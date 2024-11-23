@@ -10,9 +10,9 @@ export async function POST(request) {
 
   const data = await request.json();
 
-  const { title, summary, description, wordDefinitions } = data
+  const { title, description, wordDefinitions } = data
 
-  if (!title || !summary || !description || !Array.isArray(wordDefinitions)) {
+  if (!title || !description || !Array.isArray(wordDefinitions)) {
     return NextResponse.json(
       { error: 'Missing required fields or invalid wordDefinitions format.' },
       { status: 400 }
@@ -20,46 +20,86 @@ export async function POST(request) {
   }
 
   try {
+    // const prompt = `
+    //     Based on the following news:
+    //     Title: "${title}"
+    //     Summary: "${summary}"
+    //     Description: "${description}"
+
+    //     Words and definitions:
+    //     ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}
+
+    //     Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
+    //     1. Retain the original meaning of the news. Do not change its context or key ideas.
+    //     2. Use words and sentences that are appropriate and easy for each age group to understand.
+    //     3. Ensure that real-world terms or concepts are explained simply, while keeping their original context.
+
+    //     For each age group, provide:
+    //     1. A title appropriate for this age.
+    //     2. A summary in a way they can easily understand.
+    //     3. A detailed description suitable for their comprehension level.
+    //     4. Two questions relevant to the news.
+    //     5. Simplified definitions for the given words, suitable for the age group.
+
+    //     Respond in JSON format:
+    //     [
+    //       {
+    //         "age": 3,
+    //         "title": "<age-appropriate title>",
+    //         "summary": "<age-appropriate summary>",
+    //         "description": "<age-appropriate description>",
+    //         "questions": ["<question1>", "<question2>"],
+    //         "wordDefinitions": [
+    //           { "word": "<word>", "definition": "<age-appropriate definition>" }
+    //         ]
+    //       },
+    //       {
+    //         "age": 4,
+    //         // Repeat for each age up to 12
+    //       }
+    //     ]
+    //   `;
+
     const prompt = `
-        Based on the following news:
-        Title: "${title}"
-        Summary: "${summary}"
-        Description: "${description}"
-
-        Words and definitions:
-        ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}
-
-        Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
-        1. Retain the original meaning of the news. Do not change its context or key ideas.
-        2. Use words and sentences that are appropriate and easy for each age group to understand.
-        3. Ensure that real-world terms or concepts are explained simply, while keeping their original context.
-
-        For each age group, provide:
-        1. A title appropriate for this age.
-        2. A summary in a way they can easily understand.
-        3. A detailed description suitable for their comprehension level.
-        4. Two questions relevant to the news.
-        5. Simplified definitions for the given words, suitable for the age group.
-
-        Respond in JSON format:
-        [
-          {
-            "age": 3,
-            "title": "<age-appropriate title>",
-            "summary": "<age-appropriate summary>",
-            "description": "<age-appropriate description>",
-            "questions": ["<question1>", "<question2>"],
-            "wordDefinitions": [
-              { "word": "<word>", "definition": "<age-appropriate definition>" }
-            ]
-          },
-          {
-            "age": 4,
-            // Repeat for each age up to 12
-          }
-        ]
-      `;
-
+    Based on the following news:
+    Title: "${title}"
+    Description: "${description}"
+    
+    ${wordDefinitions.length > 0 ? `Words and definitions:
+    ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}` : ''}
+    
+    Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
+    1. Retain the original meaning of the news. Do not change its context or key ideas.
+    2. Use words and sentences that are appropriate and easy for each age group to understand.
+    3. Ensure that real-world terms or concepts are explained simply, while keeping their original context.
+    
+    For each age group, provide:
+    1. A title appropriate for this age.
+    2. A detailed description suitable for their comprehension level.
+    3. Two questions relevant to the news.
+    ${wordDefinitions.length > 0 ? '4. Simplified definitions for the given words, suitable for the age group.' : ''}
+    
+    Ensure the output includes:
+    - "wordDefinitions": [] if there are no words and definitions provided.
+    
+    Respond in JSON format:
+    [
+      {
+        "age": 3,
+        "title": "<age-appropriate title>",
+        "description": "<age-appropriate description>",
+        "questions": ["<question1>", "<question2>"],
+        ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+          { "word": "<word>", "definition": "<age-appropriate definition>" }
+        ]` : `"wordDefinitions": []`}
+      },
+      {
+        "age": 4,
+        // Repeat for each age up to 12
+      }
+    ]
+    `;
+    
     console.log(prompt);
     
     const response = await axios.post(

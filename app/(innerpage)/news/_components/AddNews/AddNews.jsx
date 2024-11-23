@@ -35,7 +35,7 @@ function AddNews() {
     const [newsForm, setNewsForm] = useState({
       category: '',
       title: '',
-      summary: '',
+      // summary: '',
       description: '',
       // age: '',
       showInHome: false,
@@ -80,32 +80,17 @@ function AddNews() {
         newErrors.title = 'Title is required';
       }
 
-      if (!newsForm.summary?.trim()) {
-        newErrors.summary = 'Summary is required';
-      }
+      // if (!newsForm.summary?.trim()) {
+      //   newErrors.summary = 'Summary is required';
+      // }
 
       if (!newsForm.description?.trim()) {
         newErrors.description = 'Description is required';
       }
 
-      // if (!newsForm.age) {
-      //   newErrors.age = 'Age is required';
-      // } else if (newsForm.age < 1 || newsForm.age > 12) {
-      //   newErrors.age = 'Age must be between 1 and 12';
-      // }
-
       if (!newsForm.image) {
         newErrors.image = 'Image is required';
       }
-
-      // const validQuestions = questions.filter(q => q.question.trim());
-      // if (validQuestions.length === 0) {
-      //   newErrors.questions = 'At least one question is required';
-      // }
-      // // Validate word definitions
-      // const validWordDefinitions = wordDefinitions.filter(wd => 
-      //   wd.word.trim() && wd.definition.trim()
-      // );
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     };
@@ -198,7 +183,7 @@ function AddNews() {
         const body = {
           categoryId: newsForm.category,
           title: newsForm.title,
-          summary: newsForm.summary,
+          // summary: newsForm.summary,
           description: newsForm.description,
           // age: newsForm.age,
           showInHome: newsForm.showInHome,
@@ -236,7 +221,7 @@ function AddNews() {
         setNewsForm({
           category: '',
           title: '',
-          summary: '',
+          // summary: '',
           description: '',
           // age: '',
           showInHome: false,
@@ -394,7 +379,7 @@ function AddNews() {
             </div>
 
             {/* Summary */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="summary">Summary*</Label>
               <textarea 
                 id="summary"
@@ -413,7 +398,7 @@ function AddNews() {
                 placeholder="Brief summary of the article"
               />
               {errors.summary && <p className="text-sm text-red-500">{errors.summary}</p>}
-            </div>
+            </div> */}
 
             {/* Description */}
             <div className="space-y-2">

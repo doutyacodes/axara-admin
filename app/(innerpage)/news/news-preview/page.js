@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useData } from '@/context/DataContext';
 import { useRouter } from 'next/navigation';
+import { datas } from './data';
 
 const ageOptions = Array.from({ length: 10 }, (_, i) => i + 3);
 
@@ -41,13 +42,13 @@ function AddNews() {
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [formStates, setFormStates] = useState({});
   const { data } = useData();
+  // const data = datas
   const [base64Image, setBase64Image] = useState(data?.image || null);
   const [imageData, setImageData] = useState(null);
   const [fileName, setFileName] = useState(null)
   const router = useRouter();
 
   console.log("data", data)
-  console.log("base64Image", base64Image)
   const handleRevertToResult = (field) => {
     const resultData = data.results.find(r => r.age === selectedAge);
     if (resultData) {
@@ -88,17 +89,18 @@ function AddNews() {
     }
   };
 
-  // Initialize form states for each age
   useEffect(() => {
     if (data) {
       const initialStates = {};
+      const categoryId = data.originalData.categoryId;
+  
       ageOptions.forEach(age => {
         const resultData = data.results.find(r => r.age === age) || {};
         initialStates[age] = {
-          category: data.originalData.categoryId,
+          category: categoryId, // Ensure category is set consistently
           age: age,
           title: resultData.title || '',
-          summary: resultData.summary || '',
+          // summary: resultData.summary || '',
           description: resultData.description || '',
           showInHome: data.originalData.showInHome,
           questions: resultData.questions?.map((q, idx) => ({ 
@@ -113,11 +115,10 @@ function AddNews() {
         };
       });
       setFormStates(initialStates);
-      setImageData(data.image)
+      setImageData(data.image);
+  
     }
   }, [data]);
-
-  console.log(formStates)
 
   useEffect(()=>{
     const category = formStates[selectedAge]?.category
@@ -139,17 +140,20 @@ function AddNews() {
       const response = await GlobalApi.GetNewsCategories(token);
       if (response.status === 200) {
         const fetchedCategories = response.data.categories;
-
         setCategories(fetchedCategories);
 
-          // Match categoryId with categories
+        // Match categoryId with categories
         const defaultCategoryId = data?.originalData?.categoryId;
         if (defaultCategoryId) {
           const defaultCategory = fetchedCategories.find(cat => cat.id.toString() === defaultCategoryId.toString());
           if (defaultCategory) {
-            updateFormState(selectedAge, 'category', defaultCategory.id.toString());
+            // Update all ages with the same category
+            ageOptions.forEach(age => {
+              updateFormState(age, 'category', defaultCategory.id.toString());
+            });
           }
         }
+        
       }
     } catch (err) {
       console.log(err);
@@ -159,12 +163,12 @@ function AddNews() {
   };
 
   useEffect(() => {
-    getNewsCategories();
+    // if(selectedAge){
+      getNewsCategories();
+    // }
   }, [data]);
 
-  const handleImageChange = (event) => {
-    console.log("evet");
-    
+  const handleImageChange = (event) => {    
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -188,12 +192,20 @@ function AddNews() {
     }));
   };
 
+  // Add this function near your other handlers
+  const handleCategoryChange = (value) => {
+    // Update category for all ages
+    ageOptions.forEach(age => {
+      updateFormState(age, 'category', value);
+    });
+  };
+
   const validateForm = () => {
     const newErrors = {};
     ageOptions.forEach(age => {
       const state = formStates[age];
       if (!state?.title?.trim()) newErrors[`title-${age}`] = `Title required for age ${age}`;
-      if (!state?.summary?.trim()) newErrors[`summary-${age}`] = `Summary required for age ${age}`;
+      // if (!state?.summary?.trim()) newErrors[`summary-${age}`] = `Summary required for age ${age}`;
       if (!state?.description?.trim()) newErrors[`description-${age}`] = `Description required for age ${age}`;
       if (!state?.questions?.some(q => q.question.trim())) {
         newErrors[`questions-${age}`] = `At least one question required for age ${age}`;
@@ -202,6 +214,60 @@ function AddNews() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!validateForm()) {
+  //     toast.error('Please fill in all required fields for all age groups');
+  //     return;
+  //   }
+  //   setIsSubmitting(true);
+  //   try {
+  //     const payload = {
+  //       result: formStates,
+  //       imageData,
+  //       fileName,
+  //     };
+      
+  //     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      
+  //     const response = await fetch("/api/saveNewsArticle", {
+  //       method: "POST",
+  //       headers: { 
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`, // Add token to headers if needed
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     if (!response.ok) {
+  //       // throw new Error('Failed to submit article');
+  //       const errorData = await response.json(); // Parse response body for detailed error
+  //       if (response.status === 400 && errorData.duplicateAges && errorData.duplicateWords) {
+  //         const duplicateAges = errorData.duplicateAges.join(', ');
+  //         const duplicateWords = errorData.duplicateWords.join(', ');
+  //         setErrors({
+  //           ...errors,
+  //           submit: `Word Definitions are already present for the given ages and Words Ages: ${duplicateAges}, Words: ${duplicateWords}.
+  //             Please Remove them and try submitting again`
+  //         });
+  //       }
+  //       throw new Error('Failed to submit article');
+  //     }
+  //     // Reset form on success
+  //     toast.success('News Added Successfully')
+  //     router.push('/news')
+  //   } catch (error) {
+  //     let errorMessage = 'Failed to submit article. Please try again.';
+  //     if (error.message.includes('Duplicate entries detected')) {
+  //       errorMessage = error.message;
+  //     }
+  //     console.error(error)
+  //     toast.error('Failed to submit article. Please try again.')
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -229,29 +295,28 @@ function AddNews() {
       });
 
       if (!response.ok) {
-        // throw new Error('Failed to submit article');
         const errorData = await response.json(); // Parse response body for detailed error
         if (response.status === 400 && errorData.duplicateAges && errorData.duplicateWords) {
           const duplicateAges = errorData.duplicateAges.join(', ');
           const duplicateWords = errorData.duplicateWords.join(', ');
+          const errorMessage = `Word Definitions are already present for the given ages and Words Ages: ${duplicateAges}, Words: ${duplicateWords}. Please Remove them and try submitting again`;
           setErrors({
             ...errors,
-            submit: `Word Definitions are already present for the given ages and Words Ages: ${duplicateAges}, Words: ${duplicateWords}.
-              Please Remove them and try submitting again`
+            submit: errorMessage
           });
+          toast.error(errorMessage);
+          return;
         }
-        throw new Error('Failed to submit article');
+        // Handle other error cases
+        toast.error(data.message || 'Failed to submit article. Please try again.');
+        return;
       }
-      // Reset form on success
-      toast.success('News Added Successfully')
-      router.push('/news')
+      // Success case
+      toast.success('News Added Successfully');
+      router.push('/news');
     } catch (error) {
-      let errorMessage = 'Failed to submit article. Please try again.';
-      if (error.message.includes('Duplicate entries detected')) {
-        errorMessage = error.message;
-      }
-      console.error(error)
-      toast.error('Failed to submit article. Please try again.')
+      console.error(error);
+      toast.error('Network error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -325,7 +390,8 @@ function AddNews() {
                 <Label>Category</Label>
                 <Select
                   value={formStates[selectedAge]?.category}
-                  onValueChange={(value) => updateFormState(selectedAge, 'category', value)}
+                  // onValueChange={(value) => updateFormState(selectedAge, 'category', value)}
+                  onValueChange={handleCategoryChange}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -390,7 +456,7 @@ function AddNews() {
               {/* ... (implement similar pattern for other fields) */}
 
               {/* Summary Section */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <Label>Summary</Label>
                   <div className="space-x-2">
@@ -425,7 +491,7 @@ function AddNews() {
                 {errors[`summary-${selectedAge}`] && (
                   <p className="text-red-500 text-sm">{errors[`summary-${selectedAge}`]}</p>
                 )}
-              </div>
+              </div> */}
 
               {/* Description Section */}
               <div className="space-y-2">

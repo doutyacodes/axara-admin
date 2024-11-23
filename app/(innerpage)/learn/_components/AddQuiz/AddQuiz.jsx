@@ -231,13 +231,202 @@ const AddQuiz = () => {
   };
 
   return (
-    <div className="min-h-screen bg-orange-50 p-6">
-      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-orange-500 mb-8">Create Weekly Quiz</h1>
+    // <div className="min-h-screen bg-orange-50 p-6">
+    //   <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
+    //     <h1 className="text-3xl font-bold text-orange-500 mb-8">Create Weekly Quiz</h1>
+        
+    //     {/* Subject and Grade Selection */}
+        
+    //     <div className="grid grid-cols-2 gap-6">
+    //       {/* Grade Selection */}
+    //       <div>
+    //         <label className="block text-gray-700 font-medium mb-2">Grade</label>
+    //         <select
+    //           className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+    //           value={formData.grade}
+    //           onChange={e => setFormData(prev => ({ ...prev, grade: e.target.value }))}
+    //         >
+    //           <option value="">Select Grade</option>
+    //           {grades.map(grade => (
+    //             <option key={grade} value={grade}>{grade}</option>
+    //           ))}
+    //         </select>
+    //       </div>
+          
+    //       {/* Subject Selection */}
+    //       <div>
+    //         <label className="block text-gray-700 font-medium mb-2">Subject</label>
+    //         <select
+    //           className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+    //           value={formData.subjectId}
+    //           onChange={e => setFormData(prev => ({ ...prev, subjectId: e.target.value }))}
+    //           disabled={!formData.grade}
+    //         >
+    //           <option value="">
+    //             {!formData.grade 
+    //               ? "Please select a grade first"
+    //               : availableSubjects.length === 0 
+    //                 ? "No subjects available for this grade"
+    //                 : "Select Subject"
+    //             }
+    //           </option>
+    //           {availableSubjects.map(subject => (
+    //             <option key={subject.id} value={subject.id}>
+    //               {subject.name}
+    //             </option>
+    //           ))}
+    //         </select>
+    //       </div>
+    //     </div>
+
+    //     {/* Test Date */}
+    //     <div className="grid grid-cols-2 gap-6">
+    //         <div>
+    //             <label className="block text-gray-700 font-medium mb-2">Start Date</label>
+    //             <input
+    //                 type="date"
+    //                 className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+    //                 value={formData.startDate}
+    //                 onChange={e => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+    //                 min={format(new Date(), 'yyyy-MM-dd')}
+    //                 disabled={isSubmitting}
+    //             />
+    //         </div>
+    //         <div>
+    //             <label className="block text-gray-700 font-medium mb-2">End Date</label>
+    //             <input
+    //                 type="date"
+    //                 className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+    //                 value={formData.endDate}
+    //                 onChange={e => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+    //                 min={format(new Date(), 'yyyy-MM-dd')}
+    //                 disabled={isSubmitting}
+    //             />
+    //         </div>
+    //     </div>
+
+    //     {/* Questions Section */}
+    //     <div className="space-y-8">
+    //       <h2 className="text-xl font-semibold text-gray-700">Questions</h2>
+          
+    //       {formData.questions.map((question, qIndex) => (
+    //         <div key={qIndex} className="p-6 bg-white rounded-lg shadow-sm space-y-4 relative">
+    //           {formData.questions.length > 1 && (
+    //             <button
+    //               type="button"
+    //               onClick={() => removeQuestion(qIndex)}
+    //               className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+    //               disabled={isSubmitting}
+    //             >
+    //               <Trash2 className="w-5 h-5" />
+    //             </button>
+    //           )}
+
+    //           <div>
+    //             <label className="block text-gray-700 font-medium mb-2">
+    //               Question {qIndex + 1}
+    //             </label>
+    //             <input
+    //               type="text"
+    //               className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+    //               value={question.question}
+    //               onChange={e => {
+    //                 const newQuestions = [...formData.questions];
+    //                 newQuestions[qIndex].question = e.target.value;
+    //                 setFormData(prev => ({ ...prev, questions: newQuestions }));
+    //               }}
+    //               disabled={isSubmitting}
+    //               placeholder="Enter your question"
+    //             />
+    //           </div>
+
+    //           {/* Options */}
+    //           <div className="space-y-3">
+    //             <label className="block text-gray-700 font-medium">Options</label>
+    //             {question.options.map((option, oIndex) => (
+    //               <div key={oIndex} className="flex items-center gap-4">
+    //                 <input
+    //                   type="text"
+    //                   className="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+    //                   value={option.text}
+    //                   onChange={e => handleOptionChange(qIndex, oIndex, 'text', e.target.value)}
+    //                   disabled={isSubmitting}
+    //                   placeholder={`Option ${oIndex + 1}`}
+    //                 />
+    //                 <label className="flex items-center gap-2">
+    //                   <input
+    //                     type="radio"
+    //                     name={`correct-${qIndex}`}
+    //                     checked={option.isCorrect}
+    //                     onChange={e => handleOptionChange(qIndex, oIndex, 'isCorrect', e.target.checked)}
+    //                     disabled={isSubmitting}
+    //                   />
+    //                   Correct
+    //                 </label>
+    //                 {question.options.length > 4 && (
+    //                   <button
+    //                     type="button"
+    //                     onClick={() => removeOption(qIndex, oIndex)}
+    //                     className="text-red-500 hover:text-red-700"
+    //                     disabled={isSubmitting}
+    //                   >
+    //                     <X className="w-5 h-5" />
+    //                   </button>
+    //                 )}
+    //               </div>
+    //             ))}
+                
+    //             <button
+    //               type="button"
+    //               onClick={() => addOption(qIndex)}
+    //               className="text-orange-500 flex items-center gap-2"
+    //               disabled={isSubmitting}
+    //             >
+    //               <PlusCircle className="w-4 h-4" />
+    //               Add Option
+    //             </button>
+    //           </div>
+    //         </div>
+    //       ))}
+
+    //       <button
+    //         type="button"
+    //         onClick={addQuestion}
+    //         className="w-full p-3 border-2 border-dashed border-orange-300 rounded-lg text-orange-500 hover:bg-orange-50 flex items-center justify-center gap-2"
+    //         disabled={isSubmitting}
+    //       >
+    //         <PlusCircle className="w-5 h-5" />
+    //         Add Question
+    //       </button>
+    //     </div>
+
+    //     {/* Submit Button */}
+    //     <button
+    //       type="submit"
+    //       className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 disabled:opacity-50"
+    //       disabled={isSubmitting}
+    //     >
+    //       {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
+    //     </button>
+    //   </form>
+
+    //   {/* Loading Overlay */}
+    //   {isSubmitting && (
+    //     <div className="fixed inset-0 bg-black/10 shadow-lg z-50 flex items-center justify-center">
+    //       <div className="bg-white p-8 rounded-lg shadow-xl flex flex-col items-center">
+    //         <Loader2 className="h-12 w-12 animate-spin text-orange-500 mb-4" />
+    //         <p className="text-xl font-semibold">Creating Topic and Quiz...</p>
+    //         <p className="text-gray-500 mt-2">Please do not close the page</p>
+    //       </div>
+    //     </div>
+    //   )}
+    // </div>
+    <div className="min-h-screen bg-orange-50 p-2 sm:p-4 md:p-6">
+      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-orange-500 mb-4 sm:mb-8">Create Weekly Quiz</h1>
         
         {/* Subject and Grade Selection */}
-        
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           {/* Grade Selection */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">Grade</label>
@@ -280,37 +469,37 @@ const AddQuiz = () => {
         </div>
 
         {/* Test Date */}
-        <div className="grid grid-cols-2 gap-6">
-            <div>
-                <label className="block text-gray-700 font-medium mb-2">Start Date</label>
-                <input
-                    type="date"
-                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-                    value={formData.startDate}
-                    onChange={e => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                    min={format(new Date(), 'yyyy-MM-dd')}
-                    disabled={isSubmitting}
-                />
-            </div>
-            <div>
-                <label className="block text-gray-700 font-medium mb-2">End Date</label>
-                <input
-                    type="date"
-                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-                    value={formData.endDate}
-                    onChange={e => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                    min={format(new Date(), 'yyyy-MM-dd')}
-                    disabled={isSubmitting}
-                />
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">Start Date</label>
+            <input
+              type="date"
+              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+              value={formData.startDate}
+              onChange={e => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+              min={format(new Date(), 'yyyy-MM-dd')}
+              disabled={isSubmitting}
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">End Date</label>
+            <input
+              type="date"
+              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+              value={formData.endDate}
+              onChange={e => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+              min={format(new Date(), 'yyyy-MM-dd')}
+              disabled={isSubmitting}
+            />
+          </div>
         </div>
 
         {/* Questions Section */}
-        <div className="space-y-8">
-          <h2 className="text-xl font-semibold text-gray-700">Questions</h2>
+        <div className="space-y-6 sm:space-y-8">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-700">Questions</h2>
           
           {formData.questions.map((question, qIndex) => (
-            <div key={qIndex} className="p-6 bg-white rounded-lg shadow-sm space-y-4 relative">
+            <div key={qIndex} className="p-3 sm:p-6 bg-white rounded-lg shadow-sm space-y-4 relative">
               {formData.questions.length > 1 && (
                 <button
                   type="button"
@@ -344,35 +533,37 @@ const AddQuiz = () => {
               <div className="space-y-3">
                 <label className="block text-gray-700 font-medium">Options</label>
                 {question.options.map((option, oIndex) => (
-                  <div key={oIndex} className="flex items-center gap-4">
+                  <div key={oIndex} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
                     <input
                       type="text"
-                      className="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="flex-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
                       value={option.text}
                       onChange={e => handleOptionChange(qIndex, oIndex, 'text', e.target.value)}
                       disabled={isSubmitting}
                       placeholder={`Option ${oIndex + 1}`}
                     />
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name={`correct-${qIndex}`}
-                        checked={option.isCorrect}
-                        onChange={e => handleOptionChange(qIndex, oIndex, 'isCorrect', e.target.checked)}
-                        disabled={isSubmitting}
-                      />
-                      Correct
-                    </label>
-                    {question.options.length > 4 && (
-                      <button
-                        type="button"
-                        onClick={() => removeOption(qIndex, oIndex)}
-                        className="text-red-500 hover:text-red-700"
-                        disabled={isSubmitting}
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2 ml-2">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name={`correct-${qIndex}`}
+                          checked={option.isCorrect}
+                          onChange={e => handleOptionChange(qIndex, oIndex, 'isCorrect', e.target.checked)}
+                          disabled={isSubmitting}
+                        />
+                        Correct
+                      </label>
+                      {question.options.length > 4 && (
+                        <button
+                          type="button"
+                          onClick={() => removeOption(qIndex, oIndex)}
+                          className="text-red-500 hover:text-red-700"
+                          disabled={isSubmitting}
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
                 

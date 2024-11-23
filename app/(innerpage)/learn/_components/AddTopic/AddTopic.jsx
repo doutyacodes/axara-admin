@@ -143,10 +143,11 @@ const AddTopic = () => {
   };
 
   return (
-    <div className="min-h-screen bg-orange-50 p-6">
-      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-orange-500 mb-8">Create Topic</h1>
-        <div className="grid grid-cols-2 gap-6">
+    <div className="min-h-screen bg-orange-50 p-2 sm:p-4 md:p-6">
+      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-orange-500 mb-4 sm:mb-8">Create Topic</h1>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           {/* Grade Selection */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">Grade</label>
@@ -202,7 +203,7 @@ const AddTopic = () => {
         </div>
 
         {/* Topic and Description */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div>
             <label className="block text-gray-700 font-medium mb-2">Topic</label>
             <input
