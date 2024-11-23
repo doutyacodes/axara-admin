@@ -41,7 +41,7 @@ function DeleteCategoryModal({
         </DialogHeader>
         <div className="py-4">
           <p className="text-gray-600">
-            Are you sure you want to delete the category <span className="font-semibold">"{selectedCategory.name}"</span>?
+            Are you sure you want to delete the category <span className="font-semibold">&quot;{selectedCategory.name}&quot;</span>?
           </p>
           <p className="mt-2 text-sm text-gray-500">
             This action cannot be undone. All news related to this category will be removed.
