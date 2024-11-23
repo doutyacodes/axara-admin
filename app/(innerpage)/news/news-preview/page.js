@@ -46,6 +46,7 @@ function AddNews() {
   const [fileName, setFileName] = useState(null)
   const router = useRouter();
 
+  console.log("data", data)
   console.log("base64Image", base64Image)
   const handleRevertToResult = (field) => {
     const resultData = data.results.find(r => r.age === selectedAge);
@@ -159,7 +160,7 @@ function AddNews() {
 
   useEffect(() => {
     getNewsCategories();
-  }, [data, selectedAge]);
+  }, [data]);
 
   const handleImageChange = (event) => {
     console.log("evet");
