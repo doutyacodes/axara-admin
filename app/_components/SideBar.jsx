@@ -15,6 +15,7 @@ import {
   FaStar,
   FaBuilding,
   FaNewspaper,
+  FaTrophy,
 } from "react-icons/fa";
 import Image from "next/image";
 import { ChevronRight, Menu } from "lucide-react";
@@ -40,6 +41,7 @@ const SideBar = () => {
     { label: "Axara News", links: "/news", icon: FaNewspaper  },  // Changed to "FaBuilding" for About Us    
     // { label: "Search", links: "/search", icon: FaSearch },
     { label: "Learn", links: "/learn", icon: FaBook },
+    { label: "Challenges", links: "/challenges", icon: FaTrophy },    
     // { label: "Tests", links: "/tests", icon: FaTasks },
     // { label: "Activities", links: "/activities", icon: FaUserFriends },
     // { label: "Communities", links: "/communities", icon: FaUserFriends },

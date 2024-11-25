@@ -838,16 +838,7 @@ export const SCHOOL = mysqlTable("school", {
   type: mysqlEnum("type", ["paid", "free", "disabled"]).notNull(),
 });
 
-export const CHALLENGES = mysqlTable("challenges", {
-  id: int("id").notNull().primaryKey().autoincrement(),
-  age: int("age").notNull(),
-  country: varchar("country", 255).notNull(),
-  career_id: int("career_id").notNull(),
-  week: int("week").notNull(),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-  challenge: varchar("challenge", 255).notNull(),
-  verification: varchar("verification", 255).notNull(),
-});
+
 export const Moderator = mysqlTable("Moderator", {
   id: int("id").notNull().primaryKey().autoincrement(),
   school_id: int("school_id")
@@ -857,21 +848,6 @@ export const Moderator = mysqlTable("Moderator", {
   name: varchar("name", 255).notNull(),
 });
 
-export const CHALLENGE_PROGRESS = mysqlTable("challenge_progress", {
-  id: int("id").notNull().primaryKey().autoincrement(),
-  user_id: int("user_id")
-    .notNull()
-    .references(() => USER_DETAILS.id),
-  challenge_id: int("challenge_id")
-    .notNull()
-    .references(() => CHALLENGES.id),
-  image: varchar("image", 255).notNull(),
-  status: mysqlEnum("status", ["pending", "approved", "rejected"]).notNull(),
-  created_at: timestamp("created_at").defaultNow(),
-  age: int("age").notNull(),
-  school_id: int("school_id").notNull(),
-  week: int("week").notNull(),
-});
 export const MILESTONE_CATEGORIES = mysqlTable("milestone_categories", {
   id: int("id").notNull().autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull().unique(),
@@ -1380,4 +1356,62 @@ export const WORDS_MEANINGS = mysqlTable("words_meanings", {
   //   .references(() => NEWS.id), 
   created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
+});
+
+export const CHALLENGES = mysqlTable("challenges", {
+  id: int("id").primaryKey().autoincrement(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").default(null),
+  show_date: date("show_date").notNull(),
+  challenge_type: mysqlEnum("challenge_type", ["upload", "quiz"]).notNull(),
+  slug: varchar("slug", { length: 350 }), // UUID for unique challenge identification
+  image: varchar("image", { length: 255 }).default(null),
+  entry_fee: int("entry_fee").default(0),
+  age: int("age"),
+  entry_type: mysqlEnum("entry_type", ["nill", "points", "fee"]).default(
+    "nill"
+  ),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const CHALLENGE_PROGRESS = mysqlTable("challenge_progress", {
+  id: int("id").primaryKey().autoincrement(),
+  challenge_id: int("challenge_id").references(() => CHALLENGES.id),
+  user_id: int("user_id").references(() => USER_DETAILS.id),
+  child_id: int("child_id").references(() => CHILDREN.id),
+  challenge_type: mysqlEnum("challenge_type", ["upload", "quiz"]).notNull(),
+  image: varchar("image", { length: 255 }).default(null), // Only for 'upload' challenge type
+  is_started: boolean("is_started").default(false),
+  is_completed: boolean("is_completed").default(false),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const CHALLENGE_QUESTIONS = mysqlTable("challenge_questions", {
+  id: int("id").primaryKey().autoincrement(),
+  challenge_id: int("challenge_id").references(() => CHALLENGES.id),
+  question: text("question").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const CHALLENGE_OPTIONS = mysqlTable("challenge_options", {
+  id: int("id").primaryKey().autoincrement(),
+  challenge_id: int("challenge_id").references(() => CHALLENGES.id),
+  question_id: int("question_id").references(() => CHALLENGE_QUESTIONS.id),
+  option: varchar("option", { length: 255 }).notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const CHALLENGE_USER_QUIZ = mysqlTable("challenge_user_quiz", {
+  id: int("id").primaryKey().autoincrement(),
+  challenge_id: int("challenge_id").references(() => CHALLENGES.id),
+  user_id: int("user_id").references(() => USER_DETAILS.id),
+  child_id: int("child_id").references(() => CHILDREN.id),
+  question_id: int("question_id").references(() => CHALLENGE_QUESTIONS.id),
+  option_id: int("option_id").references(() => CHALLENGE_OPTIONS.id),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });

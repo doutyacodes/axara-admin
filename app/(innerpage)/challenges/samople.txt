@@ -1,0 +1,62 @@
+{
+    "title": "TIlle cample",
+    "description": "sample descroiption  sample descroiption sample descroiption sample descroiption sample descroiption sample descroiption sample descroiption sample descroiption sample descroiption sample descroiption sample descroiption ",
+    "show_date": "2024-11-28",
+    "challenge_type": "quiz",
+    "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgEASABIAAD/4gxYSUNDX1BST0ZJTEUAAQEAAAxITGlubwIQAABtbnRyUkdCIFhZWiAHzgACAAkABgAxAABhY3NwTVNGVAAAAABJRUMgc1JHQgAAAAAAAAAAAAAAAAAA9tYAAQAAAADTLUhQICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    "entry_type": "fee",
+    "entry_fee": "100",
+    "age": "12",
+    "questions": [
+        {
+            "question": "sample qizzzsample qizzzsample qizzz",
+            "options": [
+                "sample qizzzsample qizzz",
+                "sample qizzz",
+                "sample qizzz",
+                "sample qizzz"
+            ],
+            "correctOption": 1
+        },
+        {
+            "question": "sample qizzzsample qizzzsample qizzzsample qizzz",
+            "options": [
+                "sample qizzz",
+                "sample qizzz",
+                "sample qizzz",
+                "sample qizzz"
+            ],
+            "correctOption": 0
+        },
+        {
+            "question": "sample qizzzsample qizzz",
+            "options": [
+                "sample qizzzsample qizzz",
+                "sample qizzz",
+                "sample qizzz",
+                "sample qizzz"
+            ],
+            "correctOption": 2
+        },
+        {
+            "question": "sample qizzz",
+            "options": [
+                "sample qizzz",
+                "sample qizzz",
+                "sample qizzz",
+                "sample qizzz"
+            ],
+            "correctOption": 2
+        },
+        {
+            "question": "sample qizzzsample qizzzsample qizzzsample qizzz",
+            "options": [
+                "sample qizzz",
+                "sample qizzzsample qizzz",
+                "sample qizzz",
+                "sample qizzz"
+            ],
+            "correctOption": 0
+        }
+    ]
+}

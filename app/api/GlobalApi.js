@@ -75,7 +75,14 @@ const CreateLearnTopic = (formData) => {
   });
 };
 
+const FetchChallenges = async (data) => {
 
+  return axios.post(`/api/fetchChallenges`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
 
 
 
@@ -96,5 +103,6 @@ export default {
   GetLearnSubjects,
   CreateLearnQuiz,
   CreateLearnTopic,
+  FetchChallenges,
 
 };

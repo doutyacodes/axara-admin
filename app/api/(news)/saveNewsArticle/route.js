@@ -8,9 +8,6 @@ import os from 'os';
 import { db } from '@/utils';
 import { and, eq } from 'drizzle-orm';
 
-// export const maxDuration = 60;
-// export const dynamic = "force-dynamic";
-
 export async function POST(request) {
   const authResult = await authenticate(request, true);
   if (!authResult.authenticated) {

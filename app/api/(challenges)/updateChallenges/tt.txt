@@ -1,0 +1,58 @@
+{
+    "challengeId": 13,
+    "title": "Improved Title",
+    "description": "as asa da dASDas asa da dASDas asa da dASDas asa da dASD",
+    "show_date": "2024-11-28",
+    "challenge_type": "quiz",
+    "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQIAOAA4AAD/2wCEAAMDAwM
+    "entry_type": "points",
+    "entry_fee": "",
+    "age": 12,
+    "oldImageName": "1732553524222-quiz-as-asa-da-dASD.png",
+    "questions": [
+        {
+            "id": 22,
+            "question": "as asa da dASD",
+            "options": [
+                "as asa da dASD",
+                "as asa da dASD",
+                "as asa da dASD",
+                "as asa da dASD"
+            ],
+            "correctOption": 0
+        },
+        {
+            "id": 23,
+            "question": "as asa da dASD",
+            "options": [
+                "as asa da dASD",
+                "as asa da dASD",
+                "as asa da dASD",
+                "as asa da dASD"
+            ],
+            "correctOption": 0
+        },
+        {
+            "id": 24,
+            "question": "as asa da dASD",
+            "options": [
+                "as asa da dASD",
+                "as asa da dASDas asa da dASD",
+                "as asa da dASD",
+                "as asa da dASD"
+            ],
+            "correctOption": 0
+        },
+        {
+            "id": 25,
+            "question": "as asa da dASD",
+            "options": [
+                "as asa da dASD",
+                "as asa da dASD",
+                "as asa da dASD",
+                "as asa da dASD"
+            ],
+            "correctOption": 0
+        }
+    ]
+}
