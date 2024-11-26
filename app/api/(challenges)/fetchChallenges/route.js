@@ -105,16 +105,26 @@ export async function POST(req) {
       .where(inArray(CHALLENGE_OPTIONS.question_id, questionIds))
       .execute();
 
-      // Step 4: Assemble data into the desired format
-      const questionsWithOptions = questions.map((q) => ({
-      question: q.question,
-      id: q.id,
-      challenge_id: q.challenge_id,
-      options: options
-        .filter((o) => o.question_id === q.id)
-        .map((o) => o.option), // Extract only the option text
-      correctOption: 0, // Replace with actual logic if needed
-      }));
+      
+
+      // // Step 4: Assemble data into the desired format
+
+      const questionsWithOptions = questions.map((q) => {
+        // Get all options for the current question
+        const filteredOptions = options.filter((o) => o.question_id === q.id);
+      
+        // Find the index of the correct option (where is_answer is true)
+        const correctOptionIndex = filteredOptions.findIndex((o) => o.is_answer);
+      
+        // Assemble the question data
+        return {
+          question: q.question,
+          id: q.id,
+          challenge_id: q.challenge_id,
+          options: filteredOptions.map((o) => o.option), // Extract only the option text
+          correctOption: correctOptionIndex >= 0 ? correctOptionIndex : null, // If no correct option, set to null
+        };
+      });
 
       console.log("questionsWithOptions", questionsWithOptions);
 

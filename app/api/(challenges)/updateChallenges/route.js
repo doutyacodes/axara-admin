@@ -5,7 +5,8 @@ import SFTPClient from 'ssh2-sftp-client';
 import os from 'os';
 import { db } from '@/utils';
 import { authenticate } from "@/lib/jwtMiddleware";
-import { CHALLENGE_OPTIONS, CHALLENGE_QUESTIONS, CHALLENGES } from "@/utils/schema";
+import { CHALLENGE_OPTIONS, CHALLENGE_QUESTIONS, CHALLENGE_USER_QUIZ, CHALLENGES } from "@/utils/schema";
+import { and, eq, inArray } from 'drizzle-orm';
 
 
 export async function PUT(request) {
@@ -103,10 +104,36 @@ export async function PUT(request) {
             await db.delete(CHALLENGE_QUESTIONS).where('id', 'in', toDeleteQuestionIds);
         }
           // Update or insert questions and options
-          for (const { id, question, options, correctOption } of questions) {
+          for (const { id, question, options, correctOption } of questions) {            
             if (id) {
               // Update existing question
               await db.update(CHALLENGE_QUESTIONS).set({ question }).where({ id });
+
+            // Step 1: Fetch the option IDs for the given question and challenge
+            const optionIds = await db
+              .select({ id: CHALLENGE_OPTIONS.id })
+              .from(CHALLENGE_OPTIONS)
+              .where(
+                and(
+                  eq(CHALLENGE_OPTIONS.question_id, id),
+                  eq(CHALLENGE_OPTIONS.challenge_id, challengeId)
+                )
+              );
+
+            // Extract just the IDs into an array
+            const idsToDelete = optionIds.map((option) => option.id);
+
+            if (idsToDelete.length > 0) {
+              // Step 2: Delete from CHALLENGE_USER_QUIZ using the retrieved IDs
+              await db
+                .delete(CHALLENGE_USER_QUIZ)
+                .where(inArray(CHALLENGE_USER_QUIZ.option_id, idsToDelete));
+
+              console.log(`Deleted entries in CHALLENGE_USER_QUIZ for IDs:`, idsToDelete);
+            } else {
+              console.log('No related option IDs found for deletion.');
+            }
+
               await db.delete(CHALLENGE_OPTIONS).where({ question_id: id }); // Clear old options
               const optionRecords = options.map((option, index) => ({
                 challenge_id: challengeId,

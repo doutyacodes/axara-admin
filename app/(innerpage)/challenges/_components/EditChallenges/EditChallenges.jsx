@@ -65,7 +65,6 @@ const EditChallenges = ({challengesData = []}) => {
       }
     }
   }, [challengesData]);
-  console.log("questions", questions)
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
