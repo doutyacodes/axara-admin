@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddCategories from './_components/AddCategories/AddCategories';
 import AddNews from './_components/AddNews/AddNews';
+import ViewAllNews from './_components/ViewAllNews/ViewAllNews';
 
 const NewsAdminPanel = () => {
 
@@ -28,6 +29,13 @@ const NewsAdminPanel = () => {
             >
               Categories
             </TabsTrigger>
+
+            <TabsTrigger 
+              value="view-news" 
+              className="flex-1 data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg transition-all duration-200"
+            >
+              View All News
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="add-news">
@@ -36,6 +44,10 @@ const NewsAdminPanel = () => {
 
           <TabsContent value="categories">
             <AddCategories />
+          </TabsContent>
+
+          <TabsContent value="view-news">
+            <ViewAllNews />
           </TabsContent>
         </Tabs>
       </div>

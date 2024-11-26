@@ -84,9 +84,23 @@ const FetchChallenges = async (data) => {
   });
 };
 
+// New function to fetch news
+const FetchNews = async (data) => {
+  return axios.post(`/api/fetchNews`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+    },
+  });
+};
 
 
-
+const FetchNewsReports = (newsId) => {
+  return axios.get(`/api/fetchNewsReports/${newsId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
 
 export default {
   CreateNewUser,
@@ -98,6 +112,8 @@ export default {
   GetNewsCategories,
   CreateNewsCategory,
   DeleteNewsCategory,
+  FetchNews,
+  FetchNewsReports,
 
   /* Learn */
   GetLearnSubjects,

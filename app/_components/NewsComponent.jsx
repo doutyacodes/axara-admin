@@ -4,18 +4,17 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import GlobalApi from "../api/_services/GlobalApi";
 import LoadingSpinner from "./LoadingSpinner";
+import GlobalApi from "../api/GlobalApi";
 
 const truncateTitle = (title, length = 40) =>
   title.length > length ? `${title.slice(0, length)}...` : title;
 
-export default function NewsSection() {
+export default function NewsSection({selectedAge}) {
   const [newsCategories, setNewsCategories] = useState([]);
   const [newsByCategory, setNewsByCategory] = useState({});
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { selectedAge } = 2;
 
   const formatDate = (date) => {
     const options = {
