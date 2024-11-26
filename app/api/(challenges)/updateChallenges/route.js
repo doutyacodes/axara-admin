@@ -87,45 +87,47 @@ export async function PUT(request) {
         entry_fee: entry_type || null,
         age,
       }).where({ id: challengeId });
-      // Handle questions and options
-      const existingQuestionIds = questions.map((q) => q.id);
-    //   const dbQuestionIds = await db.select({ id: CHALLENGE_QUESTIONS.id }).from(CHALLENGE_QUESTIONS).where({ challenge_id: challengeId });
-    const dbQuestionIds = await db.select({ id: CHALLENGE_QUESTIONS.id }).from(CHALLENGE_QUESTIONS).where({ challenge_id: challengeId });
-    const toDeleteQuestionIds = dbQuestionIds
-    .filter((q) => !existingQuestionIds.includes(q.id))
-    .map(q => q.id);
 
-    if (toDeleteQuestionIds.length > 0) {
-        await db.delete(CHALLENGE_OPTIONS).where('question_id', 'in', toDeleteQuestionIds);
-        await db.delete(CHALLENGE_QUESTIONS).where('id', 'in', toDeleteQuestionIds);
-    }
+      if (questions && questions.length>0) {
+         // Handle questions and options
+        const existingQuestionIds = questions.map((q) => q.id);
+        //   const dbQuestionIds = await db.select({ id: CHALLENGE_QUESTIONS.id }).from(CHALLENGE_QUESTIONS).where({ challenge_id: challengeId });
+        const dbQuestionIds = await db.select({ id: CHALLENGE_QUESTIONS.id }).from(CHALLENGE_QUESTIONS).where({ challenge_id: challengeId });
+        const toDeleteQuestionIds = dbQuestionIds
+        .filter((q) => !existingQuestionIds.includes(q.id))
+        .map(q => q.id);
 
-      // Update or insert questions and options
-      for (const { id, question, options, correctOption } of questions) {
-        if (id) {
-          // Update existing question
-          await db.update(CHALLENGE_QUESTIONS).set({ question }).where({ id });
-          await db.delete(CHALLENGE_OPTIONS).where({ question_id: id }); // Clear old options
-          const optionRecords = options.map((option, index) => ({
-            challenge_id: challengeId,
-            question_id: id,
-            option,
-            is_correct: index === correctOption,
-          }));
-          await db.insert(CHALLENGE_OPTIONS).values(optionRecords);
-        } else {
-          // Insert new question
-          const questionRecord = await db.insert(CHALLENGE_QUESTIONS).values({ challenge_id: challengeId, question });
-          const questionId = questionRecord[0].insertId;
-  
-          const optionRecords = options.map((option, index) => ({
-            challenge_id: challengeId,
-            question_id: questionId,
-            option,
-            is_correct: index === correctOption,
-          }));
-          await db.insert(CHALLENGE_OPTIONS).values(optionRecords);
+        if (toDeleteQuestionIds.length > 0) {
+            await db.delete(CHALLENGE_OPTIONS).where('question_id', 'in', toDeleteQuestionIds);
+            await db.delete(CHALLENGE_QUESTIONS).where('id', 'in', toDeleteQuestionIds);
         }
+          // Update or insert questions and options
+          for (const { id, question, options, correctOption } of questions) {
+            if (id) {
+              // Update existing question
+              await db.update(CHALLENGE_QUESTIONS).set({ question }).where({ id });
+              await db.delete(CHALLENGE_OPTIONS).where({ question_id: id }); // Clear old options
+              const optionRecords = options.map((option, index) => ({
+                challenge_id: challengeId,
+                question_id: id,
+                option,
+                is_answer: index === correctOption,
+              }));
+              await db.insert(CHALLENGE_OPTIONS).values(optionRecords);
+            } else {
+              // Insert new question
+              const questionRecord = await db.insert(CHALLENGE_QUESTIONS).values({ challenge_id: challengeId, question });
+              const questionId = questionRecord[0].insertId;
+      
+              const optionRecords = options.map((option, index) => ({
+                challenge_id: challengeId,
+                question_id: questionId,
+                option,
+                is_answer: index === correctOption,
+              }));
+              await db.insert(CHALLENGE_OPTIONS).values(optionRecords);
+            }
+          }
       }
 
       return NextResponse.json({ message: 'Challenge updated successfully' }, { status: 200 });

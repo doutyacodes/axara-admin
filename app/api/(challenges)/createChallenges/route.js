@@ -47,7 +47,7 @@ export async function POST(request) {
 
     // Insert questions and options if provided
     if (questions && questions.length > 0) {
-      for (const { question, options } of questions) {
+      for (const { question, options, correctOption  } of questions) {
         const questionRecord = await db.insert(CHALLENGE_QUESTIONS).values({
           challenge_id: challengeId,
           question,
@@ -56,10 +56,11 @@ export async function POST(request) {
         const questionId = questionRecord[0].insertId;
 
         if (options && options.length > 0) {
-          const optionRecords = options.map((option) => ({
+          const optionRecords = options.map((option, index) => ({
             challenge_id: challengeId,
             question_id: questionId,
             option,
+            is_answer: index === correctOption, // Set true for the correct option
           }));
           await db.insert(CHALLENGE_OPTIONS).values(optionRecords);
         }

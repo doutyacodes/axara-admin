@@ -1401,6 +1401,7 @@ export const CHALLENGE_OPTIONS = mysqlTable("challenge_options", {
   challenge_id: int("challenge_id").references(() => CHALLENGES.id),
   question_id: int("question_id").references(() => CHALLENGE_QUESTIONS.id),
   option: varchar("option", { length: 255 }).notNull(),
+  is_answer: boolean("is_answer").notNull().default(false), // Indicates if this option is the correct answer
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });

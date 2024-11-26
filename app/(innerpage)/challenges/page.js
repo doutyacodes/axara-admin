@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
 import GlobalApi from "@/app/api/GlobalApi";
 import EditChallenges from "./_components/EditChallenges/EditChallenges";
+import LoadingSpinner from "@/app/_components/LoadingSpinner";
+import { Search } from "lucide-react";
 
 const ViewChallenges = () => {
   const [challengesData, setChallengesData] = useState([]);
@@ -50,7 +50,7 @@ const ViewChallenges = () => {
   }
 
   if (isLoading) {
-    return <div>Loading...</div>; // Replace with a proper loading spinner if needed
+    return <div><LoadingSpinner /></div>;
   }
 
   return (
@@ -77,32 +77,48 @@ const ViewChallenges = () => {
             {/* Filters Section */}
             <div className="flex gap-4 mb-6">
               {/* Dropdown for Age Filter */}
-              <select
-                value={selectedAge}
-                onChange={(e) => setSelectedAge(Number(e.target.value))}
-                className="border border-gray-300 rounded px-4 py-2"
-              >
-                <option value={3}>Age 3</option>
-                <option value={4}>Age 4</option>
-                <option value={5}>Age 5</option>
-                <option value={6}>Age 6</option>
-                <option value={7}>Age 7</option>
-                <option value={8}>Age 8</option>
-                <option value={9}>Age 9</option>
-                <option value={10}>Age 10</option>
-                <option value={11}>Age 11</option>
-                <option value={12}>Age 12</option>
-                <option value={13}>Age 13</option>
-              </select>
+              <div className="relative w-full max-w-xs">
+                <select
+                  value={selectedAge}
+                  onChange={(e) => setSelectedAge(Number(e.target.value))}
+                  className="appearance-none w-full bg-white border-2 border-blue-500 text-gray-800 
+                            py-3 px-4 rounded-lg shadow-md 
+                            focus:outline-none focus:ring-2 focus:ring-blue-400 
+                            transition duration-300 ease-in-out 
+                            hover:border-blue-600 
+                            text-base font-medium"
+                >
+                  {[3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((age) => (
+                    <option 
+                      key={age} 
+                      value={age} 
+                      className="bg-white text-gray-800 hover:bg-blue-50"
+                    >
+                      Age {age}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <svg 
+                    className="fill-current h-5 w-5" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 20 20"
+                  >
+                    <path 
+                      d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
+                    />
+                  </svg>
+                </div>
+              </div>
     
               {/* Search Bar */}
-              <input
+              {/* <input
                 type="text"
                 placeholder="Search by title..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="border border-gray-300 rounded px-4 py-2 w-full"
-              />
+              /> */}
             </div>
     
             {/* Challenges Section */}
@@ -124,7 +140,7 @@ const ViewChallenges = () => {
     
                     {/* Image */}
                     <img
-                      src={challenge.image}
+                      src={`https://wowfy.in/testusr/images/${challenge.image}`}
                       alt={challenge.title}
                       className="w-full h-40 object-cover"
                       whileHover={{ scale: 1.05 }}
@@ -153,12 +169,6 @@ const ViewChallenges = () => {
     
                     {/* Edit Button */}
                     <div className="p-4">
-                      {/* <Link
-                        href={`/edit-challenge/${challenge.id}`} // Replace with your edit route
-                        
-                      >
-                        Edit Challenge
-                      </Link> */}
                       <button
                         className="text-center w-full block bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
                         onClick={()=>{handleEdit(challenge)}} // Replace with your create challenge route
@@ -169,12 +179,21 @@ const ViewChallenges = () => {
                   </div>
                 ))
               ) : (
-                // No Challenges Available Message
-                <div className="col-span-full text-center text-gray-600 mt-4">
-                <h2 className="text-lg font-semibold">
-                  No challenges are available for the selected age group.
-                </h2>
-                <p>Try selecting a different age group or modify your search.</p>
+                <div className="col-span-full flex flex-col items-center justify-center text-center p-8 bg-gray-50 rounded-lg">
+                  <div className="bg-blue-100 p-4 rounded-full mb-4">
+                    <Search
+                      className="text-blue-500" 
+                      size={48} 
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    No Challenges Available
+                  </h2>
+                  <p className="text-gray-600 max-w-md">
+                    We couldn't find any challenges for the selected age group. 
+                    Try adjusting your search or exploring different age ranges.
+                  </p>
                 </div>
               )}
             </div>
