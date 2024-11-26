@@ -84,7 +84,8 @@ export async function PUT(request) {
         // slug: updatedImageName,
         image: updatedImageName,
         entry_type,
-        entry_fee: entry_type || null,
+        // entry_fee: entry_type || null,
+        entry_fee: entry_type === 'fee' || entry_type === 'points' ? entry_fee : null,
         age,
       }).where({ id: challengeId });
 

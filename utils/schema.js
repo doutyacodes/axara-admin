@@ -1346,6 +1346,14 @@ export const NEWS_QUESTIONS = mysqlTable("news_questions", {
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
 });
 
+export const NEWS_REPORTS = mysqlTable("news_reports", {
+  id: int("id").primaryKey().autoincrement(),
+  news_id: int("news_id").notNull().references(() => NEWS.id),
+  user_id: int("user_id").references(() => USER_DETAILS.id), // Nullable
+  report_text: text("report_text"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
 export const WORDS_MEANINGS = mysqlTable("words_meanings", {
   id: int("id").primaryKey().autoincrement(), // Primary key
   age: int("age").notNull(),

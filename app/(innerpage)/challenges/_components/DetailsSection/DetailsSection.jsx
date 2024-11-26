@@ -214,7 +214,7 @@ const DetailsSection = ({ formData, setFormData, errors, setErrors, setCurrentSe
       </div>
     </div>
 
-    {formData.entry_type === 'fee' && (
+    {(formData.entry_type === 'fee' || formData.entry_type === 'points') && (
       <div>
         <label className="block text-sm font-medium text-gray-700">Entry Fee</label>
         <input

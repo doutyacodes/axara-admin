@@ -39,7 +39,8 @@ export async function POST(request) {
       slug: fileName, // Assuming slug is the file name
       image: fileName,
       entry_type,
-      entry_fee: entry_type === 'fee' ? entry_fee : null, // Insert entry_fee only if entry_type is 'fee'
+      // entry_fee: entry_type === 'fee' ? entry_fee : null, // Insert entry_fee only if entry_type is 'fee'
+      entry_fee: entry_type === 'fee' || entry_type === 'points' ? entry_fee : null,
       age,
     });
 
