@@ -191,8 +191,7 @@ const ViewChallenges = () => {
                     No Challenges Available
                   </h2>
                   <p className="text-gray-600 max-w-md">
-                    We couldn't find any challenges for the selected age group. 
-                    Try adjusting your search or exploring different age ranges.
+                    We couldn&apos;t find any challenges for the selected age group.Try adjusting your search or exploring different age ranges.
                   </p>
                 </div>
               )}
