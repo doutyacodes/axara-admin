@@ -11,6 +11,7 @@ import {
 import NewsDetails from "@/app/_components/NewsComponent";
 import GlobalApi from "@/app/api/GlobalApi";
 import Link from 'next/link';
+import LoadingSpinner from '@/app/_components/LoadingSpinner';
 
 const truncateTitle = (title, length = 40) =>
   title.length > length ? `${title.slice(0, length)}...` : title;
