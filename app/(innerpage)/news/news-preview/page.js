@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, X, Upload, Loader2, FileText, Zap } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -46,9 +46,11 @@ function AddNews() {
   const [base64Image, setBase64Image] = useState(data?.image || null);
   const [imageData, setImageData] = useState(null);
   const [fileName, setFileName] = useState(null)
+  const isFirstRender = useRef(true);
+
   const router = useRouter();
 
-  console.log("data", data)
+  // console.log("data", data)
   const handleRevertToResult = (field) => {
     const resultData = data.results.find(r => r.age === selectedAge);
     if (resultData) {
@@ -89,10 +91,22 @@ function AddNews() {
     }
   };
 
+const handleCategoryChange = (value) => {
+  if (isFirstRender.current) {
+    isFirstRender.current = false;
+    return;
+  }
+  
+  ageOptions.forEach(age => {
+    updateFormState(age, 'category', value);
+  });
+};
+  
+
   useEffect(() => {
     if (data) {
       const initialStates = {};
-      const categoryId = data.originalData.categoryId;
+      const categoryId = data.originalData.categoryId;      
   
       ageOptions.forEach(age => {
         const resultData = data.results.find(r => r.age === age) || {};
@@ -119,6 +133,7 @@ function AddNews() {
   
     }
   }, [data]);
+  // console.log("formStates:", formStates);
 
   useEffect(()=>{
     const category = formStates[selectedAge]?.category
@@ -143,16 +158,21 @@ function AddNews() {
         setCategories(fetchedCategories);
 
         // Match categoryId with categories
-        const defaultCategoryId = data?.originalData?.categoryId;
-        if (defaultCategoryId) {
-          const defaultCategory = fetchedCategories.find(cat => cat.id.toString() === defaultCategoryId.toString());
-          if (defaultCategory) {
-            // Update all ages with the same category
-            ageOptions.forEach(age => {
-              updateFormState(age, 'category', defaultCategory.id.toString());
-            });
-          }
-        }
+        // const defaultCategoryId = data?.originalData?.categoryId;
+        // console.log("defaultCategory Test");
+        // if (defaultCategoryId) {
+        //   console.log("defaultCategory Test 2");
+
+        //   const defaultCategory = fetchedCategories.find(cat => cat.id.toString() === defaultCategoryId.toString());
+        //   console.log("defaultCategory", defaultCategory);
+          
+        //   if (defaultCategory) {
+        //     // Update all ages with the same category
+        //     ageOptions.forEach(age => {
+        //       updateFormState(age, 'category', defaultCategory.id.toString());
+        //     });
+        //   }
+        // }
         
       }
     } catch (err) {
@@ -190,14 +210,6 @@ function AddNews() {
         [field]: value
       }
     }));
-  };
-
-  // Add this function near your other handlers
-  const handleCategoryChange = (value) => {
-    // Update category for all ages
-    ageOptions.forEach(age => {
-      updateFormState(age, 'category', value);
-    });
   };
 
   const validateForm = () => {
@@ -376,24 +388,24 @@ function AddNews() {
         </div>
 
         {/* Main Form */}
-        <Card className="border-none shadow-lg">
+        <Card className="border-none shadow-lg w-full max-w-full mx-auto px-2 md:px-6">
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
               {/* Error Alert */}
               {errors.submit && (
                 <Alert variant="destructive">
                   <AlertDescription>{errors.submit}</AlertDescription>
                 </Alert>
               )}
+
               {/* Category Select */}
               <div className="space-y-2">
-                <Label>Category</Label>
+                <h3 className="text-lg font-semibold">Category</h3>
                 <Select
                   value={formStates[selectedAge]?.category}
-                  // onValueChange={(value) => updateFormState(selectedAge, 'category', value)}
                   onValueChange={handleCategoryChange}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -418,14 +430,15 @@ function AddNews() {
 
               {/* Title Section */}
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label>Title</Label>
-                  <div className="space-x-2">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
+                  <h3 className="text-lg font-semibold">Title</h3>
+                  <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleRevertToOriginal('title')}
+                      className="w-full md:w-auto"
                     >
                       <FileText className="w-4 h-4 mr-2" />
                       Provided Data
@@ -436,6 +449,7 @@ function AddNews() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleRevertToResult('title')}
+                      className="w-full md:w-auto"
                     >
                       <Zap className="w-4 h-4 mr-2" />
                       Processed Result
@@ -445,64 +459,24 @@ function AddNews() {
                 <Input
                   value={formStates[selectedAge]?.title || ''}
                   onChange={(e) => updateFormState(selectedAge, 'title', e.target.value)}
-                  className={errors[`title-${selectedAge}`] ? 'border-red-500' : ''}
+                  className={`w-full ${errors[`title-${selectedAge}`] ? 'border-red-500' : ''}`}
                 />
                 {errors[`title-${selectedAge}`] && (
                   <p className="text-red-500 text-sm">{errors[`title-${selectedAge}`]}</p>
                 )}
               </div>
 
-              {/* Similar sections for Summary, Description, Questions, and Word Definitions */}
-              {/* ... (implement similar pattern for other fields) */}
-
-              {/* Summary Section */}
-              {/* <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label>Summary</Label>
-                  <div className="space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToOriginal('summary')}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Provided Data
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToResult('summary')}
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      Processed Result
-                    </Button>
-                  </div>
-                </div>
-                <textarea
-                  value={formStates[selectedAge]?.summary || ''}
-                  onChange={(e) => updateFormState(selectedAge, 'summary', e.target.value)}
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[100px] ${
-                    errors[`summary-${selectedAge}`] ? 'border-red-500' : 'border-gray-200'
-                  }`}
-                  placeholder="Enter summary"
-                />
-                {errors[`summary-${selectedAge}`] && (
-                  <p className="text-red-500 text-sm">{errors[`summary-${selectedAge}`]}</p>
-                )}
-              </div> */}
-
               {/* Description Section */}
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label>Description</Label>
-                  <div className="space-x-2">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
+                   <h3 className="text-lg font-semibold">Description</h3>
+                  <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleRevertToOriginal('description')}
+                      className="w-full md:w-auto"
                     >
                       <FileText className="w-4 h-4 mr-2" />
                       Provided Data
@@ -512,6 +486,7 @@ function AddNews() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleRevertToResult('description')}
+                      className="w-full md:w-auto"
                     >
                       <Zap className="w-4 h-4 mr-2" />
                       Processed Result
@@ -521,7 +496,7 @@ function AddNews() {
                 <textarea
                   value={formStates[selectedAge]?.description || ''}
                   onChange={(e) => updateFormState(selectedAge, 'description', e.target.value)}
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[200px] ${
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[150px] md:min-h-[200px] ${
                     errors[`description-${selectedAge}`] ? 'border-red-500' : 'border-gray-200'
                   }`}
                   placeholder="Enter description"
@@ -532,98 +507,16 @@ function AddNews() {
               </div>
 
               {/* Word Definitions Section */}
-              {/* <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Word Definitions</h3>
-                  <div className="space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToResult('wordDefinitions')}
-                    >
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Load Result Definitions
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        const currentDefs = formStates[selectedAge]?.wordDefinitions || [];
-                        updateFormState(selectedAge, 'wordDefinitions', [
-                          ...currentDefs,
-                          { id: Date.now(), word: '', definition: '' }
-                        ]);
-                      }}
-                      variant="outline"
-                      className="border-orange-500 text-orange-500 hover:bg-orange-50"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Definition
-                    </Button>
-                  </div>
-                </div>
-
-                {formStates[selectedAge]?.wordDefinitions?.map((def, index) => (
-                  <Card key={def.id} className="p-4 border border-gray-200">
-                    <div className="flex justify-between items-start mb-4">
-                      <h4 className="font-medium">Definition {index + 1}</h4>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          const newDefs = formStates[selectedAge].wordDefinitions.filter(d => d.id !== def.id);
-                          updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                        }}
-                        className="text-gray-500 hover:text-red-500"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Word</Label>
-                        <Input
-                          value={def.word}
-                          onChange={(e) => {
-                            const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
-                              d.id === def.id ? { ...d, word: e.target.value } : d
-                            );
-                            updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                          }}
-                          className="mt-1"
-                          placeholder="Enter word"
-                        />
-                      </div>
-
-                      <div>
-                        <Label>Definition</Label>
-                        <textarea
-                          value={def.definition}
-                          onChange={(e) => {
-                            const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
-                              d.id === def.id ? { ...d, definition: e.target.value } : d
-                            );
-                            updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                          }}
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[100px] mt-1"
-                          placeholder="Enter definition"
-                        />
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div> */}
-
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
                   <h3 className="text-lg font-semibold">Word Definitions</h3>
-                  <div className="space-x-2">
+                  <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleRevertToOriginal('wordDefinitions')}
+                      className="w-full md:w-auto"
                     >
                       <FileText className="w-4 h-4 mr-2" />
                       Provided Data
@@ -633,6 +526,7 @@ function AddNews() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleRevertToResult('wordDefinitions')}
+                      className="w-full md:w-auto"
                     >
                       <Zap className="w-4 h-4 mr-2" />
                       Processed Result
@@ -647,7 +541,7 @@ function AddNews() {
                         ]);
                       }}
                       variant="outline"
-                      className="border-orange-500 text-orange-500 hover:bg-orange-50"
+                      className="w-full md:w-auto border-orange-500 text-orange-500 hover:bg-orange-50"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Definition
@@ -657,67 +551,67 @@ function AddNews() {
 
                 {formStates[selectedAge]?.wordDefinitions?.map((def, index) => (
                   <Card key={def.id} className="p-4 border border-gray-200">
-                    {/* Rest of the existing word definition card code remains the same */}
-                    <div className="flex justify-between items-start mb-4">
-                      <h4 className="font-medium">Definition {index + 1}</h4>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          const newDefs = formStates[selectedAge].wordDefinitions.filter(d => d.id !== def.id);
-                          updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                        }}
-                        className="text-gray-500 hover:text-red-500"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
+                        <div className="flex justify-between items-start mb-4">
+                            <h4 className="font-medium">Definition {index + 1}</h4>
+                            <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => {
+                                const newDefs = formStates[selectedAge].wordDefinitions.filter(d => d.id !== def.id);
+                                updateFormState(selectedAge, 'wordDefinitions', newDefs);
+                            }}
+                            className="text-gray-500 hover:text-red-500"
+                            >
+                            <X className="w-4 h-4" />
+                            </Button>
+                        </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Word</Label>
-                        <Input
-                          value={def.word}
-                          onChange={(e) => {
-                            const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
-                              d.id === def.id ? { ...d, word: e.target.value } : d
-                            );
-                            updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                          }}
-                          className="mt-1"
-                          placeholder="Enter word"
-                        />
-                      </div>
+                        <div className="space-y-4">
+                            <div>
+                            <Label>Word</Label>
+                            <Input
+                                value={def.word}
+                                onChange={(e) => {
+                                const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
+                                    d.id === def.id ? { ...d, word: e.target.value } : d
+                                );
+                                updateFormState(selectedAge, 'wordDefinitions', newDefs);
+                                }}
+                                className="mt-1"
+                                placeholder="Enter word"
+                            />
+                            </div>
 
-                      <div>
-                        <Label>Definition</Label>
-                        <textarea
-                          value={def.definition}
-                          onChange={(e) => {
-                            const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
-                              d.id === def.id ? { ...d, definition: e.target.value } : d
-                            );
-                            updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                          }}
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[100px] mt-1"
-                          placeholder="Enter definition"
-                        />
-                      </div>
-                    </div>
-                  </Card>
+                            <div>
+                            <Label>Definition</Label>
+                            <textarea
+                                value={def.definition}
+                                onChange={(e) => {
+                                const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
+                                    d.id === def.id ? { ...d, definition: e.target.value } : d
+                                );
+                                updateFormState(selectedAge, 'wordDefinitions', newDefs);
+                                }}
+                                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[100px] mt-1"
+                                placeholder="Enter definition"
+                            />
+                            </div>
+                        </div>          
+                    </Card>
                 ))}
               </div>
 
               {/* Questions Section */}
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
                   <h3 className="text-lg font-semibold">Questions</h3>
-                  <div className="space-x-2">
+                  <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleRevertToResult('questions')}
+                      className="w-full md:w-auto"
                     >
                       <Zap className="w-4 h-4 mr-2" />
                       Load Processed Result Questions
@@ -732,7 +626,7 @@ function AddNews() {
                         ]);
                       }}
                       variant="outline"
-                      className="border-orange-500 text-orange-500 hover:bg-orange-50"
+                      className="w-full md:w-auto border-orange-500 text-orange-500 hover:bg-orange-50"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Question
@@ -745,30 +639,30 @@ function AddNews() {
                     errors[`questions-${selectedAge}`] ? 'border-red-500' : 'border-gray-200'
                   }`}>
                     <div className="flex justify-between items-start mb-4">
-                      <h4 className="font-medium">Question {index + 1}</h4>
-                      <Button
+                        <h4 className="font-medium">Question {index + 1}</h4>
+                        <Button
                         type="button"
                         variant="ghost"
                         onClick={() => {
-                          const newQuestions = formStates[selectedAge].questions.filter(question => question.id !== q.id);
-                          updateFormState(selectedAge, 'questions', newQuestions);
+                            const newQuestions = formStates[selectedAge].questions.filter(question => question.id !== q.id);
+                            updateFormState(selectedAge, 'questions', newQuestions);
                         }}
                         className="text-gray-500 hover:text-red-500"
-                      >
+                        >
                         <X className="w-4 h-4" />
-                      </Button>
+                        </Button>
                     </div>
 
                     <Input
-                      value={q.question}
-                      onChange={(e) => {
+                        value={q.question}
+                        onChange={(e) => {
                         const newQuestions = formStates[selectedAge].questions.map(question =>
-                          question.id === q.id ? { ...question, question: e.target.value } : question
+                            question.id === q.id ? { ...question, question: e.target.value } : question
                         );
                         updateFormState(selectedAge, 'questions', newQuestions);
-                      }}
-                      placeholder="Enter your question"
-                      className="w-full"
+                        }}
+                        placeholder="Enter your question"
+                        className="w-full"
                     />
                   </Card>
                 ))}
