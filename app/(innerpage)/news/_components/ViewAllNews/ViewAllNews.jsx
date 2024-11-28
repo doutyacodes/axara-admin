@@ -102,6 +102,8 @@ export default function ViewAllNews() {
     setShowReportsModal(true);
   };
 
+
+
   const ReportsModal = () => (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -299,8 +301,10 @@ export default function ViewAllNews() {
                             whileTap={{ scale: 0.95 }}
                             className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
                             >
-                            <Edit2 className="mr-2" /> 
-                            <span>Edit News</span>
+                              <Link href={`news/${selectedAge}/${article.id}`} className='flex items-center justify-center space-x-2'>
+                                <Edit2 className="mr-2" /> 
+                                <span>Edit News</span>
+                              </Link>
                             </motion.button>
                         </motion.div>
                         )}

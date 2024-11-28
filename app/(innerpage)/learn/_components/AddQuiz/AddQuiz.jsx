@@ -170,8 +170,8 @@ const AddQuiz = () => {
       return "Please fill in all required fields";
     }
 
-    if (formData.questions.length < 5) {
-      return "Please add at least 5 questions";
+    if (formData.questions.length < 1) {
+      return "Please add at least 1 questions";
     }
     for (const question of formData.questions) {
       if (!question.question || question.options.length < 4) {
