@@ -123,8 +123,7 @@ export const USER_ACTIVITIES = mysqlTable("user_activities", {
   child_id: int("child_id")
     .references(() => CHILDREN.id)
     .notNull(),
-  course_id: int("course_id")
-    .references(() => COURSES.id),
+  course_id: int("course_id").references(() => COURSES.id),
   activity_id: int("activity_id")
     .references(() => ACTIVITIES.id)
     .notNull(),
@@ -134,7 +133,6 @@ export const USER_ACTIVITIES = mysqlTable("user_activities", {
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
-
 //kids_community
 
 export const KIDS_COMMUNITY = mysqlTable("kids_community", {

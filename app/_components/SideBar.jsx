@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import useAuth from "../hooks/useAuth";
+import { BsActivity } from "react-icons/bs";
 
 const SideBar = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -43,8 +44,8 @@ const SideBar = () => {
     { label: "Learn", links: "/learn", icon: FaBook },
     { label: "Challenges", links: "/challenges", icon: FaTrophy },    
     // { label: "Tests", links: "/tests", icon: FaTasks },
-    // { label: "Activities", links: "/activities", icon: FaUserFriends },
-    // { label: "Communities", links: "/communities", icon: FaUserFriends },
+    { label: "Activities", links: "/activities", icon: BsActivity },
+    { label: "Users", links: "/users", icon: FaUserFriends },
     // { label: "Our Story", links: "/our-story", icon: FaInfoCircle },
     // { label: "Our Features", links: "/our-features", icon: FaStar },
     // { label: "About Us", links: "/about-us", icon: FaBuilding },  // Changed to "FaBuilding" for About Us    

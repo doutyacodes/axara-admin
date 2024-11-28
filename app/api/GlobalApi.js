@@ -102,6 +102,34 @@ const FetchNewsReports = (newsId) => {
   });
 };
 
+const FetchActivities = (age, type) => {
+  return axios.get(`/api/fetchActivities`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    params: {
+      age,
+      type,
+    },
+  });
+};
+
+const FetchAllUsers= () => {
+  return axios.get(`/api/fetchUsers`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+const FetchUserChildren = (userId) => {
+  return axios.get(`/api/fetchUserChildren/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
 export default {
   CreateNewUser,
   LoginUser,
@@ -120,5 +148,12 @@ export default {
   CreateLearnQuiz,
   CreateLearnTopic,
   FetchChallenges,
+
+  /* Activities */
+  FetchActivities,
+
+  /* Users */
+  FetchAllUsers,
+  FetchUserChildren
 
 };
