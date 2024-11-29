@@ -130,6 +130,31 @@ const FetchUserChildren = (userId) => {
   });
 };
 
+
+const FetchUserChallenges = (age, entryType, submissionStatus) => {
+  return axios.get(`/api/fetchUserChallenges`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    params: {
+      age,
+      entryType,
+      submissionStatus
+    },
+  });
+};
+
+  const UpdateChallengeStatus = async (challengeId, status) => {
+    return axios.post(`/api/updateChallengeStatus`, { challengeId, status }, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+      },
+    });
+  };
+
+
+
+
 export default {
   CreateNewUser,
   LoginUser,
@@ -154,6 +179,10 @@ export default {
 
   /* Users */
   FetchAllUsers,
-  FetchUserChildren
+  FetchUserChildren,
+
+  /* Challenges */
+  FetchUserChallenges,
+  UpdateChallengeStatus,
 
 };

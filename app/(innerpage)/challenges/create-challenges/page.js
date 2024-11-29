@@ -17,7 +17,12 @@ const ChallengeCreationForm = () => {
     image: null,
     entry_type: 'nill',
     entry_fee: '',
-    age: ''
+    age: '',
+    latitude: '',
+    longitude: '',
+    reach_distance: '',
+    steps: '',
+    direction: '',
   });
   console.log(formData)
 

@@ -37,9 +37,6 @@ const AdminActivities = () => {
   const renderActivities = () => {
     if (isLoading) {
       return (
-        // <div className="col-span-full flex justify-center items-center p-8">
-        //   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
-        // </div>
         <div className="col-span-full flex justify-center items-center p-8">
           <LoadingSpinner />
         </div>

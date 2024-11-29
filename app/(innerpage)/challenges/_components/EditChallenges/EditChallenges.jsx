@@ -29,6 +29,11 @@ const EditChallenges = ({challengesData = []}) => {
     entry_fee: '',
     age: '',
     oldImageName: '',
+    latitude: '',
+    longitude: '',
+    reach_distance: '',
+    steps: '',
+    direction: '',
   });
 
   console.log(challengesData)
@@ -47,6 +52,11 @@ const EditChallenges = ({challengesData = []}) => {
         entry_fee: challengesData.entry_fee || '',
         age: challengesData.age || '',
         oldImageName: challengesData.image || null,
+        latitude: challengesData.maps?.[0]?.latitude || '',
+        longitude: challengesData.maps?.[0]?.longitude || '',
+        reach_distance: challengesData.maps?.[0]?.reach_distance || '',
+        steps: challengesData.pedometer?.[0]?.steps || '',
+        direction: challengesData.pedometer?.[0]?.direction || '',
       });
       // Set the initial image preview
       if (challengesData.image) {

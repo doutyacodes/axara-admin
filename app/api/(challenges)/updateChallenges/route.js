@@ -5,7 +5,7 @@ import SFTPClient from 'ssh2-sftp-client';
 import os from 'os';
 import { db } from '@/utils';
 import { authenticate } from "@/lib/jwtMiddleware";
-import { CHALLENGE_OPTIONS, CHALLENGE_QUESTIONS, CHALLENGE_USER_QUIZ, CHALLENGES } from "@/utils/schema";
+import { CHALLENGE_MAPS, CHALLENGE_OPTIONS, Challenge_PEDOMETER, CHALLENGE_QUESTIONS, CHALLENGE_USER_QUIZ, CHALLENGES } from "@/utils/schema";
 import { and, eq, inArray } from 'drizzle-orm';
 
 
@@ -15,7 +15,7 @@ export async function PUT(request) {
       return authResult.response;
     }
   
-    const { challengeId, title, description, show_date, challenge_type, image, oldImageName, entry_type, entry_fee, age, questions } = await request.json();
+    const { challengeId, title, description, show_date, challenge_type, image, oldImageName, entry_type, entry_fee, age, questions, latitude, longitude, reach_distance,steps, direction } = await request.json();
   
     const localTempDir = os.tmpdir(); // Temporary directory for file operations
     const cPanelDirectory = '/home/devusr/public_html/testusr/images'; // Remote directory
@@ -89,6 +89,33 @@ export async function PUT(request) {
         entry_fee: entry_type === 'fee' || entry_type === 'points' ? entry_fee : null,
         age,
       }).where({ id: challengeId });
+
+      // Update CHALLENGE_MAPS table
+      if (latitude && longitude && reach_distance) {
+        await db
+          .delete(CHALLENGE_MAPS)
+          .where({ challenge_id: challengeId }); // Clear existing map data
+
+        await db.insert(CHALLENGE_MAPS).values({
+          challenge_id: challengeId,
+          latitude,
+          longitude,
+          reach_distance,
+        });
+      }
+
+      // Update Challenge_PEDOMETER table
+      if (steps) {
+        await db
+          .delete(Challenge_PEDOMETER)
+          .where({ challenge_id: challengeId }); // Clear existing pedometer data
+
+        await db.insert(Challenge_PEDOMETER).values({
+          challenge_id: challengeId,
+          steps,
+          direction: direction || null,
+        });
+      }
 
       if (questions && questions.length>0) {
          // Handle questions and options

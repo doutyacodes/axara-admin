@@ -5,8 +5,6 @@ import { Calendar, Upload, Edit2, Plus, Check, ArrowLeft, ArrowRight } from 'luc
 
 const DetailsSection = ({ formData, setFormData, errors, setErrors, setCurrentSection, imagePreview, setImagePreview, handleSubmit }) => { 
 
-    
-
     const validateDetailsSection = () => {
         const newErrors = {};
         if (!formData.title.trim()) newErrors.title = 'Title is required';
@@ -17,6 +15,26 @@ const DetailsSection = ({ formData, setFormData, errors, setErrors, setCurrentSe
         if (!formData.age) newErrors.age = 'Age is required';
         if (formData.entry_type === 'fee' && !formData.entry_fee) {
           newErrors.entry_fee = 'Entry fee is required';
+        }
+        if (formData.challenge_type === 'location'){
+          if (!formData.latitude){
+            newErrors.latitude = 'Latitude is required';
+          } 
+          if (!formData.longitude) {
+            newErrors.longitude = 'Longitude is required';
+          }
+          if (!formData.reach_distance) {
+            newErrors.reach_distance = 'Reach Distance is required';
+          }
+        }
+
+        if (formData.challenge_type === 'pedometer'){
+          if (!formData.steps){
+            newErrors.steps = 'Steps is required';
+          } 
+          if (!formData.direction) {
+            newErrors.direction = 'Direction is required';
+          }
         }
     
         setErrors(newErrors);
@@ -43,7 +61,7 @@ const DetailsSection = ({ formData, setFormData, errors, setErrors, setCurrentSe
     
       const handleNext = () => {
         if (validateDetailsSection()) {
-          if (formData.challenge_type === 'upload') {
+          if (formData.challenge_type === 'upload' || formData.challenge_type==='location' || formData.challenge_type==='pedometer') {
             handleSubmit();
           } else {
             setCurrentSection('quiz');
@@ -196,6 +214,8 @@ const DetailsSection = ({ formData, setFormData, errors, setErrors, setCurrentSe
           <option value="">Select Type</option>
           <option value="upload">Upload</option>
           <option value="quiz">Quiz</option>
+          <option value="location">Location</option>
+          <option value="pedometer">Pedometer</option>
         </select>
         {errors.challenge_type && <p className="text-red-500 text-sm mt-1">{errors.challenge_type}</p>}
       </div>
@@ -224,6 +244,71 @@ const DetailsSection = ({ formData, setFormData, errors, setErrors, setCurrentSe
           onChange={e => setFormData(prev => ({ ...prev, entry_fee: e.target.value }))}
         />
         {errors.entry_fee && <p className="text-red-500 text-sm mt-1">{errors.entry_fee}</p>}
+      </div>
+    )}
+
+    {formData.challenge_type === 'location' && (
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Latitude</label>
+          <input
+            type="number"
+            className={`mt-1 block w-full rounded-md border ${errors.latitude  ? 'border-red-500' : 'border-gray-300'} p-2`}
+            value={formData.latitude}
+            onChange={e => setFormData(prev => ({ ...prev, latitude: e.target.value }))}
+          />
+          {errors.latitude && <p className="text-red-500 text-sm mt-1">{errors.latitude}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Longitude</label>
+          <input
+            type="number"
+            className={`mt-1 block w-full rounded-md border ${errors.longitude  ? 'border-red-500' : 'border-gray-300'} p-2`}
+            value={formData.longitude}
+            onChange={e => setFormData(prev => ({ ...prev, longitude: e.target.value }))}
+          />
+          {errors.longitude && <p className="text-red-500 text-sm mt-1">{errors.longitude}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Reach Distance</label>
+          <input
+            type="number"
+            className={`mt-1 block w-full rounded-md border ${errors.reach_distance  ? 'border-red-500' : 'border-gray-300'} p-2`}
+            value={formData.reach_distance}
+            onChange={e => setFormData(prev => ({ ...prev, reach_distance: e.target.value }))}
+          />
+          {errors.reach_distance && <p className="text-red-500 text-sm mt-1">{errors.reach_distance}</p>}
+        </div>
+      </div>
+    )}
+
+    {formData.challenge_type === 'pedometer' && (
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Steps</label>
+          <input
+            type="number"
+            className={`mt-1 block w-full rounded-md border ${errors.steps  ? 'border-red-500' : 'border-gray-300'} p-2`}
+            value={formData.steps}
+            onChange={e => setFormData(prev => ({ ...prev, steps: e.target.value }))}
+          />
+          {errors.steps && <p className="text-red-500 text-sm mt-1">{errors.steps}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Direction</label>
+          <select
+            value={formData.direction}
+            onChange={e => setFormData(prev => ({ ...prev, direction: e.target.value }))}
+            className={`mt-1 block w-full rounded-md border ${errors.direction ? 'border-red-500' : 'border-gray-300'} p-2`}
+          >
+            <option value="">Select Direction</option>
+            <option value="north">North</option>
+            <option value="south">South</option>
+            <option value="east">East</option>
+            <option value="west">West</option>
+          </select>
+          {errors.direction && <p className="text-red-500 text-sm mt-1">{errors.direction}</p>}
+        </div>
       </div>
     )}
 

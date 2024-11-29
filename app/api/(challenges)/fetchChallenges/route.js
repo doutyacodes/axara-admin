@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/utils";
-import { CHALLENGES, CHALLENGE_OPTIONS, CHALLENGE_PROGRESS, CHALLENGE_QUESTIONS, CHILDREN } from "@/utils/schema";
+import { CHALLENGES, CHALLENGE_MAPS, CHALLENGE_OPTIONS, CHALLENGE_PROGRESS, CHALLENGE_QUESTIONS, CHILDREN, Challenge_PEDOMETER } from "@/utils/schema";
 import { authenticate } from "@/lib/jwtMiddleware";
 import { and, eq, inArray, notIn } from "drizzle-orm"; // Using `notIn` to exclude challenges that are completed
 
@@ -87,6 +87,20 @@ export async function POST(req) {
       // Extract challenge IDs for fetching related questions
       const challengeIds = challenges.map((c) => c.id);
 
+      // Step 4: Fetch maps for the relevant challenges
+      const maps = await db
+        .select()
+        .from(CHALLENGE_MAPS)
+        .where(inArray(CHALLENGE_MAPS.challenge_id, challengeIds))
+        .execute();
+
+      // Step 5: Fetch pedometer data for the relevant challenges
+      const pedometers = await db
+        .select()
+        .from(Challenge_PEDOMETER)
+        .where(inArray(Challenge_PEDOMETER.challenge_id, challengeIds))
+        .execute();
+
       // Step 2: Fetch questions for the relevant challenges
       const questions = await db
       .select()
@@ -105,8 +119,7 @@ export async function POST(req) {
       .where(inArray(CHALLENGE_OPTIONS.question_id, questionIds))
       .execute();
 
-      
-
+    
       // // Step 4: Assemble data into the desired format
 
       const questionsWithOptions = questions.map((q) => {
@@ -140,6 +153,19 @@ export async function POST(req) {
       age: c.age,
       entry_type: c.entry_type,
       questions: questionsWithOptions.filter((q) => q.challenge_id === c.id),
+      maps: maps
+        .filter((m) => m.challenge_id === c.id)
+        .map((m) => ({
+          latitude: m.latitude,
+          longitude: m.longitude,
+          reach_distance: m.reach_distance,
+        })),
+      pedometer: pedometers
+        .filter((p) => p.challenge_id === c.id)
+        .map((p) => ({
+          steps: p.steps,
+          direction: p.direction,
+        })),
       }));
 
       // console.log(challengesWithQuestions);

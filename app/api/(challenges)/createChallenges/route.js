@@ -5,7 +5,7 @@ import SFTPClient from 'ssh2-sftp-client';
 import os from 'os';
 import { db } from '@/utils';
 import { authenticate } from '@/lib/jwtMiddleware';
-import { CHALLENGES, CHALLENGE_QUESTIONS, CHALLENGE_OPTIONS } from '@/utils/schema';
+import { CHALLENGES, CHALLENGE_QUESTIONS, CHALLENGE_OPTIONS, CHALLENGE_MAPS, Challenge_PEDOMETER } from '@/utils/schema';
 
 export async function POST(request) {
   const authResult = await authenticate(request, true);
@@ -16,7 +16,21 @@ export async function POST(request) {
   const userData = authResult.decoded_Data;
   const userId = userData.id;
 
-  const { title, description, show_date, challenge_type, image, entry_type, entry_fee, age, questions } = await request.json();
+  const { title, 
+          description, 
+          show_date, 
+          challenge_type, 
+          image, 
+          entry_type, 
+          entry_fee, 
+          age, 
+          questions, 
+          latitude,
+          longitude,
+          reach_distance,
+          steps,
+          direction
+        } = await request.json();
 
   // Define the local temp directory dynamically based on platform
   const localTempDir = os.tmpdir();
@@ -45,6 +59,37 @@ export async function POST(request) {
     });
 
     const challengeId = challengeRecord[0].insertId;
+
+    if (challenge_type === 'location'){
+
+      // Validate required fields
+      if (!reach_distance || !latitude || !longitude) {
+        return NextResponse.json({ message: "All fields are required." },{status: 400});
+      }
+
+      // Insert data into the challenge_maps table
+      const result = await db.insert(CHALLENGE_MAPS).values({
+        challenge_id: challengeId,
+        reach_distance,
+        latitude,
+        longitude,
+      });
+    }
+
+    if (challenge_type === 'pedometer'){
+
+      // Validate required fields
+      if (!steps || !direction ) {
+        return NextResponse.json({ message: "All fields are required." },{status: 400});
+      }
+
+      // Insert data into the challenge_maps table
+      const result = await db.insert(Challenge_PEDOMETER).values({
+        challenge_id: challengeId,
+        steps,
+        direction,
+      });
+    }
 
     // Insert questions and options if provided
     if (questions && questions.length > 0) {

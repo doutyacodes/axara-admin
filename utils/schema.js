@@ -1369,7 +1369,7 @@ export const CHALLENGES = mysqlTable("challenges", {
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description").default(null),
   show_date: date("show_date").notNull(),
-  challenge_type: mysqlEnum("challenge_type", ["upload", "quiz"]).notNull(),
+  challenge_type: mysqlEnum("challenge_type", ["upload", "quiz", "location", "pedometer"]).notNull(),
   slug: varchar("slug", { length: 350 }), // UUID for unique challenge identification
   image: varchar("image", { length: 255 }).default(null),
   entry_fee: int("entry_fee").default(0),
@@ -1386,10 +1386,11 @@ export const CHALLENGE_PROGRESS = mysqlTable("challenge_progress", {
   challenge_id: int("challenge_id").references(() => CHALLENGES.id),
   user_id: int("user_id").references(() => USER_DETAILS.id),
   child_id: int("child_id").references(() => CHILDREN.id),
-  challenge_type: mysqlEnum("challenge_type", ["upload", "quiz"]).notNull(),
+  challenge_type: mysqlEnum("challenge_type", ["upload", "quiz", "location", "pedometer"]).notNull(),
   image: varchar("image", { length: 255 }).default(null), // Only for 'upload' challenge type
   is_started: boolean("is_started").default(false),
   is_completed: boolean("is_completed").default(false),
+  submission_status: mysqlEnum("submission_status", ["pending", "approved", "rejected"]).notNull().default("pending"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
@@ -1421,4 +1422,21 @@ export const CHALLENGE_USER_QUIZ = mysqlTable("challenge_user_quiz", {
   option_id: int("option_id").references(() => CHALLENGE_OPTIONS.id),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const CHALLENGE_MAPS = mysqlTable("challenge_maps", {
+  map_id: int("map_id").primaryKey().autoincrement(),
+  challenge_id: int("challenge_id").notNull().references(() => CHALLENGES.id), // References CHALLENGES table
+  reach_distance: float("reach_distance").notNull(), // Radius in meters
+  latitude: decimal("latitude", { precision: 10, scale: 8 }).notNull(), // Latitude
+  longitude: decimal("longitude", { precision: 11, scale: 8 }).notNull(), // Longitude
+});
+
+export const Challenge_PEDOMETER = mysqlTable("challenge_pedometer", {
+  id: int("id").primaryKey().autoincrement(),
+  challenge_id: int("challenge_id")
+    .notNull()
+    .references(() => CHALLENGES.id), // Foreign key to CHALLENGES table
+  steps: float("steps").notNull(), // Number of steps
+  direction: varchar("direction", { length: 20 }).default(null), // Direction
 });
