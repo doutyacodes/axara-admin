@@ -5,6 +5,7 @@ import { Search, Expand, Filter, Check, X } from 'lucide-react';
 import Image from 'next/image';
 import GlobalApi from '@/app/api/GlobalApi';
 import LoadingSpinner from '@/app/_components/LoadingSpinner';
+import { calculateAge } from '@/lib/ageCalculate';
 
 const ChallengesAdminPanel = () => {
   const [age, setAge] = useState(3);
@@ -133,7 +134,7 @@ const ChallengesAdminPanel = () => {
             <div className="flex justify-between items-center">
                 <div>
                 <p className="text-sm font-medium text-gray-700">
-                    {challenge.childName}, Age {challenge.childAge}
+                    {challenge.childName}, Age {calculateAge(challenge.childAge)}
                 </p>
                 </div>
             </div>
