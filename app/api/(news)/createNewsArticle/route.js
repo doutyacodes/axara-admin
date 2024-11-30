@@ -62,45 +62,45 @@ export async function POST(request) {
 
     
     /* ltest usesd */
-    // const prompt = `
-    //   Based on the following news:
-    //   Title: "${title}"
-    //   Description: "${description}"
+    const prompt = `
+      Based on the following news:
+      Title: "${title}"
+      Description: "${description}"
       
-    //   ${wordDefinitions.length > 0 ? `Words and definitions:
-    //   ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}` : ''}
+      ${wordDefinitions.length > 0 ? `Words and definitions:
+      ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}` : ''}
       
-    //   Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
-    //   1. Retain the original meaning of the news. Do not change its context or key ideas.
-    //   2. Use words and sentences that are appropriate and easy for each age group to understand.
-    //   3. Ensure that real-world terms or concepts are explained simply, while keeping their original context.
+      Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
+      1. Retain the original meaning of the news. Do not change its context or key ideas.
+      2. Use words and sentences that are appropriate and easy for each age group to understand.
+      3. Ensure that real-world terms or concepts are explained simply, while keeping their original context.
       
-    //   For each age group, provide:
-    //   1. A title appropriate for this age.
-    //   2. A detailed description suitable for their comprehension level.
-    //   3. Two questions relevant to the news.
-    //   ${wordDefinitions.length > 0 ? '4. Simplified definitions for the given words, suitable for the age group.' : ''}
+      For each age group, provide:
+      1. A title appropriate for this age.
+      2. A detailed description suitable for their comprehension level.
+      3. Two questions relevant to the news.
+      ${wordDefinitions.length > 0 ? '4. Simplified definitions for the given words, suitable for the age group.' : ''}
       
-    //   Ensure the output includes:
-    //   - "wordDefinitions": [] if there are no words and definitions provided.
+      Ensure the output includes:
+      - "wordDefinitions": [] if there are no words and definitions provided.
       
-    //   Respond in JSON format:
-    //   [
-    //     {
-    //       "age": 3,
-    //       "title": "<age-appropriate title>",
-    //       "description": "<age-appropriate description>",
-    //       "questions": ["<question1>", "<question2>"],
-    //       ${wordDefinitions.length > 0 ? `"wordDefinitions": [
-    //         { "word": "<word>", "definition": "<age-appropriate definition>" }
-    //       ]` : `"wordDefinitions": []`}
-    //     },
-    //     {
-    //       "age": 4,
-    //       // Repeat for each age up to 12
-    //     }
-    //   ]
-    //   `;
+      Respond in JSON format:
+      [
+        {
+          "age": 3,
+          "title": "<age-appropriate title>",
+          "description": "<age-appropriate description>",
+          "questions": ["<question1>", "<question2>"],
+          ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+            { "word": "<word>", "definition": "<age-appropriate definition>" }
+          ]` : `"wordDefinitions": []`}
+        },
+        {
+          "age": 4,
+          // Repeat for each age up to 12
+        }
+      ]
+      `;
     
     /* Bit better */
     // const prompt = `
@@ -228,68 +228,68 @@ export async function POST(request) {
     //   ]
     //   `;
 
-    /*  */
-    const prompt = `
-    Based on the following news:
-    Title: "${title}"
-    Description: "${description}"
+    /* final one */
+    // const prompt = `
+    //     Based on the following news:
+    //     Title: "${title}"
+    //     Description: "${description}"
 
-    ${wordDefinitions.length > 0 ? `Words and definitions:
-    ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}` : ''}
+    //     ${wordDefinitions.length > 0 ? `Words and definitions:
+    //     ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}` : ''}
 
-    Rewrite this news for the following age groups:
-    1. Ages 3-5
-    2. Ages 6-9
-    3. Ages 10-12
+    //     Rewrite this news for the following age groups:
+    //     1. Ages 3-5
+    //     2. Ages 6-9
+    //     3. Ages 10-12
 
-    The rewritten content should:
-    1. Retain the original meaning of the news. Do not change its context or key ideas.
-    2. **Include all details from the input news in the description. Do not summarize, shorten, or omit any part of the news. Rewrite it using simpler words and sentences suitable for the age group.**
-    3. **Ensure the rewritten content's length is as long and detailed as the input news. The description should not be shorter than the original and should contain full, comprehensive explanations while being easy to understand for the respective age group.**
-    4. **Organize the content into paragraphs, ensuring each paragraph is well-formed and coherent.**
-    5. Use words and sentences that are appropriate and easy for each age group to understand.
-    6. Explain real-world terms or concepts simply, while keeping their original context.
+    //     The rewritten content should:
+    //     1. Retain the original meaning of the news. Do not change its context or key ideas.
+    //     2. **Include all details from the input news in the description. Do not summarize, shorten, or omit any part of the news. Rewrite it using simpler words and sentences suitable for the age group.**
+    //     3. **Ensure the rewritten content's length is as long and detailed as the input news. The description should not be shorter than the original and should contain full, comprehensive explanations while being easy to understand for the respective age group.**
+    //     4. **Organize the content into paragraphs, ensuring each paragraph is well-formed and coherent.**
+    //     5. Use words and sentences that are appropriate and easy for each age group to understand.
+    //     6. Explain real-world terms or concepts simply, while keeping their original context.
 
-    For each age group, provide:
-    1. A title appropriate for this age group.
-    2. A detailed and comprehensive description rewritten for the specific age group, matching the length and detail of the input news.
-    3. Two questions relevant to the news.
-    ${wordDefinitions.length > 0 ? '4. Simplified definitions for the given words, suitable for the age group.' : ''}
+    //     For each age group, provide:
+    //     1. A title appropriate for this age group.
+    //     2. A detailed and comprehensive description rewritten for the specific age group, matching the length and detail of the input news.
+    //     3. Two questions relevant to the news.
+    //     ${wordDefinitions.length > 0 ? '4. Simplified definitions for the given words, suitable for the age group.' : ''}
 
-    Ensure the output includes:
-    - "wordDefinitions": [] if there are no words and definitions provided.
+    //     Ensure the output includes:
+    //     - "wordDefinitions": [] if there are no words and definitions provided.
 
-    Respond in JSON format:
-    [
-      {
-        "age": [3, 4, 5],
-        "title": "<age-appropriate title>",
-        "description": "<detailed and comprehensive description>",
-        "questions": ["<question1>", "<question2>"],
-        ${wordDefinitions.length > 0 ? `"wordDefinitions": [
-          { "word": "<word>", "definition": "<age-appropriate definition>" }
-        ]` : `"wordDefinitions": []`}
-      },
-      {
-        "age": [6, 7, 8, 9],
-        "title": "<age-appropriate title>",
-        "description": "<detailed and comprehensive description>",
-        "questions": ["<question1>", "<question2>"],
-        ${wordDefinitions.length > 0 ? `"wordDefinitions": [
-          { "word": "<word>", "definition": "<age-appropriate definition>" }
-        ]` : `"wordDefinitions": []`}
-      },
-      {
-        "age": [10, 11, 12],
-        "title": "<age-appropriate title>",
-        "description": "<detailed and comprehensive description>",
-        "questions": ["<question1>", "<question2>"],
-        ${wordDefinitions.length > 0 ? `"wordDefinitions": [
-          { "word": "<word>", "definition": "<age-appropriate definition>" }
-        ]` : `"wordDefinitions": []`}
-      }
-    ]
-`;
+    //     Respond in JSON format:
+    //     [
+    //       {
+    //         "age": [3, 4, 5],
+    //         "title": "<age-appropriate title>",
+    //         "description": "<detailed and comprehensive description>",
+    //         "questions": ["<question1>", "<question2>"],
+    //         ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //           { "word": "<word>", "definition": "<age-appropriate definition>" }
+    //         ]` : `"wordDefinitions": []`}
+    //       },
+    //       {
+    //         "age": [6, 7, 8, 9],
+    //         "title": "<age-appropriate title>",
+    //         "description": "<detailed and comprehensive description>",
+    //         "questions": ["<question1>", "<question2>"],
+    //         ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //           { "word": "<word>", "definition": "<age-appropriate definition>" }
+    //         ]` : `"wordDefinitions": []`}
+    //       },
+    //       {
+    //         "age": [10, 11, 12],
+    //         "title": "<age-appropriate title>",
+    //         "description": "<detailed and comprehensive description>",
+    //         "questions": ["<question1>", "<question2>"],
+    //         ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //           { "word": "<word>", "definition": "<age-appropriate definition>" }
+    //         ]` : `"wordDefinitions": []`}
+    //       }
+    //     ]
+    // `;
 
     
     const response = await axios.post(
@@ -431,20 +431,20 @@ export async function POST(request) {
         throw new Error("Failed to parse response data");
     }
 
-    const transformedData = [];
-        parsedData.forEach(item => {
-          item.age.forEach(age => {
-            transformedData.push({
-              age,
-              title: item.title,
-              description: item.description,
-              questions: item.questions,
-              wordDefinitions: item.wordDefinitions
-            });
-          });
-        });
+    // const transformedData = [];
+    //   parsedData.forEach(item => {
+    //     item.age.forEach(age => {
+    //       transformedData.push({
+    //         age,
+    //         title: item.title,
+    //         description: item.description,
+    //         questions: item.questions,
+    //         wordDefinitions: item.wordDefinitions
+    //       });
+    //     });
+    //   });
 
-    return NextResponse.json({ results: transformedData, originalData: data }, { status: 200 });
+    return NextResponse.json({ results: parsedData, originalData: data }, { status: 200 });
   } catch (error) {
     console.error('Error processing OpenAI API:', error);
     return NextResponse.json(
