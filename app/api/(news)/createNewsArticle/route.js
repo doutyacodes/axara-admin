@@ -245,7 +245,7 @@ export async function POST(request) {
     The rewritten content should:
     1. Retain the original meaning of the news. Do not change its context or key ideas.
     2. **Include all details from the input news in the description. Do not summarize, shorten, or omit any part of the news. Rewrite it using simpler words and sentences suitable for the age group.**
-    3. **Ensure the rewritten content is as long and detailed as the input news. The description should not be shorter than the original and should contain full, comprehensive explanations while being easy to understand for the respective age group.**
+    3. **Ensure the rewritten content's length is as long and detailed as the input news. The description should not be shorter than the original and should contain full, comprehensive explanations while being easy to understand for the respective age group.**
     4. **Organize the content into paragraphs, ensuring each paragraph is well-formed and coherent.**
     5. Use words and sentences that are appropriate and easy for each age group to understand.
     6. Explain real-world terms or concepts simply, while keeping their original context.
@@ -420,7 +420,7 @@ export async function POST(request) {
   //     ]
   //   }
   // ]
-  console.log("responseText", responseText)
+  // console.log("responseText", responseText)
 
     let parsedData;
 
