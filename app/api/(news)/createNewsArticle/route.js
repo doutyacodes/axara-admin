@@ -62,171 +62,262 @@ export async function POST(request) {
 
     
     /* ltest usesd */
-    const prompt = `
-      Based on the following news:
-      Title: "${title}"
-      Description: "${description}"
-      
-      ${wordDefinitions.length > 0 ? `Words and definitions:
-      ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}` : ''}
-      
-      Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
-      1. Retain the original meaning of the news. Do not change its context or key ideas.
-      2. Use words and sentences that are appropriate and easy for each age group to understand.
-      3. Ensure that real-world terms or concepts are explained simply, while keeping their original context.
-      
-      For each age group, provide:
-      1. A title appropriate for this age.
-      2. A detailed description suitable for their comprehension level.
-      3. Two questions relevant to the news.
-      ${wordDefinitions.length > 0 ? '4. Simplified definitions for the given words, suitable for the age group.' : ''}
-      
-      Ensure the output includes:
-      - "wordDefinitions": [] if there are no words and definitions provided.
-      
-      Respond in JSON format:
-      [
-        {
-          "age": 3,
-          "title": "<age-appropriate title>",
-          "description": "<age-appropriate description>",
-          "questions": ["<question1>", "<question2>"],
-          ${wordDefinitions.length > 0 ? `"wordDefinitions": [
-            { "word": "<word>", "definition": "<age-appropriate definition>" }
-          ]` : `"wordDefinitions": []`}
-        },
-        {
-          "age": 4,
-          // Repeat for each age up to 12
-        }
-      ]
-      `;
-    
-    /* Bit better */
-    // const prompt = `
-    //     Based on the following news:
-    //     Title: "${title}"
-    //     Description: "${description}"
-
-    //     ${wordDefinitions.length > 0 ? `Words and definitions:
-    //     ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}` : ''}
-
-    //     Rewrite this news for the following age groups:
-    //     1. Ages 3-5
-    //     2. Ages 6-9
-    //     3. Ages 10-12
-
-    //     The rewritten content should:
-    //     1. Retain the original meaning of the news. Do not change its context or key ideas.
-    //     2. Include as much detail as possible from the input news in the description. Ensure the description is long, detailed, and comprehensive, using simplified language that matches the age group's comprehension level.
-    //     3. Avoid omitting any important content or details from the input news.
-    //     4. Use words and sentences that are appropriate and easy for each age group to understand.
-    //     5. Explain real-world terms or concepts simply, while keeping their original context.
-
-    //     For each age group, provide:
-    //     1. A title appropriate for this age group.
-    //     2. A detailed and comprehensive description that includes all the main points from the input news, rewritten for the specific age group.
-    //     3. Two questions relevant to the news.
-    //     ${wordDefinitions.length > 0 ? '4. Simplified definitions for the given words, suitable for the age group.' : ''}
-
-    //     Ensure the output includes:
-    //     - "wordDefinitions": [] if there are no words and definitions provided.
-
-    //     Respond in JSON format:
-    //     [
-    //       {
-    //         "age": [3, 4, 5],
-    //         "title": "<age-appropriate title>",
-    //         "description": "<detailed and comprehensive description>",
-    //         "questions": ["<question1>", "<question2>"],
-    //         ${wordDefinitions.length > 0 ? `"wordDefinitions": [
-    //           { "word": "<word>", "definition": "<age-appropriate definition>" }
-    //         ]` : `"wordDefinitions": []`}
-    //       },
-    //       {
-    //         "age": [6, 7, 8, 9],
-    //         "title": "<age-appropriate title>",
-    //         "description": "<detailed and comprehensive description>",
-    //         "questions": ["<question1>", "<question2>"],
-    //         ${wordDefinitions.length > 0 ? `"wordDefinitions": [
-    //           { "word": "<word>", "definition": "<age-appropriate definition>" }
-    //         ]` : `"wordDefinitions": []`}
-    //       },
-    //       {
-    //         "age": [10, 11, 12],
-    //         "title": "<age-appropriate title>",
-    //         "description": "<detailed and comprehensive description>",
-    //         "questions": ["<question1>", "<question2>"],
-    //         ${wordDefinitions.length > 0 ? `"wordDefinitions": [
-    //           { "word": "<word>", "definition": "<age-appropriate definition>" }
-    //         ]` : `"wordDefinitions": []`}
-    //       }
-    //     ]
-    //     `;
-
-    // console.log(prompt);
-
-    /* Okish but not para a */
     // const prompt = `
     //   Based on the following news:
     //   Title: "${title}"
     //   Description: "${description}"
-
+      
     //   ${wordDefinitions.length > 0 ? `Words and definitions:
     //   ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}` : ''}
-
-    //   Rewrite this news for the following age groups:
-    //   1. Ages 3-5
-    //   2. Ages 6-9
-    //   3. Ages 10-12
-
-    //   The rewritten content should:
+      
+    //   Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
     //   1. Retain the original meaning of the news. Do not change its context or key ideas.
-    //   2. **Include all details from the input news in the description. Do not summarize or shorten the news. Instead, rewrite it using simpler words and sentences suitable for the age group.**
-    //   3. Ensure the rewritten content is as long and detailed as the input news, while making it easy to understand for the respective age group.
-    //   4. Use words and sentences that are appropriate and easy for each age group to understand.
-    //   5. Explain real-world terms or concepts simply, while keeping their original context.
-
+    //   2. Use words and sentences that are appropriate and easy for each age group to understand.
+    //   3. Ensure that real-world terms or concepts are explained simply, while keeping their original context.
+      
     //   For each age group, provide:
-    //   1. A title appropriate for this age group.
-    //   2. A detailed and comprehensive description rewritten for the specific age group, matching the length and detail of the input news.
+    //   1. A title appropriate for this age.
+    //   2. A detailed description suitable for their comprehension level.
     //   3. Two questions relevant to the news.
     //   ${wordDefinitions.length > 0 ? '4. Simplified definitions for the given words, suitable for the age group.' : ''}
-
+      
     //   Ensure the output includes:
     //   - "wordDefinitions": [] if there are no words and definitions provided.
-
+      
     //   Respond in JSON format:
     //   [
     //     {
-    //       "age": [3, 4, 5],
+    //       "age": 3,
     //       "title": "<age-appropriate title>",
-    //       "description": "<detailed and comprehensive description>",
+    //       "description": "<age-appropriate description>",
     //       "questions": ["<question1>", "<question2>"],
     //       ${wordDefinitions.length > 0 ? `"wordDefinitions": [
     //         { "word": "<word>", "definition": "<age-appropriate definition>" }
     //       ]` : `"wordDefinitions": []`}
     //     },
     //     {
-    //       "age": [6, 7, 8, 9],
-    //       "title": "<age-appropriate title>",
-    //       "description": "<detailed and comprehensive description>",
-    //       "questions": ["<question1>", "<question2>"],
-    //       ${wordDefinitions.length > 0 ? `"wordDefinitions": [
-    //         { "word": "<word>", "definition": "<age-appropriate definition>" }
-    //       ]` : `"wordDefinitions": []`}
-    //     },
-    //     {
-    //       "age": [10, 11, 12],
-    //       "title": "<age-appropriate title>",
-    //       "description": "<detailed and comprehensive description>",
-    //       "questions": ["<question1>", "<question2>"],
-    //       ${wordDefinitions.length > 0 ? `"wordDefinitions": [
-    //         { "word": "<word>", "definition": "<age-appropriate definition>" }
-    //       ]` : `"wordDefinitions": []`}
+    //       "age": 4,
+    //       // Repeat for each age up to 12
     //     }
     //   ]
     //   `;
+
+    // const prompt = `
+    // Based on the following news:
+    // Title: "${title}"
+    // Description: "${description}"
+    
+    // ${wordDefinitions.length > 0 ? `Words and definitions:
+    // ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}` : ''}
+    
+    // Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
+    // 1. Retain the original meaning of the news. Do not change its context or key ideas.
+    // 2. Be tailored to the understanding level of each age group, using language and concepts they can easily grasp.
+    // 3. Gradually increase the content size and detail as the age increases:
+    //    - **Age 3**: A small story (8-10 lines or about 50-70 words), simple and repetitive language to emphasize key ideas. Use relatable and imaginative concepts.
+    //    - **Age 4**: A detailed story (10-15 lines or about 100 words) with slightly more complexity and details to hold their attention.
+    //    - **Ages 5 to 6**: A fully fleshed-out narrative (15-20 lines or about 150-200 words), with engaging and interactive elements such as rhetorical questions or brief descriptions of emotions and actions.
+    //    - **Ages 7 to 9**: 2-3 rich paragraphs (250-300 words) with detailed explanations, vivid descriptions, and age-appropriate vocabulary to expand their understanding and curiosity.
+    //    - **Ages 10 to 12**: 4-5 comprehensive paragraphs (500-600 words) with nuanced explanations, deeper context, and more mature language to enhance critical thinking and comprehension.
+    
+    // For each age group, provide:
+    // 1. A title appropriate for this age.
+    // 2. A description with length and complexity suitable for the age group as outlined above.
+    // 3. Two questions relevant to the news, designed to stimulate curiosity and understanding for that age.
+    // ${wordDefinitions.length > 0 ? '4. Simplified definitions for the given words, tailored to the age group.' : ''}
+    
+    // Ensure the output includes:
+    // - "wordDefinitions": [] if there are no words and definitions provided.
+    
+    // Respond in JSON format:
+    // [
+    //   {
+    //     "age": 3,
+    //     "title": "<simple and catchy title for 3-year-olds>",
+    //     "description": "<a small story of 8-10 lines or 50-70 words>",
+    //     "questions": ["<simple and imaginative question1>", "<simple and imaginative question2>"],
+    //     ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //       { "word": "<word>", "definition": "<simplified definition for 3-year-olds>" }
+    //     ]` : `"wordDefinitions": []`}
+    //   },
+    //   {
+    //     "age": 4,
+    //     "title": "<engaging and detailed title for 4-year-olds>",
+    //     "description": "<a detailed story of 10-15 lines or about 100 words>",
+    //     "questions": ["<engaging and relatable question1>", "<engaging and relatable question2>"],
+    //     ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //       { "word": "<word>", "definition": "<simplified definition for 4-year-olds>" }
+    //     ]` : `"wordDefinitions": []`}
+    //   },
+    //   {
+    //     "age": 5,
+    //     "title": "<title with more narrative for 5-year-olds>",
+    //     "description": "<a fleshed-out narrative of 15-20 lines or about 150-200 words>",
+    //     "questions": ["<interactive question1>", "<interactive question2>"],
+    //     ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //       { "word": "<word>", "definition": "<simplified definition for 5-year-olds>" }
+    //     ]` : `"wordDefinitions": []`}
+    //   },
+    //   {
+    //     "age": 6,
+    //     "title": "<slightly advanced title for 6-year-olds>",
+    //     "description": "<a fleshed-out narrative of 15-20 lines or about 150-200 words>",
+    //     "questions": ["<engaging question1>", "<engaging question2>"],
+    //     ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //       { "word": "<word>", "definition": "<simplified definition for 6-year-olds>" }
+    //     ]` : `"wordDefinitions": []`}
+    //   },
+    //   {
+    //     "age": 7,
+    //     "title": "<descriptive and engaging title for 7-year-olds>",
+    //     "description": "<2-3 paragraphs or about 250-300 words>",
+    //     "questions": ["<curiosity-driven question1>", "<curiosity-driven question2>"],
+    //     ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //       { "word": "<word>", "definition": "<simplified definition for 7-year-olds>" }
+    //     ]` : `"wordDefinitions": []`}
+    //   },
+    //   {
+    //     "age": 8,
+    //     "title": "<title with depth and engagement for 8-year-olds>",
+    //     "description": "<2-3 paragraphs or about 250-300 words with rich details>",
+    //     "questions": ["<insightful question1>", "<insightful question2>"],
+    //     ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //       { "word": "<word>", "definition": "<simplified definition for 8-year-olds>" }
+    //     ]` : `"wordDefinitions": []`}
+    //   },
+    //   {
+    //     "age": 9,
+    //     "title": "<elaborate title for 9-year-olds>",
+    //     "description": "<3 paragraphs or about 300-400 words with vivid and engaging explanations>",
+    //     "questions": ["<thought-provoking question1>", "<thought-provoking question2>"],
+    //     ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //       { "word": "<word>", "definition": "<simplified definition for 9-year-olds>" }
+    //     ]` : `"wordDefinitions": []`}
+    //   },
+    //   {
+    //     "age": 10,
+    //     "title": "<comprehensive title for 10-year-olds>",
+    //     "description": "<4 paragraphs or about 500 words with nuanced context>",
+    //     "questions": ["<reflective question1>", "<reflective question2>"],
+    //     ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //       { "word": "<word>", "definition": "<simplified definition for 10-year-olds>" }
+    //     ]` : `"wordDefinitions": []`}
+    //   },
+    //   {
+    //     "age": 11,
+    //     "title": "<detailed and engaging title for 11-year-olds>",
+    //     "description": "<4-5 paragraphs or about 500-600 words with in-depth details>",
+    //     "questions": ["<critical thinking question1>", "<critical thinking question2>"],
+    //     ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //       { "word": "<word>", "definition": "<simplified definition for 11-year-olds>" }
+    //     ]` : `"wordDefinitions": []`}
+    //   },
+    //   {
+    //     "age": 12,
+    //     "title": "<rich and comprehensive title for 12-year-olds>",
+    //     "description": "<5 paragraphs or about 600-700 words with mature language and context>",
+    //     "questions": ["<analytical question1>", "<analytical question2>"],
+    //     ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //       { "word": "<word>", "definition": "<simplified definition for 12-year-olds>" }
+    //     ]` : `"wordDefinitions": []`}
+    //   }
+    // ]
+    // `;
+
+    // const prompt = `
+    //   Based on the following news:
+    //   Title: "${title}"
+    //   Description: "${description}"
+      
+    //   ${wordDefinitions.length > 0 ? `Words and definitions:
+    //   ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}` : ''}
+      
+    //   Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
+    //   1. Retain the original meaning of the news. Do not change its context or key ideas.
+    //   2. Be tailored to the understanding level of each age group, using language and concepts they can easily grasp.
+    //   3. Gradually increase the content size and detail as the age increases:
+    //     - **Age 3**: A single small paragraph (50-70 words), with simple and repetitive language. Avoid using bullet points.
+    //     - **Age 4**: A slightly longer paragraph (75-100 words), adding a bit more context while keeping it simple.
+    //     - **Ages 5 to 6**: A detailed narrative (150-200 words), split into small paragraphs as needed.
+    //     - **Ages 7 to 9**: 2-3 rich paragraphs (250-300 words) with vivid descriptions and age-appropriate vocabulary.
+    //     - **Ages 10 to 12**: 4-5 comprehensive paragraphs (500-600 words) with nuanced explanations and deeper context.
+
+    //   For each age group, provide:
+    //   1. A title appropriate for this age.
+    //   2. A description formatted in **continuous paragraphs for younger ages** (3 and 4), and **with proper paragraph breaks** (using "\\n\\n") for older ages.
+    //   3. Two questions relevant to the news, designed to stimulate curiosity and understanding for that age.
+    //   ${wordDefinitions.length > 0 ? '4. Simplified definitions for the given words, tailored to the age group.' : ''}
+      
+    //   Ensure the output includes:
+    //   - "wordDefinitions": [] if there are no words and definitions provided.
+      
+    //   Respond in JSON format:
+    //   [
+    //     {
+    //       "age": 3,
+    //       "title": "<short title for 3-year-olds>",
+    //       "description": "This is a single small paragraph for 3-year-olds with simple language.",
+    //       "questions": ["<simple question1>", "<simple question2>"],
+    //       ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+    //         { "word": "<word>", "definition": "<simplified definition for 3-year-olds>" }
+    //       ]` : `"wordDefinitions": []`}
+    //     },
+    //     {
+    //       "age": 4,
+    //       // Repeat for each age up to 12, ensuring proper paragraph structure
+    //     }
+    //   ]
+    //   `;
+
+
+    const prompt = `
+    Based on the following news:
+    Title: "${title}"
+    Description: "${description}"
+    
+    ${wordDefinitions.length > 0 ? `Words and definitions:
+    ${wordDefinitions.map(({ word, definition }) => `- ${word}: ${definition}`).join('\n')}` : ''}
+    
+    Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
+    1. Retain the original meaning of the news. Do not change its context or key ideas.
+    2. Be tailored to the understanding level of each age group, using language and concepts they can easily grasp.
+    3. Gradually increase the detail and complexity as the age increases:
+       - **Age 3**: A single, small paragraph (50-70 words) with very simple and repetitive language. Avoid breaking into multiple paragraphs.
+       - **Age 4**: A slightly longer single paragraph (75-100 words), adding more context while keeping language simple.
+       - **Ages 5 to 6**: Expand into 1-2 short paragraphs (150-200 words), introducing additional details where relevant.
+       - **Ages 7 to 9**: Use 2-3 paragraphs (250-300 words), adding vivid explanations and age-appropriate vocabulary, only if needed based on the given news.
+       - **Ages 10 to 12**: Provide 3-5 paragraphs (up to 500-600 words) with deeper context, elaboration, and nuanced details only if the content allows it. Do not force additional paragraphs.
+
+    For each age group, provide:
+    1. A title appropriate for this age.
+    2. A detailed description suitable for their age's comprehension level. When giving multiple paragraphs, use **logical paragraph breaks** ("\\n\\n") to break the paragraphs so they are easily viewable.
+    3. Two questions relevant to the news, designed to stimulate curiosity and understanding for that age.
+    ${wordDefinitions.length > 0 ? '4. Simplified definitions for the given words, tailored to the age group.' : ''}
+    
+    Ensure the output includes:
+    - "wordDefinitions": [] if there are no words and definitions provided.
+    
+    Respond in JSON format:
+    [
+      {
+        "age": 3,
+        "title": "<short title for 3-year-olds>",
+        "description": "This is a single small paragraph for 3-year-olds with simple language.",
+        "questions": ["<simple question1>", "<simple question2>"],
+        ${wordDefinitions.length > 0 ? `"wordDefinitions": [
+          { "word": "<word>", "definition": "<simplified definition for 3-year-olds>" }
+        ]` : `"wordDefinitions": []`}
+      },
+      {
+        "age": 4,
+        // Repeat for each age up to 12, ensuring logical paragraph structure
+      }
+    ]
+    `;
+
+
+      /* --------------------------- */
+    
 
     /* final one */
     // const prompt = `
@@ -297,7 +388,7 @@ export async function POST(request) {
       {
           model: "gpt-4o-mini", 
           messages: [{ role: "user", content: prompt }],
-          max_tokens: 2500,
+          max_tokens: 3500,
       },
       {
           headers: {
@@ -420,7 +511,7 @@ export async function POST(request) {
   //     ]
   //   }
   // ]
-  // console.log("responseText", responseText)
+  console.log("responseText", responseText)
 
     let parsedData;
 
