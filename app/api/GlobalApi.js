@@ -102,6 +102,17 @@ const FetchNewsReports = (newsId) => {
   });
 };
 
+
+const DeleteNewsArticle = (id) => {
+  return axios.delete("/api/deleteNewsArticle", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    data: { id },
+  });
+};
+
+
 const FetchActivities = (age, type) => {
   return axios.get(`/api/fetchActivities`, {
     headers: {
@@ -167,6 +178,7 @@ export default {
   DeleteNewsCategory,
   FetchNews,
   FetchNewsReports,
+  DeleteNewsArticle,
 
   /* Learn */
   GetLearnSubjects,

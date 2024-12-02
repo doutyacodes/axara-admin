@@ -456,7 +456,7 @@ function AddNews() {
             </div>
 
             {/* Word Definitions Section */}
-            <div className="space-y-4 mt-6">
+            {/* <div className="space-y-4 mt-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Word Definitions</h3>
                 <Button
@@ -503,7 +503,7 @@ function AddNews() {
                   </div>
                 </Card>
               ))}
-            </div>
+            </div> */}
             <Button 
               type="submit" 
               disabled={isSubmitting}
