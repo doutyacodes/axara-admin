@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/utils";
 import { NEWS, NEWS_CATEGORIES } from "@/utils/schema";
 import { authenticate } from "@/lib/jwtMiddleware";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 export async function POST(req) {
   const authResult = await authenticate(req,true);
@@ -40,6 +40,7 @@ export async function POST(req) {
       .from(NEWS)
       .leftJoin(NEWS_CATEGORIES, eq(NEWS.news_category_id, NEWS_CATEGORIES.id)) // Join on category ID
       .where(eq(NEWS.age, age))
+      .orderBy(desc(NEWS.created_at)) // Order by `created_at` in descending order
       .execute();
 
     return NextResponse.json({
