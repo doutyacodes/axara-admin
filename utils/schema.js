@@ -1440,3 +1440,31 @@ export const Challenge_PEDOMETER = mysqlTable("challenge_pedometer", {
   steps: float("steps").notNull(), // Number of steps
   direction: varchar("direction", { length: 20 }).default(null), // Direction
 });
+
+export const USER_POINTS = mysqlTable("user_points", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: int("user_id").notNull(),  // User identifier
+  child_id: int("child_id").notNull(),  // Child identifier
+  points: int("points").default(0),  // Points earned by the user for a child
+  created_at: timestamp("created_at").defaultNow(),  // Timestamp for record
+});
+
+export const USER_CHALLENGE_POINTS = mysqlTable("user_challenge_points", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: int("user_id").notNull(),  // User identifier
+  child_id: int("child_id").notNull(),  // Child identifier
+  challenge_id: int("challenge_id").notNull(),
+  points: int("points").default(0),  // Points earned by the user for a child
+  created_at: timestamp("created_at").defaultNow(),  // Timestamp for record
+});
+
+
+export const QUIZ_SCORE = mysqlTable("quiz_score", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: int("user_id").notNull(),
+  child_id: int("child_id").notNull(),
+  challenge_id: int("challenge_id").notNull(), // Link to a specific challenge
+  score: decimal("score", { precision: 5, scale: 2 }).notNull(), // Allows 999.99 max
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
