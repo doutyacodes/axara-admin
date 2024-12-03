@@ -32,7 +32,7 @@ export async function POST(request) {
       })
       .where(eq(NEWS.id, id));
 
-    let fileName = image; // Default to the existing image name
+    let fileName = oldImage; // Default to the existing image name
 
     // Check if the image was edited
     if (isImageEdited) {
@@ -48,11 +48,22 @@ export async function POST(request) {
       const cPanelDirectory = '/home/devusr/public_html/testusr/images';
 
       // Delete the old image from cPanel directory if a new one is provided
-      await sftp.delete(`${cPanelDirectory}/${oldImage}`);
+      try {
+        // Attempt to delete the old image
+        await sftp.delete(`${cPanelDirectory}/${oldImage}`);
+        console.log(`Old image deleted successfully: ${oldImage}`);
+      } catch (error) {
+        // Handle the error if the file is not found or another issue occurs
+        if (error.code === 'ENOENT') {
+          console.log(`File not found: ${oldImage}. Proceeding without deletion.`);
+        } else {
+          console.error(`Error deleting the file: ${error.message}`);
+        }
+      }
 
-      // Define a unique name for the new image
-      const timestamp = Date.now();
-      fileName = `${timestamp}-${categoryId}-${title.replace(/\s+/g, '-')}.png`;
+      // // Define a unique name for the new image
+      // const timestamp = Date.now();
+      // fileName = `${timestamp}-${categoryId}-${title.replace(/\s+/g, '-')}.png`;
 
       const localFilePath = path.join(localTempDir, fileName);
 
@@ -75,14 +86,14 @@ export async function POST(request) {
       await sftp.end();
     }
 
-    // If the image was edited, update the image URL in the database
-    if (isImageEdited) {
-      await db.update(NEWS)
-        .set({
-          image_url: fileName,
-        })
-        .where(eq(NEWS.id, id));
-    }
+    // // If the image was edited, update the image URL in the database
+    // if (isImageEdited) {
+    //   await db.update(NEWS)
+    //     .set({
+    //       image_url: fileName,
+    //     })
+    //     .where(eq(NEWS.id, id));
+    // }
 
     return NextResponse.json(
       {
