@@ -71,6 +71,7 @@ export async function POST(request) {
         // summary,
         description,
         showOnTop,
+        main_news,
         questions,
         wordDefinitions,
       } = entry;
@@ -83,7 +84,8 @@ export async function POST(request) {
         image_url: `${fileName}`,
         description,
         age,
-        show_on_top: showOnTop,
+        show_on_top: main_news ? true :showOnTop,
+        main_news: main_news,
       });
 
       const newsId = newsRecord[0].insertId;

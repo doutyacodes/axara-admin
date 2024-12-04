@@ -118,6 +118,7 @@ const handleCategoryChange = (value) => {
           // summary: resultData.summary || '',
           description: resultData.description || '',
           showOnTop: data.originalData.showOnTop,
+          main_news: data.originalData.main_news,
           questions: resultData.questions?.map((q, idx) => ({ 
             id: idx + 1, 
             question: q 

@@ -39,6 +39,7 @@ function AddNews() {
       description: '',
       // age: '',
       showOnTop: false,
+      main_news: false,
       image: null
     });
   
@@ -187,6 +188,7 @@ function AddNews() {
           description: newsForm.description,
           // age: newsForm.age,
           showOnTop: newsForm.showOnTop,
+          main_news: newsForm.main_news,
           questions: questions.filter(q => q.question.trim()).map(q => q.question),
           wordDefinitions: wordDefinitions.filter(wd => 
                             wd.word.trim() && wd.definition.trim()
@@ -225,6 +227,7 @@ function AddNews() {
           description: '',
           // age: '',
           showOnTop: false,
+          main_news: false,
           image: null
         });
         setQuestions([{ id: 1, question: '' }]);
@@ -447,12 +450,22 @@ function AddNews() {
 
             {/* Show in Home Checkbox */}
             <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <Checkbox 
                 id="showOnTop"
                 checked={newsForm.showOnTop}
                 onCheckedChange={(checked) => setNewsForm({...newsForm, showOnTop: checked})}
               />
               <Label htmlFor="showOnTop">Show on Top</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="main_news"
+                checked={newsForm.main_news}
+                onCheckedChange={(checked) => setNewsForm({...newsForm, main_news: checked})}
+              />
+              <Label htmlFor="main_news">Main News</Label>
+            </div>
             </div>
 
             {/* Word Definitions Section */}
