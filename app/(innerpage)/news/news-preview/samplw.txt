@@ -42,7 +42,7 @@
         "title": "Sandeep Joins a New Team!",
         "summary": "Sandeep joined Team Congress and left Team BJP.\n",
         "description": "A leader named Sandeep used to be in Team BJP, but now he has joined Team Congress! Big leaders in Congress gave him warm hugs and a special welcome.\n\n\"I Want to Be with Nice People!\" Sandeep said he left his old team because he wants to be with people who spread kindness and love. He didn’t like how Team BJP was behaving.\n\nWhy Did Sandeep Switch? Sandeep felt sad because his old team didn’t listen to him or help him when he needed it. He thought they made too many deals that he didn’t like.\n\nElection Day Changed! There’s an election in Palakkad soon, but the date has moved from November 13 to November 20 because of a big festival. Let’s wait and see what happens next! 😊\n",
-        "showInHome": true,
+        "showOnTop": true,
         "wordDefinitions": [
             {
                 "id": 1,

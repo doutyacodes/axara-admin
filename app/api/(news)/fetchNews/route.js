@@ -33,7 +33,7 @@ export async function POST(req) {
         news_category_id: NEWS.news_category_id,
         image_url: NEWS.image_url, // URL of the featured image
         summary: NEWS.summary, // Brief summary, nullable
-        showInHome: NEWS.show_in_home,
+        showOnTop: NEWS.show_on_top,
         created_at: NEWS.created_at, // Timestamp for record creation
         updated_at: NEWS.updated_at,
       })

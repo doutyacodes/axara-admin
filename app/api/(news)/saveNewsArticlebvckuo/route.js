@@ -22,7 +22,7 @@ export async function POST(request) {
     summary,
     description,
     age,
-    showInHome,
+    showOnTop,
     questions,
     image,
     wordDefinitions,
@@ -64,7 +64,7 @@ export async function POST(request) {
       summary,
       description,
       age,
-      show_in_home: showInHome,
+      show_on_top: showOnTop,
     });
 
     const newsId = newsRecord[0].insertId

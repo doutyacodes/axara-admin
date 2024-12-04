@@ -117,7 +117,7 @@ const handleCategoryChange = (value) => {
           title: resultData.title || '',
           // summary: resultData.summary || '',
           description: resultData.description || '',
-          showInHome: data.originalData.showInHome,
+          showOnTop: data.originalData.showOnTop,
           questions: resultData.questions?.map((q, idx) => ({ 
             id: idx + 1, 
             question: q 
@@ -422,11 +422,11 @@ const handleCategoryChange = (value) => {
               {/* Show in Home Checkbox */}
               <div className="flex items-center space-x-2">
                 <Checkbox 
-                  id="showInHome"
-                  checked={formStates[selectedAge]?.showInHome}
-                  onCheckedChange={(checked) => updateFormState(selectedAge, 'showInHome', checked)}
+                  id="showOnTop"
+                  checked={formStates[selectedAge]?.showOnTop}
+                  onCheckedChange={(checked) => updateFormState(selectedAge, 'showOnTop', checked)}
                 />
-                <Label htmlFor="showInHome">Show in Home Page</Label>
+                <Label htmlFor="showOnTop">Show in Home Page</Label>
               </div>
 
               {/* Title Section */}

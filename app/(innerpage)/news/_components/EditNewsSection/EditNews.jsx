@@ -33,7 +33,7 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
       category: '',
       title: '',
       description: '',
-      showInHome: false,
+      showOnTop: false,
       image: null
     });
 
@@ -51,7 +51,7 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
     //         category: selectedNews.news_category_id?.toString() || '',
     //         title: selectedNews.title || '',
     //         description: selectedNews.description || '',
-    //         showInHome: selectedNews.showInHome || false,
+    //         showOnTop: selectedNews.showOnTop || false,
     //         image: imageUrl
     //       }));
       
@@ -64,7 +64,7 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
     //         category: selectedNews.news_category_id?.toString() || '',
     //         title: selectedNews.title || '',
     //         description: selectedNews.description || '',
-    //         showInHome: selectedNews.showInHome || false,
+    //         showOnTop: selectedNews.showOnTop || false,
     //         image: imageUrl
     //       });
     //     }
@@ -85,7 +85,7 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
             category: selectedNews.news_category_id?.toString() || '',
             title: selectedNews.title || '',
             description: selectedNews.description || '',
-            showInHome: selectedNews.showInHome || false,
+            showOnTop: selectedNews.showOnTop || false,
             image: imageUrl
           };
       
@@ -201,7 +201,7 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
           categoryId: newsForm.category,
           title: newsForm.title,
           description: newsForm.description,
-          showInHome: newsForm.showInHome,
+          showOnTop: newsForm.showOnTop,
           // Only send base64 image if it's been edited, otherwise send original image name
           image: isImageEdited ? base64Image : selectedNews.image_url,
           oldImage: selectedNews.image_url,
@@ -399,11 +399,11 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
                 {/* Show in Home Checkbox */}
                 <div className="flex items-center space-x-2">
                 <Checkbox 
-                    id="showInHome"
-                    checked={newsForm.showInHome}
-                    onCheckedChange={(checked) => setNewsForm({...newsForm, showInHome: checked})}
+                    id="showOnTop"
+                    checked={newsForm.showOnTop}
+                    onCheckedChange={(checked) => setNewsForm({...newsForm, showOnTop: checked})}
                 />
-                <Label htmlFor="showInHome">Show in Home Page</Label>
+                <Label htmlFor="showOnTop">Show in Home Page</Label>
                 </div>
                 <Button 
                 type="submit" 

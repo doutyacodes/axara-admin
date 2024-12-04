@@ -16,7 +16,7 @@ export async function POST(request) {
   const userData = authResult.decoded_Data;
   const userId = userData.id;
 
-  const { id, categoryId, title, description, showInHome, image, isImageEdited, oldImage } = await request.json();
+  const { id, categoryId, title, description, showOnTop, image, isImageEdited, oldImage } = await request.json();
 
   // Define the local temp directory dynamically based on platform
   const localTempDir = os.tmpdir();
@@ -28,7 +28,7 @@ export async function POST(request) {
         news_category_id: categoryId,
         title,
         description,
-        show_in_home: showInHome,
+        show_on_top: showOnTop,
       })
       .where(eq(NEWS.id, id));
 
