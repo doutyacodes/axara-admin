@@ -257,47 +257,47 @@ export async function POST(request) {
     const prompt = isInterview
       ? `
       Based on the following interview:
-      
+
       Title: "${title}"
-      
+
       Interviewer and Interviewee Dialogue:
       "${description}"
-      
-      Rewrite this interview in a way understandable for each age group (3 to 12 years old). The rewritten content should:
-      
-      1. Maintain the original interview format, keeping all questions, and answers intact.
-      2. Change the text to make it a simplified and age-appropriate for each specified age group.
-      3. Ensure the language and concepts used are easy for the specified age group to understand.
-      4. Present the interview in first person, retaining the structure of "<person1>: <some text>, <person2>: <some text>".
-      5. Two engaging questions to make the child think or talk about the interview.
 
-       Ensure the output includes:
-        - "wordDefinitions": Always include explanations for terms, ideas, or concepts in the rewritten description that might need clarification for that age group.
-      
+      Rewrite this interview in a way that is understandable for each age group (3 to 12 years old). The rewritten content should:
+
+      1. Maintain the original interview format, keeping all questions and answers intact.
+      2. Change the text to make it simplified and age-appropriate for each specified age group.
+      3. Ensure the language and concepts used are easy for the specified age group to understand.
+      4. Present the interview in first person, keeping the structure of "<person1>: <some text>, <person2>: <some text>".
+      5. Include two engaging questions to make the child think or talk about the interview.
+
       For each age group, provide:
+
       1. The entire interview text rewritten to be age-appropriate.
-      
-      Respond in JSON format:
+      2. Word definitions: Always include explanations for terms, ideas, or concepts in the rewritten description that might need clarification for that age group.
+
+      Respond in JSON format as shown below:
+
       [
         {
           "age": 3,
-           "title": "<title for 3-year-olds>",
-          "description": "<rewritten interview text for 3-year-olds>",
+          "title": "<title for 3-year-olds>",
+          "description": "<for 3-year-olds>",
           "questions": ["<question1>", "<question2>"],
-            "wordDefinitions": [
-              { "word": "<term>", "definition": "<explanation for 3-year-olds>" }
-            ]
+          "wordDefinitions": [
+            { "word": "<term>", "definition": "<explanation for 3-year-olds>" }
+          ]
         },
         {
           "age": 4,
-           "title": "<title for 3-year-olds>",
-          "description": "<rewritten interview text for 4-year-olds>"
+          "title": "<title for 4-year-olds>",
+          "description": "<for 4-year-olds>",
           "questions": ["<question1>", "<question2>"],
-            "wordDefinitions": [
-              { "word": "<term>", "definition": "<explanation for 4-year-olds>" }
-            ]
+          "wordDefinitions": [
+            { "word": "<term>", "definition": "<explanation for 4-year-olds>" }
+          ]
         },
-        // Repeat for each age up to 12, ensuring a clear, engaging tone appropriate for each.
+        // Repeat for each age group from 5 to 12, ensuring a clear, engaging tone appropriate for each.
       ]
       `
       : `

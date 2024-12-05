@@ -79,7 +79,7 @@ export async function POST(request) {
       
       // Save data in NEWS table
       const newsRecord = await db.insert(NEWS).values({
-        // news_category_id: 8,
+        news_category_id: 8,
         title,
         image_url: `${fileName}`,
         description,
