@@ -241,6 +241,41 @@ export async function POST(request) {
         ]
         `;
 
+      // const prompt = `
+      // Based on the following interview:
+      
+      // Title: "${title}"
+      
+      // Interviewer and Interviewee Dialogue:
+      // "${description}"
+      
+      // Rewrite this interview in a way understandable for each age group (3 to 12 years old). The rewritten content should:
+      
+      // 1. Maintain the original interview format, keeping all dialogues, questions, and answers intact.
+      // 2. Change the text to make it age-appropriate for each specified age group.
+      // 3. Ensure the language and concepts used are easy for the specified age group to understand.
+      // 4. Present the interview in first person, retaining the structure of "<person1>: <some text>, <person2>: <some text>".
+      
+      // For each age group, provide:
+      // 1. The entire interview text rewritten to be age-appropriate.
+      
+      // Respond in JSON format:
+      // [
+      //   {
+      //     "age": 3,
+      //      "title": "<title for 3-year-olds>",
+      //     "description": "<rewritten interview text for 3-year-olds>"
+      //   },
+      //   {
+      //     "age": 4,
+      //      "title": "<title for 3-year-olds>",
+      //     "description": "<rewritten interview text for 4-year-olds>"
+      //   },
+      //   // Repeat for each age group up to 12, ensuring a clear, engaging tone appropriate for each.
+      // ]
+      // `;
+      
+
     
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",

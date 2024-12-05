@@ -1321,9 +1321,9 @@ export const NEWS_CATEGORIES = mysqlTable("news_categories", {
 
 export const NEWS = mysqlTable("news", {
   id: int("id").primaryKey().autoincrement(),
-  news_category_id: int("news_category_id")
-    .notNull()
-    .references(() => NEWS_CATEGORIES.id), // Foreign key referencing NEWS_CATEGORIES table
+  // news_category_id: int("news_category_id")
+  //   .notNull()
+  //   .references(() => NEWS_CATEGORIES.id), 
   title: varchar("title", { length: 255 }).notNull(), // Title of the news article
   image_url: text("image_url").notNull(), // URL of the featured image
   summary: text("summary"), // Brief summary, nullable
@@ -1333,6 +1333,16 @@ export const NEWS = mysqlTable("news", {
   main_news: boolean("main_news").default(false),
   created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
+});
+
+export const NEWS_TO_CATEGORIES = mysqlTable("news_to_categories", {
+  id: int("id").primaryKey().autoincrement(),
+  news_id: int("news_id")
+    .notNull()
+    .references(() => NEWS.id, { onDelete: "cascade" }), // Foreign key referencing NEWS table
+  news_category_id: int("news_category_id")
+    .notNull()
+    .references(() => NEWS_CATEGORIES.id, { onDelete: "cascade" }), // Foreign key referencing NEWS_CATEGORIES table
 });
 
 export const NEWS_QUESTIONS = mysqlTable("news_questions", {

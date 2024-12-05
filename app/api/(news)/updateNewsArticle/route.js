@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import SFTPClient from 'ssh2-sftp-client';
-import { NEWS } from '@/utils/schema';
+import { NEWS, NEWS_TO_CATEGORIES } from '@/utils/schema';
 import { authenticate } from '@/lib/jwtMiddleware';
 import os from 'os';
 import { db } from '@/utils';
@@ -23,15 +23,30 @@ export async function POST(request) {
 
   try {
     // Update the news data in the database (always update fields regardless of image edit)
-    await db.update(NEWS)
+    // Step 1: Update the news fields in the NEWS table
+    await db
+      .update(NEWS)
       .set({
-        news_category_id: categoryId,
         title,
         description,
         show_on_top: showOnTop,
       })
       .where(eq(NEWS.id, id));
 
+    // Step 2: Remove existing category mappings for this news ID in NEWS_TO_CATEGORIES
+    await db
+      .delete(NEWS_TO_CATEGORIES)
+      .where(eq(NEWS_TO_CATEGORIES.news_id, id));
+
+    // Step 3: Insert new category mappings into NEWS_TO_CATEGORIES
+    if (Array.isArray(categoryId) && categoryId.length > 0) {
+      const newMappings = categoryId.map((catId) => ({
+        news_id: id,
+        news_category_id: catId,
+      }));
+
+      await db.insert(NEWS_TO_CATEGORIES).values(newMappings);
+    }
     let fileName = oldImage; // Default to the existing image name
 
     // Check if the image was edited

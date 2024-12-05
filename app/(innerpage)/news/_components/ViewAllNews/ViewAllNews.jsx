@@ -23,7 +23,8 @@ const truncateTitle = (title, length = 40) =>
 export default function ViewAllNews() {
   const [newsCategories, setNewsCategories] = useState([]);
   const [newsByCategory, setNewsByCategory] = useState({});
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  // const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showNews, setShowNews] = useState(false);
@@ -58,18 +59,18 @@ export default function ViewAllNews() {
     try {
       setIsLoading(true);
       const response = await GlobalApi.FetchNews({ age: selectedAge });
-      const categories = response.data.categories || [];
-      const news = response.data.news || [];
+      const { categories = [], news = [] } = response.data;
 
-      setNewsCategories([{ name: "All" }, ...categories]);
+      const allCategory = { id: "all", name: "All" };
+      setNewsCategories([allCategory, ...categories]);
 
+      // Group news by categories
       const groupedNews = categories.reduce((acc, category) => {
-        acc[category.name] = news.filter(
-          (item) => item.news_category_id === category.id
+        acc[category.name] = news.filter((item) =>
+          item.categoryIds.split(",").map(Number).includes(category.id)
         );
         return acc;
       }, {});
-
       groupedNews["All"] = news;
       setNewsByCategory(groupedNews);
       setSelectedCategory("All");
@@ -101,6 +102,20 @@ export default function ViewAllNews() {
       article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       article.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  function getCategoryNamesByIds(ids) {
+    // Handle case where ids is a single ID or an array of IDs
+    const idsArray = Array.isArray(ids) ? ids : [ids];
+    
+    // Get category names for the given IDs
+    const categoryNames = idsArray.map((id) => {
+      const category = newsCategories.find((cat) => cat.id === id);
+      return category ? category.name : null; // Return category name or null if not found
+    });
+  
+    // Filter out null values and join the category names with commas
+    return categoryNames.filter(name => name !== null).join(', ');
+  }
 
   const handleViewReports = (article) => {
     fetchNewsReports(article.id);
@@ -306,165 +321,95 @@ export default function ViewAllNews() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8 }}
               >
-                {filteredNews.map((article) => (
-                  // <motion.div
-                  //     key={article.id}
-                  //     className="bg-white shadow-md rounded-lg overflow-hidden relative group"
-                  //     onMouseEnter={() => setHoveredNewsId(article.id)}
-                  //     onMouseLeave={() => setHoveredNewsId(null)}
-                  //     >
-                  //     {/* Image */}
-                  //     <div className="h-48 w-full relative">
-                  //         <Image
-                  //         src={`https://wowfy.in/testusr/images/${article.image_url}`}
-                  //         alt={article.title}
-                  //         fill
-                  //         className="object-cover"
-                  //         />
+                {
+                  filteredNews.length > 0 ? (
+                    filteredNews.map((article) => (
+                      <motion.div
+                        key={article.id}
+                        className="bg-white shadow-md rounded-lg overflow-hidden relative group"
+                        onMouseEnter={() => setHoveredNewsId(article.id)}
+                        onMouseLeave={() => setHoveredNewsId(null)}
+                      >
+                        {/* Image */}
+                        <div className="h-56 w-full relative">
+                          <Image
+                            src={`https://wowfy.in/testusr/images/${article.image_url}`}
+                            alt={article.title}
+                            fill
+                            className="object-cover"
+                          />
+                
+                          {/* Hover Overlay */}
+                          {hoveredNewsId === article.id && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center space-y-4 z-10 p-4"
+                            >
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleViewNews(article)}
+                                className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
+                              >
+                                <Eye className="mr-2" /> 
+                                <span>View News</span>
+                              </motion.button>
+                              
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleViewReports(article)}
+                                className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
+                              >
+                                <FileText className="mr-2" /> 
+                                <span>View Reports</span>
+                              </motion.button>
+                              
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleEditNews(article)}
+                                className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
+                              >
+                                <Edit2 className="mr-2" /> 
+                                <span>Edit News</span>
+                              </motion.button>
+                
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleDeleteNews(article)}
+                                className="w-4/5 bg-white text-red-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-red-50 transition"
+                              >
+                                <Trash2 className="mr-2" /> 
+                                <span>Delete News</span>
+                              </motion.button>
+                            </motion.div>
+                          )}
+                        </div>
+                
+                        {/* Content */}
+                        <div className="p-4">
+                          <h3 className="text-lg font-medium text-gray-800 mb-2">
+                            {truncateTitle(article.title)}
+                          </h3>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">
+                              {formatDate(article.created_at)}
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  ) : (  
+                    <p className="text-center col-span-full text-gray-600">
+                      No news found.
+                    </p>
+                  )
+                }
 
-                  //         {/* Hover Overlay */}
-                  //         {/* <AnimatePresence> */}
-                  //             {hoveredNewsId === article.id && (
-                  //             <motion.div
-                  //                 initial={{ opacity: 0 }}
-                  //                 animate={{ opacity: 1 }}
-                  //                 exit={{ opacity: 0 }}
-                  //                 className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center space-y-4 z-10 p-4"
-                  //             >
-
-                  //                 <motion.button
-                  //                     whileHover={{ scale: 1.05 }}
-                  //                     whileTap={{ scale: 0.95 }}
-                  //                     onClick={() => handleViewNews(article)}
-                  //                     className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
-                  //                     >
-                  //                     {/* <Link href={`news/${selectedAge}/${article.id}`} className='flex items-center justify-center space-x-2'>
-                  //                     <Eye className="mr-2" /> 
-                  //                     <span>View News</span>
-                  //                     </Link> */}
-
-                  //                     <Eye className="mr-2" /> 
-                  //                     <span>View News</span>
-
-                  //                 </motion.button>
-                                  
-                  //                 <motion.button
-                  //                   whileHover={{ scale: 1.05 }}
-                  //                   whileTap={{ scale: 0.95 }}
-                  //                   onClick={() => handleViewReports(article)}
-                  //                   className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
-                  //                   >
-                  //                   <FileText className="mr-2" /> 
-                  //                   <span>View Reports</span>
-                  //                 </motion.button>
-                                  
-                  //                 <motion.button
-                  //                   whileHover={{ scale: 1.05 }}
-                  //                   whileTap={{ scale: 0.95 }}
-                  //                   onClick={() => handleEditNews(article)}
-                  //                   className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
-                  //                   >
-                  //                     {/* <Link href={`news/${selectedAge}/${article.id}`} className='flex items-center justify-center space-x-2'> */}
-                  //                     <Edit2 className="mr-2" /> 
-                  //                     <span>Edit News</span>
-                  //                     {/* </Link> */}
-                  //                 </motion.button>
-                  //             </motion.div>
-                  //             )}
-                  //         {/* </AnimatePresence> */}
-                  //     </div>
-
-                  //     {/* Content */}
-                  //     <div className="p-4">
-                  //         <h3 className="text-lg font-medium text-gray-800 mb-2">
-                  //         {truncateTitle(article.title)}
-                  //         </h3>
-                  //         <div className="flex justify-between items-center">
-                  //             <span className="text-sm text-gray-500">
-                  //                 {formatDate(article.created_at)}
-                  //             </span>
-                  //         </div>
-                  //     </div>
-                  // </motion.div>
-                  <motion.div
-                    key={article.id}
-                    className="bg-white shadow-md rounded-lg overflow-hidden relative group"
-                    onMouseEnter={() => setHoveredNewsId(article.id)}
-                    onMouseLeave={() => setHoveredNewsId(null)}
-                  >
-                    {/* Image */}
-                    <div className="h-56 w-full relative">
-                      <Image
-                        src={`https://wowfy.in/testusr/images/${article.image_url}`}
-                        alt={article.title}
-                        fill
-                        className="object-cover"
-                      />
-            
-                      {/* Hover Overlay */}
-                      {hoveredNewsId === article.id && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center space-y-4 z-10 p-4"
-                        >
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleViewNews(article)}
-                            className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
-                          >
-                            <Eye className="mr-2" /> 
-                            <span>View News</span>
-                          </motion.button>
-                          
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleViewReports(article)}
-                            className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
-                          >
-                            <FileText className="mr-2" /> 
-                            <span>View Reports</span>
-                          </motion.button>
-                          
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleEditNews(article)}
-                            className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
-                          >
-                            <Edit2 className="mr-2" /> 
-                            <span>Edit News</span>
-                          </motion.button>
-            
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleDeleteNews(article)}
-                            className="w-4/5 bg-white text-red-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-red-50 transition"
-                          >
-                            <Trash2 className="mr-2" /> 
-                            <span>Delete News</span>
-                          </motion.button>
-                        </motion.div>
-                      )}
-                    </div>
-            
-                    {/* Content */}
-                    <div className="p-4">
-                      <h3 className="text-lg font-medium text-gray-800 mb-2">
-                        {truncateTitle(article.title)}
-                      </h3>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500">
-                          {formatDate(article.created_at)}
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
               </motion.div>
             </>
         </div>

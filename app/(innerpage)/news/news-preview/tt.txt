@@ -1,250 +1,216 @@
-<p>
-<Card className="border-none shadow-lg">
-<CardContent>
-  <form onSubmit={handleSubmit} className="space-y-6">
-    {/* Error Alert */}
-    {errors.submit && (
-      <Alert variant="destructive">
-        <AlertDescription>{errors.submit}</AlertDescription>
-      </Alert>
-    )}
-    {/* Category Select */}
-    <div className="space-y-2">
-      <Label>Category</Label>
-      <Select
-        value={formStates[selectedAge]?.category}
-        // onValueChange={(value) => updateFormState(selectedAge, 'category', value)}
-        onValueChange={handleCategoryChange}
-      >
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {categories.map(cat => (
-            <SelectItem key={cat.id} value={cat.id.toString()}>
-              {cat.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+"use client"
 
-    {/* Show in Home Checkbox */}
-    <div className="flex items-center space-x-2">
-      <Checkbox 
-        id="showOnTop"
-        checked={formStates[selectedAge]?.showOnTop}
-        onCheckedChange={(checked) => updateFormState(selectedAge, 'showOnTop', checked)}
-      />
-      <Label htmlFor="showOnTop">Show in Home Page</Label>
-    </div>
+const ageOptions = Array.from({ length: 10 }, (_, i) => i + 3);
 
-    {/* Title Section */}
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <Label>Title</Label>
-        <div className="space-x-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleRevertToOriginal('title')}
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            Provided Data
-          </Button>
+function AddNews() {
+  const [selectedAge, setSelectedAge] = useState(3);
+  const [categories, setCategories] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [categoryLoading, setCategoryLoading] = useState(false);
+  const [formStates, setFormStates] = useState({});
+  // const { data } = useData();
+  const data = datas
+  const [base64Image, setBase64Image] = useState(data?.image || null);
+  const [imageData, setImageData] = useState(null);
+  const [fileName, setFileName] = useState(null)
+  const isFirstRender = useRef(true);
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleRevertToResult('title')}
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            Processed Result
-          </Button>
-        </div>
-      </div>
-      <Input
-        value={formStates[selectedAge]?.title || ''}
-        onChange={(e) => updateFormState(selectedAge, 'title', e.target.value)}
-        className={errors[`title-${selectedAge}`] ? 'border-red-500' : ''}
-      />
-      {errors[`title-${selectedAge}`] && (
-        <p className="text-red-500 text-sm">{errors[`title-${selectedAge}`]}</p>
-      )}
-    </div>
+  const router = useRouter();
 
-    {/* Similar sections for Summary, Description, Questions, and Word Definitions */}
-    {/* Description Section */}
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <Label>Description</Label>
-        <div className="space-x-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleRevertToOriginal('description')}
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            Provided Data
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleRevertToResult('description')}
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            Processed Result
-          </Button>
-        </div>
-      </div>
-      <textarea
-        value={formStates[selectedAge]?.description || ''}
-        onChange={(e) => updateFormState(selectedAge, 'description', e.target.value)}
-        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[200px] ${
-          errors[`description-${selectedAge}`] ? 'border-red-500' : 'border-gray-200'
-        }`}
-        placeholder="Enter description"
-      />
-      {errors[`description-${selectedAge}`] && (
-        <p className="text-red-500 text-sm">{errors[`description-${selectedAge}`]}</p>
-      )}
-    </div>
 
-    {/* Word Definitions Section */}
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Word Definitions</h3>
-        <div className="space-x-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleRevertToOriginal('wordDefinitions')}
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            Provided Data
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleRevertToResult('wordDefinitions')}
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            Processed Result
-          </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              const currentDefs = formStates[selectedAge]?.wordDefinitions || [];
-              updateFormState(selectedAge, 'wordDefinitions', [
-                ...currentDefs,
-                { id: Date.now(), word: '', definition: '' }
-              ]);
-            }}
-            variant="outline"
-            className="border-orange-500 text-orange-500 hover:bg-orange-50"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Definition
-          </Button>
-        </div>
-      </div>
+const handleCategoryChange = (value) => {
+  if (isFirstRender.current) {
+    isFirstRender.current = false;
+    return;
+  }
+  
+  ageOptions.forEach(age => {
+    updateFormState(age, 'category', value);
+  });
+};
+  
 
-      {formStates[selectedAge]?.wordDefinitions?.map((def, index) => (
-        <Card key={def.id} className="p-4 border border-gray-200">
+  useEffect(() => {
+    if (data) {
+      const initialStates = {};
+      const categoryId = data.originalData.categoryIds;      
+  
+      ageOptions.forEach(age => {
+        const resultData = data.results.find(r => r.age === age) || {};
+        initialStates[age] = {
+          category: categoryId, // Ensure category is set consistently
+          age: age,
+          title: resultData.title || '',
+          // summary: resultData.summary || '',
+          description: resultData.description || '',
+          showOnTop: data.originalData.showOnTop,
+          main_news: data.originalData.main_news,
+          questions: resultData.questions?.map((q, idx) => ({ 
+            id: idx + 1, 
+            question: q 
+          })) || [{ id: 1, question: '' }],
+          wordDefinitions: resultData.wordDefinitions?.map((wd, idx) => ({
+            id: idx + 1,
+            word: wd.word,
+            definition: wd.definition
+          })) || [{ id: 1, word: '', definition: '' }],
+        };
+      });
+      setFormStates(initialStates);
+      setImageData(data.image);
+  
+    }
+  }, [data]);
+  console.log("formStates:", formStates);
 
-        </Card>
-      ))}
-    </div>
+  useEffect(()=>{
+    const category = formStates[selectedAge]?.category
+    const title = formStates[selectedAge]?.title
+    if(category && title){
+      const fileName = `${Date.now()}-${category}-${title.replace(/\s+/g, '-')}.png`;
+      setFileName(fileName)
+    }
+  },[formStates])
 
-    {/* Questions Section */}
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Questions</h3>
-        <div className="space-x-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleRevertToResult('questions')}
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            Load Processed Result Questions
-          </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              const currentQuestions = formStates[selectedAge]?.questions || [];
-              updateFormState(selectedAge, 'questions', [
-                ...currentQuestions,
-                { id: Date.now(), question: '' }
-              ]);
-            }}
-            variant="outline"
-            className="border-orange-500 text-orange-500 hover:bg-orange-50"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Question
-          </Button>
-        </div>
-      </div>
+  const getNewsCategories = async () => {
+    setCategoryLoading(true);
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        setCategoryLoading(false);
+        return;
+      }
+      const response = await GlobalApi.GetNewsCategories(token);
+      if (response.status === 200) {
+        const fetchedCategories = response.data.categories;
+        setCategories(fetchedCategories);
+        
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setCategoryLoading(false);
+    }
+  };
 
-      {formStates[selectedAge]?.questions?.map((q, index) => (
-        <Card key={q.id} className={`p-4 border ${
-          errors[`questions-${selectedAge}`] ? 'border-red-500' : 'border-gray-200'
-        }`}>
-          <div className="flex justify-between items-start mb-4">
-            <h4 className="font-medium">Question {index + 1}</h4>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                const newQuestions = formStates[selectedAge].questions.filter(question => question.id !== q.id);
-                updateFormState(selectedAge, 'questions', newQuestions);
-              }}
-              className="text-gray-500 hover:text-red-500"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
+  console.log("categories", categories)
 
-          <Input
-            value={q.question}
-            onChange={(e) => {
-              const newQuestions = formStates[selectedAge].questions.map(question =>
-                question.id === q.id ? { ...question, question: e.target.value } : question
-              );
-              updateFormState(selectedAge, 'questions', newQuestions);
-            }}
-            placeholder="Enter your question"
-            className="w-full"
-          />
-        </Card>
-      ))}
-      {errors[`questions-${selectedAge}`] && (
-        <p className="text-red-500 text-sm">{errors[`questions-${selectedAge}`]}</p>
-      )}
-    </div>
+  useEffect(() => {
+    // if(selectedAge){
+      getNewsCategories();
+    // }
+  }, [data]);
 
-    <Button 
-      type="submit" 
-      disabled={isSubmitting}
-      className="w-full bg-orange-500 hover:bg-orange-600"
-    >
-      {isSubmitting ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Updating...
-        </>
-      ) : (
-        'Update Article'
-      )}
-    </Button>
-  </form>
-</CardContent>
-</Card></p>
+  const updateFormState = (age, field, value) => {
+    setFormStates(prev => ({
+      ...prev,
+      [age]: {
+        ...prev[age],
+        [field]: value
+      }
+    }));
+  };
+
+
+
+  const handleCategoryToggle = (categoryId) => {
+    setNewsForm(prev => {
+      const currentCategories = prev.categories;
+      const isSelected = currentCategories.includes(categoryId);
+      
+      // If already selected, remove. If not, add.
+      const updatedCategories = isSelected 
+        ? currentCategories.filter(id => id !== categoryId)
+        : [...currentCategories, categoryId];
+      
+      return {
+        ...prev,
+        categories: updatedCategories
+      };
+    });
+  };
+
+
+  return (
+    <>
+
+      {
+        (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          {/* Main Form */}
+          <Card className="border-none shadow-lg w-full max-w-full mx-auto px-2 md:px-6">
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+                {/* Error Alert */}
+                {errors.submit && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{errors.submit}</AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Categories Multi-Select */}
+              <div className="space-y-2">
+                <Label>Categories*</Label>
+                <div className="border rounded-lg p-4">
+                  {/* <div className="mb-2">
+                    <Input
+                      placeholder="Search categories..."
+                      value={categorySearchTerm}
+                      onChange={(e) => setCategorySearchTerm(e.target.value)}
+                      className="border-gray-200"
+                    />
+                  </div> */}
+                  
+                  {categoryLoading ? (
+                    <div className="flex justify-center">
+                      <Loader2 className="animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {categories.map(cat => (
+                        <div 
+                          key={cat.id} 
+                          className={`
+                            flex items-center space-x-2 p-2 border rounded-lg cursor-pointer 
+                            ${formStates.category.includes(cat.id) 
+                              ? 'bg-orange-100 border-orange-500' 
+                              : 'hover:bg-gray-100'}
+                          `}
+                          onClick={() => handleCategoryToggle(cat.id)}
+                        >
+                          {formStates.category.includes(cat.id) && (
+                            <Check className="h-5 w-5 text-orange-500" />
+                          )}
+                          <span>{cat.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {errors.categories && <p className="text-sm text-red-500">{errors.categories}</p>}
+              </div>
+
+              
+
+
+
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full bg-orange-500 hover:bg-orange-600"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Article'
+                  )}
+                </Button>
+              </form>
+            </CardCo

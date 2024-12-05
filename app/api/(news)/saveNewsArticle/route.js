@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import SFTPClient from 'ssh2-sftp-client';
-import { NEWS, NEWS_QUESTIONS, WORDS_MEANINGS } from '@/utils/schema';
+import { NEWS, NEWS_CATEGORIES, NEWS_QUESTIONS, NEWS_TO_CATEGORIES, WORDS_MEANINGS } from '@/utils/schema';
 import { authenticate } from '@/lib/jwtMiddleware';
 import os from 'os';
 import { db } from '@/utils';
@@ -79,7 +79,7 @@ export async function POST(request) {
       
       // Save data in NEWS table
       const newsRecord = await db.insert(NEWS).values({
-        news_category_id: category,
+        // news_category_id: 8,
         title,
         image_url: `${fileName}`,
         description,
@@ -90,6 +90,18 @@ export async function POST(request) {
 
       const newsId = newsRecord[0].insertId;
       console.log("newsId", newsId);
+
+      // Save each category ID in the NEWS_CATEGORIES table
+      if (Array.isArray(category) && category.length > 0) {
+        const categoryRecords = category.map((categoryId) => ({
+          news_id: newsId,
+          news_category_id: categoryId,
+        }));
+
+        await db.insert(NEWS_TO_CATEGORIES).values(categoryRecords);
+
+        console.log("logging 3: Saved categories for newsId:", newsId);
+      }
 
       console.log("questions", questions);
       

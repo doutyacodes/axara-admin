@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Upload, Loader2 } from 'lucide-react';
+import { Plus, X, Upload, Loader2, Check } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ function AddNews() {
     const { setDataFromPage } = useData(); 
 
     const [newsForm, setNewsForm] = useState({
-      category: '',
+      categories: [], // Changed from single category to array
       title: '',
       // summary: '',
       description: '',
@@ -43,6 +43,7 @@ function AddNews() {
       image: null
     });
   
+    console.log('newsForm', newsForm)
 
     const getNewsCategories = async () => {
       setCategoryLoading(true);
@@ -73,17 +74,13 @@ function AddNews() {
     const validateForm = () => {
       const newErrors = {};
 
-      if (!newsForm.category) {
-        newErrors.category = 'Category is required';
+      if (newsForm.categories.length === 0) {
+        newErrors.categories = 'At least one category is required';
       }
 
       if (!newsForm.title?.trim()) {
         newErrors.title = 'Title is required';
       }
-
-      // if (!newsForm.summary?.trim()) {
-      //   newErrors.summary = 'Summary is required';
-      // }
 
       if (!newsForm.description?.trim()) {
         newErrors.description = 'Description is required';
@@ -96,31 +93,21 @@ function AddNews() {
       return Object.keys(newErrors).length === 0;
     };
 
-     // Word Definitions Handlers
-     const handleAddWordDefinition = () => {
-      setWordDefinitions([
-        ...wordDefinitions,
-        {
-          id: wordDefinitions.length + 1,
-          word: '',
-          definition: ''
-        }
-      ]);
-    };
-  
-    const handleRemoveWordDefinition = (definitionId) => {
-      if (wordDefinitions.length > 1) {
-        setWordDefinitions(wordDefinitions.filter(wd => wd.id !== definitionId));
-      }
-    };
-  
-    const handleWordDefinitionChange = (definitionId, field, value) => {
-      setWordDefinitions(wordDefinitions.map(wd => {
-        if (wd.id === definitionId) {
-          return { ...wd, [field]: value };
-        }
-        return wd;
-      }));
+    const handleCategoryToggle = (categoryId) => {
+      setNewsForm(prev => {
+        const currentCategories = prev.categories;
+        const isSelected = currentCategories.includes(categoryId);
+        
+        // If already selected, remove. If not, add.
+        const updatedCategories = isSelected 
+          ? currentCategories.filter(id => id !== categoryId)
+          : [...currentCategories, categoryId];
+        
+        return {
+          ...prev,
+          categories: updatedCategories
+        };
+      });
     };
   
     const handleNewsImage = (event) => {
@@ -131,16 +118,6 @@ function AddNews() {
         const newErrors = { ...errors };
         delete newErrors.image;
         setErrors(newErrors);
-
-          // Validate file type
-          // const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-          // if (!validTypes.includes(selectedFile.type)) {
-          //   setErrors({
-          //     ...errors,
-          //     image: 'Only JPG, JPEG, and PNG files are allowed'
-          //   });
-          //   return;
-          // }
 
           // Validate file size (10MB max)
           if (selectedFile.size > 10 * 1024 * 1024) {
@@ -182,11 +159,9 @@ function AddNews() {
 
       try {
         const body = {
-          categoryId: newsForm.category,
+          categoryIds: newsForm.categories, // Send array of category IDs
           title: newsForm.title,
-          // summary: newsForm.summary,
           description: newsForm.description,
-          // age: newsForm.age,
           showOnTop: newsForm.showOnTop,
           main_news: newsForm.main_news,
           questions: questions.filter(q => q.question.trim()).map(q => q.question),
@@ -211,17 +186,12 @@ function AddNews() {
           console.log("not ok")
           throw new Error('Failed to submit article');
         }
-        // console.log()
         const data = await response.json();
         const payload = { ...data, image: base64Image }; // Include the image in the payload
         setDataFromPage(payload);
         router.push('/news/news-preview');
-        // const serializedData = encodeURIComponent(JSON.stringify(payload));
-        // console.log("pusgh ok")
-        // router.push(`/news-preview?data=${serializedData}`);
-        // Reset form on success
         setNewsForm({
-          category: '',
+          categories: [],
           title: '',
           // summary: '',
           description: '',
@@ -249,7 +219,9 @@ function AddNews() {
     const filteredDropdownCategories = categories.filter(cat =>
       cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
     );
-  
+
+    
+    console.log("filteredDropdownCategories", filteredDropdownCategories)
   return (
     <>
       <Toaster />
@@ -278,7 +250,7 @@ function AddNews() {
             )}
 
             {/* Category Select with Search */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="category">Category*</Label>
               <Select
                 value={newsForm.category}
@@ -319,6 +291,48 @@ function AddNews() {
                 </SelectContent>
               </Select>
               {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
+            </div> */}
+
+             {/* Categories Multi-Select */}
+             <div className="space-y-2">
+              <Label>Categories*</Label>
+              <div className="border rounded-lg p-4">
+                <div className="mb-2">
+                  <Input
+                    placeholder="Search categories..."
+                    value={categorySearchTerm}
+                    onChange={(e) => setCategorySearchTerm(e.target.value)}
+                    className="border-gray-200"
+                  />
+                </div>
+                
+                {categoryLoading ? (
+                  <div className="flex justify-center">
+                    <Loader2 className="animate-spin" />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {filteredDropdownCategories.map(cat => (
+                      <div 
+                        key={cat.id} 
+                        className={`
+                          flex items-center space-x-2 p-2 border rounded-lg cursor-pointer 
+                          ${newsForm.categories.includes(cat.id) 
+                            ? 'bg-orange-100 border-orange-500' 
+                            : 'hover:bg-gray-100'}
+                        `}
+                        onClick={() => handleCategoryToggle(cat.id)}
+                      >
+                        {newsForm.categories.includes(cat.id) && (
+                          <Check className="h-5 w-5 text-orange-500" />
+                        )}
+                        <span>{cat.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {errors.categories && <p className="text-sm text-red-500">{errors.categories}</p>}
             </div>
 
             {/* Image Upload */}
@@ -381,29 +395,7 @@ function AddNews() {
               {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
             </div>
 
-            {/* Summary */}
-            {/* <div className="space-y-2">
-              <Label htmlFor="summary">Summary*</Label>
-              <textarea 
-                id="summary"
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[100px] ${
-                  errors.summary ? 'border-red-500' : 'border-gray-200'
-                }`}
-                value={newsForm.summary}
-                onChange={(e) => {
-                  setNewsForm({...newsForm, summary: e.target.value});
-                  if (e.target.value.trim()) {
-                    const newErrors = { ...errors };
-                    delete newErrors.summary;
-                    setErrors(newErrors);
-                  }
-                }}
-                placeholder="Brief summary of the article"
-              />
-              {errors.summary && <p className="text-sm text-red-500">{errors.summary}</p>}
-            </div> */}
-
-            {/* Description */}
+           {/* Description */}
             <div className="space-y-2">
               <Label htmlFor="description">Description*</Label>
               <textarea 
@@ -425,29 +417,6 @@ function AddNews() {
               {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
             </div>
 
-            {/* Age Input */}
-            {/* <div className="space-y-2">
-              <Label htmlFor="age">Age* (3-12 years)</Label>
-              <Input 
-                id="age"
-                type="number"
-                min="3"
-                max="12"
-                value={newsForm.age}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value) || '';
-                  setNewsForm({...newsForm, age: value});
-                  if (value >= 3 && value <= 12) {
-                    const newErrors = { ...errors };
-                    delete newErrors.age;
-                    setErrors(newErrors);
-                  }
-                }}
-                className={`border-gray-200 ${errors.age ? 'border-red-500' : ''}`}
-              />
-              {errors.age && <p className="text-sm text-red-500">{errors.age}</p>}
-            </div> */}
-
             {/* Show in Home Checkbox */}
             <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-2">
@@ -468,55 +437,6 @@ function AddNews() {
             </div>
             </div>
 
-            {/* Word Definitions Section */}
-            {/* <div className="space-y-4 mt-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Word Definitions</h3>
-                <Button
-                  type="button"
-                  onClick={handleAddWordDefinition}
-                  variant="outline"
-                  className="border-orange-500 text-orange-500 hover:bg-orange-50"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Word
-                </Button>
-              </div>
-
-              {wordDefinitions.map((def, index) => (
-                <Card key={def.id} className="p-4 border border-gray-200">
-                  <div className="flex justify-between items-start mb-4">
-                    <h4 className="font-medium">Word {index + 1}</h4>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => handleRemoveWordDefinition(def.id)}
-                      className="text-gray-500 hover:text-red-500"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Word</Label>
-                    <Input
-                      value={def.word}
-                      onChange={(e) => handleWordDefinitionChange(def.id, 'word', e.target.value)}
-                      placeholder="Enter word"
-                      className="border-gray-200"
-                    />
-                    
-                    <Label className="mt-2">Definition</Label>
-                    <textarea
-                      value={def.definition}
-                      onChange={(e) => handleWordDefinitionChange(def.id, 'definition', e.target.value)}
-                      placeholder="Enter word definition"
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[100px] border-gray-200"
-                    />
-                  </div>
-                </Card>
-              ))}
-            </div> */}
             <Button 
               type="submit" 
               disabled={isSubmitting}

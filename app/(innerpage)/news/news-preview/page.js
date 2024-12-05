@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, Upload, Loader2, FileText, Zap } from 'lucide-react';
+import { Plus, X, Upload, Loader2, FileText, Zap, Check } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -51,7 +51,7 @@ function AddNews() {
 
   const router = useRouter();
 
-  // console.log("data", data)
+  console.log("data", data)
   const handleRevertToResult = (field) => {
     const resultData = data.results.find(r => r.age === selectedAge);
     if (resultData) {
@@ -92,22 +92,11 @@ function AddNews() {
     }
   };
 
-const handleCategoryChange = (value) => {
-  if (isFirstRender.current) {
-    isFirstRender.current = false;
-    return;
-  }
-  
-  ageOptions.forEach(age => {
-    updateFormState(age, 'category', value);
-  });
-};
-  
 
   useEffect(() => {
     if (data) {
       const initialStates = {};
-      const categoryId = data.originalData.categoryId;      
+      const categoryId = data.originalData.categoryIds;      
   
       ageOptions.forEach(age => {
         const resultData = data.results.find(r => r.age === age) || {};
@@ -135,7 +124,7 @@ const handleCategoryChange = (value) => {
   
     }
   }, [data]);
-  // console.log("formStates:", formStates);
+  console.log("formStates:", formStates);
 
   useEffect(()=>{
     const category = formStates[selectedAge]?.category
@@ -184,6 +173,8 @@ const handleCategoryChange = (value) => {
     }
   };
 
+  console.log("categories", categories)
+
   useEffect(() => {
     // if(selectedAge){
       getNewsCategories();
@@ -229,59 +220,51 @@ const handleCategoryChange = (value) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!validateForm()) {
-  //     toast.error('Please fill in all required fields for all age groups');
-  //     return;
-  //   }
-  //   setIsSubmitting(true);
-  //   try {
-  //     const payload = {
-  //       result: formStates,
-  //       imageData,
-  //       fileName,
-  //     };
+  // const handleCategoryToggle = (age, categoryId) => {
+  //   setFormStates(prev => {
+  //     const currentCategories = prev[age]?.category || [];
+  //     const isSelected = currentCategories.includes(categoryId);
       
-  //     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  //     // If already selected, remove. If not, add.
+  //     const updatedCategories = isSelected 
+  //       ? currentCategories.filter(id => id !== categoryId)
+  //       : [...currentCategories, categoryId];
       
-  //     const response = await fetch("/api/saveNewsArticle", {
-  //       method: "POST",
-  //       headers: { 
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`, // Add token to headers if needed
-  //       },
-  //       body: JSON.stringify(payload),
-  //     });
-
-  //     if (!response.ok) {
-  //       // throw new Error('Failed to submit article');
-  //       const errorData = await response.json(); // Parse response body for detailed error
-  //       if (response.status === 400 && errorData.duplicateAges && errorData.duplicateWords) {
-  //         const duplicateAges = errorData.duplicateAges.join(', ');
-  //         const duplicateWords = errorData.duplicateWords.join(', ');
-  //         setErrors({
-  //           ...errors,
-  //           submit: `Word Definitions are already present for the given ages and Words Ages: ${duplicateAges}, Words: ${duplicateWords}.
-  //             Please Remove them and try submitting again`
-  //         });
+  //     return {
+  //       ...prev,
+  //       [age]: {
+  //         ...prev[age],
+  //         category: updatedCategories
   //       }
-  //       throw new Error('Failed to submit article');
-  //     }
-  //     // Reset form on success
-  //     toast.success('News Added Successfully')
-  //     router.push('/news')
-  //   } catch (error) {
-  //     let errorMessage = 'Failed to submit article. Please try again.';
-  //     if (error.message.includes('Duplicate entries detected')) {
-  //       errorMessage = error.message;
-  //     }
-  //     console.error(error)
-  //     toast.error('Failed to submit article. Please try again.')
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
+  //     };
+  //   });
   // };
+
+  const handleCategoryToggle = (categoryId) => {
+    setFormStates(prev => {
+      const updatedFormStates = {};
+      
+      ageOptions.forEach(age => {
+        const currentCategories = prev[age]?.category || [];
+        const isSelected = currentCategories.includes(categoryId);
+        
+        // If already selected, remove. If not, add.
+        const updatedCategories = isSelected 
+          ? currentCategories.filter(id => id !== categoryId)
+          : [...currentCategories, categoryId];
+        
+        updatedFormStates[age] = {
+          ...prev[age],
+          category: updatedCategories
+        };
+      });
+      
+      return {
+        ...prev,
+        ...updatedFormStates
+      };
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -348,556 +331,477 @@ const handleCategoryChange = (value) => {
           </div>
         </div>
       )}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Image Section */}
-        <div className="mb-8 relative">
-          {
-            // base64Image && (
-              <img 
-              src={base64Image} 
-              alt="Article" 
-              className="w-full h-96 object-cover rounded-lg cursor-pointer"
+      {
+        (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Image Section */}
+          <div className="mb-8 relative">
+            {
+              // base64Image && (
+                <img 
+                src={base64Image} 
+                alt="Article" 
+                className="w-full h-96 object-cover rounded-lg cursor-pointer"
+                onClick={() => setShowImageDialog(true)}
+              />
+              // )
+            }
+            <Button
+              className="absolute bottom-4 right-4"
               onClick={() => setShowImageDialog(true)}
-            />
-            // )
-          }
-          <Button
-            className="absolute bottom-4 right-4"
-            onClick={() => setShowImageDialog(true)}
-          >
-            Change Image
-          </Button>
-        </div>
+            >
+              Change Image
+            </Button>
+          </div>
 
-        {/* Age Selector */}
-        <div className="mb-6">
-          <Label>Select Age Group</Label>
-          <Select
-            value={selectedAge.toString()}
-            onValueChange={(value) => setSelectedAge(parseInt(value))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ageOptions.map(age => (
-                <SelectItem key={age} value={age.toString()}>
-                  Age {age}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Main Form */}
-        <Card className="border-none shadow-lg w-full max-w-full mx-auto px-2 md:px-6">
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-              {/* Error Alert */}
-              {errors.submit && (
-                <Alert variant="destructive">
-                  <AlertDescription>{errors.submit}</AlertDescription>
-                </Alert>
-              )}
-
-              {/* Category Select */}
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Category</h3>
-                <Select
-                  value={formStates[selectedAge]?.category}
-                  onValueChange={handleCategoryChange}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id.toString()}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Show in Home Checkbox */}
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="showOnTop"
-                  checked={formStates[selectedAge]?.showOnTop}
-                  onCheckedChange={(checked) => updateFormState(selectedAge, 'showOnTop', checked)}
-                />
-                <Label htmlFor="showOnTop">Show in Home Page</Label>
-              </div>
-
-              {/* Title Section */}
-              <div className="space-y-2">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
-                  <h3 className="text-lg font-semibold">Title</h3>
-                  <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToOriginal('title')}
-                      className="w-full md:w-auto"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Provided Data
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToResult('title')}
-                      className="w-full md:w-auto"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      Processed Result
-                    </Button>
-                  </div>
-                </div>
-                <Input
-                  value={formStates[selectedAge]?.title || ''}
-                  onChange={(e) => updateFormState(selectedAge, 'title', e.target.value)}
-                  className={`w-full ${errors[`title-${selectedAge}`] ? 'border-red-500' : ''}`}
-                />
-                {errors[`title-${selectedAge}`] && (
-                  <p className="text-red-500 text-sm">{errors[`title-${selectedAge}`]}</p>
-                )}
-              </div>
-
-              {/* Description Section */}
-              <div className="space-y-2">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
-                   <h3 className="text-lg font-semibold">Description</h3>
-                  <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToOriginal('description')}
-                      className="w-full md:w-auto"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Provided Data
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToResult('description')}
-                      className="w-full md:w-auto"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      Processed Result
-                    </Button>
-                  </div>
-                </div>
-                <textarea
-                  value={formStates[selectedAge]?.description || ''}
-                  onChange={(e) => updateFormState(selectedAge, 'description', e.target.value)}
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[150px] md:min-h-[200px] ${
-                    errors[`description-${selectedAge}`] ? 'border-red-500' : 'border-gray-200'
-                  }`}
-                  placeholder="Enter description"
-                />
-                {errors[`description-${selectedAge}`] && (
-                  <p className="text-red-500 text-sm">{errors[`description-${selectedAge}`]}</p>
-                )}
-              </div>
-
-              {/* Word Definitions Section */}
-              {/* <div className="space-y-4">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
-                  <h3 className="text-lg font-semibold">Word Definitions</h3>
-                  <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToOriginal('wordDefinitions')}
-                      className="w-full md:w-auto"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Provided Data
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToResult('wordDefinitions')}
-                      className="w-full md:w-auto"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      Processed Result
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        const currentDefs = formStates[selectedAge]?.wordDefinitions || [];
-                        updateFormState(selectedAge, 'wordDefinitions', [
-                          ...currentDefs,
-                          { id: Date.now(), word: '', definition: '' }
-                        ]);
-                      }}
-                      variant="outline"
-                      className="w-full md:w-auto border-orange-500 text-orange-500 hover:bg-orange-50"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Definition
-                    </Button>
-                  </div>
-                </div>
-
-                {formStates[selectedAge]?.wordDefinitions?.map((def, index) => (
-                  <Card key={def.id} className="p-4 border border-gray-200">
-                        <div className="flex justify-between items-start mb-4">
-                            <h4 className="font-medium">Definition {index + 1}</h4>
-                            <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => {
-                                const newDefs = formStates[selectedAge].wordDefinitions.filter(d => d.id !== def.id);
-                                updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                            }}
-                            className="text-gray-500 hover:text-red-500"
-                            >
-                            <X className="w-4 h-4" />
-                            </Button>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                            <Label>Word</Label>
-                            <Input
-                                value={def.word}
-                                onChange={(e) => {
-                                const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
-                                    d.id === def.id ? { ...d, word: e.target.value } : d
-                                );
-                                updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                                }}
-                                className="mt-1"
-                                placeholder="Enter word"
-                            />
-                            </div>
-
-                            <div>
-                            <Label>Definition</Label>
-                            <textarea
-                                value={def.definition}
-                                onChange={(e) => {
-                                const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
-                                    d.id === def.id ? { ...d, definition: e.target.value } : d
-                                );
-                                updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                                }}
-                                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[100px] mt-1"
-                                placeholder="Enter definition"
-                            />
-                            </div>
-                        </div>          
-                    </Card>
+          {/* Age Selector */}
+          <div className="mb-6">
+            <Label>Select Age Group</Label>
+            <Select
+              value={selectedAge.toString()}
+              onValueChange={(value) => setSelectedAge(parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ageOptions.map(age => (
+                  <SelectItem key={age} value={age.toString()}>
+                    Age {age}
+                  </SelectItem>
                 ))}
-              </div> */}
+              </SelectContent>
+            </Select>
+          </div>
 
-              {/* Word Definitions Section */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Word Definitions</h3>
-                  <div className="flex space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToResult('wordDefinitions')}
-                      className="border-orange-500 text-orange-500"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      Processed Result
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        const currentDefs = formStates[selectedAge]?.wordDefinitions || [];
-                        updateFormState(selectedAge, 'wordDefinitions', [
-                          ...currentDefs,
-                          { id: Date.now(), word: '', definition: '' }
-                        ]);
-                      }}
-                      variant="outline"
-                      className="border-orange-500 text-orange-500"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Definition
-                    </Button>
-                  </div>
-                </div>
+          {/* Main Form */}
+          <Card className="border-none shadow-lg w-full max-w-full mx-auto px-2 md:px-6">
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+                {/* Error Alert */}
+                {errors.submit && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{errors.submit}</AlertDescription>
+                  </Alert>
+                )}
 
-                <div className="space-y-4 max-h-[500px] overflow-y-auto">
-                  {formStates[selectedAge]?.wordDefinitions?.map((def, index) => (
-                    <Accordion 
-                      key={def.id} 
-                      type="single" 
-                      collapsible 
-                      className="border-2 border-gray-200 rounded-lg transition-colors"
-                    >
-                      <AccordionItem value={`item-${def.id}`}>
-                        <AccordionTrigger className="px-4 py-2">
-                          Definition {index + 1}
-                        </AccordionTrigger>
-                        <AccordionContent className="p-4">
-                          <div className="space-y-4">
-                            <div>
-                              <Label className="">Word</Label>
-                              <Input
-                                value={def.word}
-                                onChange={(e) => {
-                                  const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
-                                    d.id === def.id ? { ...d, word: e.target.value } : d
-                                  );
-                                  updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                                }}
-                                className="mt-1 border-gray-200 focus:ring-orange-500"
-                                placeholder="Enter word"
-                              />
-                            </div>
+                {/* Category Select */}
+                {/* <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">Category</h3>
+                  <Select
+                    value={formStates[selectedAge]?.category}
+                    onValueChange={handleCategoryChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div> */}
 
-                            <div>
-                              <Label className="">Definition</Label>
-                              <textarea
-                                value={def.definition}
-                                onChange={(e) => {
-                                  const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
-                                    d.id === def.id ? { ...d, definition: e.target.value } : d
-                                  );
-                                  updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                                }}
-                                className="w-full p-3 border-2 rounded-lg border-gray-200 focus:ring-2 min-h-[100px] mt-1"
-                                placeholder="Enter definition"
-                              />
-                            </div>
-
-                            <Button
-                              type="button"
-                              onClick={() => {
-                                const newDefs = formStates[selectedAge].wordDefinitions.filter(d => d.id !== def.id);
-                                updateFormState(selectedAge, 'wordDefinitions', newDefs);
-                              }}
-                              className="w-full bg-[#E54D2E] hover:bg-[#D94A2A] text-white"
-                            >
-                              Remove Definition
-                            </Button>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  ))}
-                </div>
-              </div>
-
-              {/* Questions Section */}
-              {/* <div className="space-y-4">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
-                  <h3 className="text-lg font-semibold">Questions</h3>
-                  <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToResult('questions')}
-                      className="w-full md:w-auto"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      Load Processed Result Questions
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        const currentQuestions = formStates[selectedAge]?.questions || [];
-                        updateFormState(selectedAge, 'questions', [
-                          ...currentQuestions,
-                          { id: Date.now(), question: '' }
-                        ]);
-                      }}
-                      variant="outline"
-                      className="w-full md:w-auto"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Question
-                    </Button>
-                  </div>
-                </div>
-
-                {formStates[selectedAge]?.questions?.map((q, index) => (
-                  <Card key={q.id} className={`p-4 border ${
-                    errors[`questions-${selectedAge}`] ? 'border-red-500' : 'border-gray-200'
-                  }`}>
-                    <div className="flex justify-between items-start mb-4">
-                        <h4 className="font-medium">Question {index + 1}</h4>
-                        <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                            const newQuestions = formStates[selectedAge].questions.filter(question => question.id !== q.id);
-                            updateFormState(selectedAge, 'questions', newQuestions);
-                        }}
-                        className="text-gray-500 hover:text-red-500"
-                        >
-                        <X className="w-4 h-4" />
-                        </Button>
-                    </div>
-
+                {/* Categories Multi-Select */}
+              <div className="space-y-2">
+                <Label>Categories*</Label>
+                <div className="border rounded-lg p-4">
+                  {/* <div className="mb-2">
                     <Input
-                        value={q.question}
-                        onChange={(e) => {
-                        const newQuestions = formStates[selectedAge].questions.map(question =>
-                            question.id === q.id ? { ...question, question: e.target.value } : question
-                        );
-                        updateFormState(selectedAge, 'questions', newQuestions);
-                        }}
-                        placeholder="Enter your question"
-                        className="w-full"
+                      placeholder="Search categories..."
+                      value={categorySearchTerm}
+                      onChange={(e) => setCategorySearchTerm(e.target.value)}
+                      className="border-gray-200"
                     />
-                  </Card>
-                ))}
-                {errors[`questions-${selectedAge}`] && (
-                  <p className="text-red-500 text-sm">{errors[`questions-${selectedAge}`]}</p>
-                )}
-              </div> */}
+                  </div> */}
+                  
+                  {categoryLoading ? (
+                    <div className="flex justify-center">
+                      <Loader2 className="animate-spin" />
+                    </div>
+                  ) : (
+                    // <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    //   {categories.map(cat => (
+                    //     <div 
+                    //       key={cat.id} 
+                    //       className={`
+                    //         flex items-center space-x-2 p-2 border rounded-lg cursor-pointer 
+                    //         ${formStates.category.includes(cat.id) 
+                    //           ? 'bg-orange-100 border-orange-500' 
+                    //           : 'hover:bg-gray-100'}
+                    //       `}
+                    //       onClick={() => handleCategoryToggle(cat.id)}
+                    //     >
+                    //       {formStates.category.includes(cat.id) && (
+                    //         <Check className="h-5 w-5 text-orange-500" />
+                    //       )}
+                    //       <span>{cat.name}</span>
+                    //     </div>
+                    //   ))}
+                    // </div>
+                    // In the render method:
+                    // <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    //   {categories.map(cat => (
+                    //     <div 
+                    //       key={cat.id} 
+                    //       className={`
+                    //         flex items-center space-x-2 p-2 border rounded-lg cursor-pointer 
+                    //         ${formStates[selectedAge]?.category?.includes(cat.id) 
+                    //           ? 'bg-orange-100 border-orange-500' 
+                    //           : 'hover:bg-gray-100'}
+                    //       `}
+                    //       onClick={() => handleCategoryToggle(selectedAge, cat.id)}
+                    //     >
+                    //       {formStates[selectedAge]?.category?.includes(cat.id) && (
+                    //         <Check className="h-5 w-5 text-orange-500" />
+                    //       )}
+                    //       <span>{cat.name}</span>
+                    //     </div>
+                    //   ))}
+                    // </div>
 
-              {/* Questions Section */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Questions</h3>
-                  <div className="flex space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevertToResult('questions')}
-                      className="border-orange-500 text-orange-500"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      Processed Result
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        const currentQuestions = formStates[selectedAge]?.questions || [];
-                        updateFormState(selectedAge, 'questions', [
-                          ...currentQuestions,
-                          { id: Date.now(), question: '' }
-                        ]);
-                      }}
-                      variant="outline"
-                      className="border-orange-500 text-orange-500"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Question
-                    </Button>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {categories.map(cat => (
+                        <div 
+                          key={cat.id} 
+                          className={`
+                            flex items-center space-x-2 p-2 border rounded-lg cursor-pointer 
+                            ${formStates[selectedAge]?.category?.includes(cat.id) 
+                              ? 'bg-orange-100 border-orange-500' 
+                              : 'hover:bg-gray-100'}
+                          `}
+                          onClick={() => handleCategoryToggle(cat.id)}
+                        >
+                          {formStates[selectedAge]?.category?.includes(cat.id) && (
+                            <Check className="h-5 w-5 text-orange-500" />
+                          )}
+                          <span>{cat.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {errors.categories && <p className="text-sm text-red-500">{errors.categories}</p>}
+              </div>
+
+                {/* Show in Home Checkbox */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="showOnTop"
+                    checked={formStates[selectedAge]?.showOnTop}
+                    onCheckedChange={(checked) => updateFormState(selectedAge, 'showOnTop', checked)}
+                  />
+                  <Label htmlFor="showOnTop">Show in Home Page</Label>
+                </div>
+
+                {/* Title Section */}
+                <div className="space-y-2">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
+                    <h3 className="text-lg font-semibold">Title</h3>
+                    <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRevertToOriginal('title')}
+                        className="w-full md:w-auto"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Provided Data
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRevertToResult('title')}
+                        className="w-full md:w-auto"
+                      >
+                        <Zap className="w-4 h-4 mr-2" />
+                        Processed Result
+                      </Button>
+                    </div>
+                  </div>
+                  <Input
+                    value={formStates[selectedAge]?.title || ''}
+                    onChange={(e) => updateFormState(selectedAge, 'title', e.target.value)}
+                    className={`w-full ${errors[`title-${selectedAge}`] ? 'border-red-500' : ''}`}
+                  />
+                  {errors[`title-${selectedAge}`] && (
+                    <p className="text-red-500 text-sm">{errors[`title-${selectedAge}`]}</p>
+                  )}
+                </div>
+
+                {/* Description Section */}
+                <div className="space-y-2">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
+                    <h3 className="text-lg font-semibold">Description</h3>
+                    <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRevertToOriginal('description')}
+                        className="w-full md:w-auto"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Provided Data
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRevertToResult('description')}
+                        className="w-full md:w-auto"
+                      >
+                        <Zap className="w-4 h-4 mr-2" />
+                        Processed Result
+                      </Button>
+                    </div>
+                  </div>
+                  <textarea
+                    value={formStates[selectedAge]?.description || ''}
+                    onChange={(e) => updateFormState(selectedAge, 'description', e.target.value)}
+                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[150px] md:min-h-[200px] ${
+                      errors[`description-${selectedAge}`] ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                    placeholder="Enter description"
+                  />
+                  {errors[`description-${selectedAge}`] && (
+                    <p className="text-red-500 text-sm">{errors[`description-${selectedAge}`]}</p>
+                  )}
+                </div>
+
+                {/* Word Definitions Section */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Word Definitions</h3>
+                    <div className="flex space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRevertToResult('wordDefinitions')}
+                        className="border-orange-500 text-orange-500"
+                      >
+                        <Zap className="w-4 h-4 mr-2" />
+                        Processed Result
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          const currentDefs = formStates[selectedAge]?.wordDefinitions || [];
+                          updateFormState(selectedAge, 'wordDefinitions', [
+                            ...currentDefs,
+                            { id: Date.now(), word: '', definition: '' }
+                          ]);
+                        }}
+                        variant="outline"
+                        className="border-orange-500 text-orange-500"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Definition
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto">
+                    {formStates[selectedAge]?.wordDefinitions?.map((def, index) => (
+                      <Accordion 
+                        key={def.id} 
+                        type="single" 
+                        collapsible 
+                        className="border-2 border-gray-200 rounded-lg transition-colors"
+                      >
+                        <AccordionItem value={`item-${def.id}`}>
+                          <AccordionTrigger className="px-4 py-2">
+                            Definition {index + 1}
+                          </AccordionTrigger>
+                          <AccordionContent className="p-4">
+                            <div className="space-y-4">
+                              <div>
+                                <Label className="">Word</Label>
+                                <Input
+                                  value={def.word}
+                                  onChange={(e) => {
+                                    const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
+                                      d.id === def.id ? { ...d, word: e.target.value } : d
+                                    );
+                                    updateFormState(selectedAge, 'wordDefinitions', newDefs);
+                                  }}
+                                  className="mt-1 border-gray-200 focus:ring-orange-500"
+                                  placeholder="Enter word"
+                                />
+                              </div>
+
+                              <div>
+                                <Label className="">Definition</Label>
+                                <textarea
+                                  value={def.definition}
+                                  onChange={(e) => {
+                                    const newDefs = formStates[selectedAge].wordDefinitions.map(d =>
+                                      d.id === def.id ? { ...d, definition: e.target.value } : d
+                                    );
+                                    updateFormState(selectedAge, 'wordDefinitions', newDefs);
+                                  }}
+                                  className="w-full p-3 border-2 rounded-lg border-gray-200 focus:ring-2 min-h-[100px] mt-1"
+                                  placeholder="Enter definition"
+                                />
+                              </div>
+
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  const newDefs = formStates[selectedAge].wordDefinitions.filter(d => d.id !== def.id);
+                                  updateFormState(selectedAge, 'wordDefinitions', newDefs);
+                                }}
+                                className="w-full bg-[#E54D2E] hover:bg-[#D94A2A] text-white"
+                              >
+                                Remove Definition
+                              </Button>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    ))}
                   </div>
                 </div>
 
-                <div className="space-y-4 max-h-[500px] overflow-y-auto">
-                  {formStates[selectedAge]?.questions?.map((q, index) => (
-                    <Accordion 
-                      key={q.id} 
-                      type="single" 
-                      collapsible 
-                      className="border-2 border-gray-200 rounded-lg transition-colors"
-                    >
-                      <AccordionItem value={`item-${q.id}`}>
-                        <AccordionTrigger className="px-4 py-2">
-                          Question {index + 1}
-                        </AccordionTrigger>
-                        <AccordionContent className="p-4">
-                          <div className="space-y-4">
-                            <div>
-                              <Label className="">Question</Label>
-                              <Input
-                                value={q.question}
-                                onChange={(e) => {
-                                  const newQuestions = formStates[selectedAge].questions.map(question =>
-                                    question.id === q.id ? { ...question, question: e.target.value } : question
-                                  );
+                {/* Questions Section */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Questions</h3>
+                    <div className="flex space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRevertToResult('questions')}
+                        className="border-orange-500 text-orange-500"
+                      >
+                        <Zap className="w-4 h-4 mr-2" />
+                        Processed Result
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          const currentQuestions = formStates[selectedAge]?.questions || [];
+                          updateFormState(selectedAge, 'questions', [
+                            ...currentQuestions,
+                            { id: Date.now(), question: '' }
+                          ]);
+                        }}
+                        variant="outline"
+                        className="border-orange-500 text-orange-500"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Question
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto">
+                    {formStates[selectedAge]?.questions?.map((q, index) => (
+                      <Accordion 
+                        key={q.id} 
+                        type="single" 
+                        collapsible 
+                        className="border-2 border-gray-200 rounded-lg transition-colors"
+                      >
+                        <AccordionItem value={`item-${q.id}`}>
+                          <AccordionTrigger className="px-4 py-2">
+                            Question {index + 1}
+                          </AccordionTrigger>
+                          <AccordionContent className="p-4">
+                            <div className="space-y-4">
+                              <div>
+                                <Label className="">Question</Label>
+                                <Input
+                                  value={q.question}
+                                  onChange={(e) => {
+                                    const newQuestions = formStates[selectedAge].questions.map(question =>
+                                      question.id === q.id ? { ...question, question: e.target.value } : question
+                                    );
+                                    updateFormState(selectedAge, 'questions', newQuestions);
+                                  }}
+                                  className="mt-1 border-gray-200 focus:ring-orange-500"
+                                  placeholder="Enter question"
+                                />
+                              </div>
+
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  const newQuestions = formStates[selectedAge].questions.filter(question => question.id !== q.id);
                                   updateFormState(selectedAge, 'questions', newQuestions);
                                 }}
-                                className="mt-1 border-gray-200 focus:ring-orange-500"
-                                placeholder="Enter question"
-                              />
+                                className="w-full bg-[#E54D2E] hover:bg-[#D94A2A] text-white"
+                              >
+                                Remove Question
+                              </Button>
                             </div>
-
-                            <Button
-                              type="button"
-                              onClick={() => {
-                                const newQuestions = formStates[selectedAge].questions.filter(question => question.id !== q.id);
-                                updateFormState(selectedAge, 'questions', newQuestions);
-                              }}
-                              className="w-full bg-[#E54D2E] hover:bg-[#D94A2A] text-white"
-                            >
-                              Remove Question
-                            </Button>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  ))}
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="w-full bg-orange-500 hover:bg-orange-600"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  'Update Article'
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Image Change Dialog */}
-        <AlertDialog open={showImageDialog} onOpenChange={setShowImageDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Change Article Image</AlertDialogTitle>
-              <AlertDialogDescription>
-                Would you like to change the article image?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction asChild>
-              <>
-                <input
-                  className="hidden"
-                  type="file"
-                  id="image"
-                  accept="image/jpeg,image/png,image/jpg"
-                  onChange={handleImageChange}
-                />
-                <label 
-                  htmlFor="image" 
-                  className="bg-black text-white py-2 px-4 rounded cursor-pointer hover:bg-gray-800"
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full bg-orange-500 hover:bg-orange-600"
                 >
-                  Change Image
-                </label>
-              </>
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Article'
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Image Change Dialog */}
+          <AlertDialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Change Article Image</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Would you like to change the article image?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction asChild>
+                <>
+                  <input
+                    className="hidden"
+                    type="file"
+                    id="image"
+                    accept="image/jpeg,image/png,image/jpg"
+                    onChange={handleImageChange}
+                  />
+                  <label 
+                    htmlFor="image" 
+                    className="bg-black text-white py-2 px-4 rounded cursor-pointer hover:bg-gray-800"
+                  >
+                    Change Image
+                  </label>
+                </>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+        )
+      }
     </>
   );
 }

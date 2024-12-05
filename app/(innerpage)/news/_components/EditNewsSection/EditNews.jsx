@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Upload, Loader2 } from 'lucide-react';
+import { Plus, X, Upload, Loader2, Check } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -29,47 +29,15 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
     const [isImageEdited, setIsImageEdited] = useState(false);
     const router = useRouter();
 
+    console.log('selectedNews', selectedNews)
     const [newsForm, setNewsForm] = useState({
-      category: '',
+      categories: [], 
       title: '',
       description: '',
       showOnTop: false,
       image: null
     });
-
-    // Initialize form with selected news data when component mounts
-    // useEffect(() => {
-    //     if (selectedNews) {
-    //       // Prepare image URL
-    //       const imageUrl = selectedNews.image_url 
-    //         ? `https://wowfy.in/testusr/images/${selectedNews.image_url}`
-    //         : null;
-      
-    //       // Use functional update to ensure all fields are set
-    //       setNewsForm(prevForm => ({
-    //         ...prevForm,
-    //         category: selectedNews.news_category_id?.toString() || '',
-    //         title: selectedNews.title || '',
-    //         description: selectedNews.description || '',
-    //         showOnTop: selectedNews.showOnTop || false,
-    //         image: imageUrl
-    //       }));
-      
-    //       // Set initial image
-    //       setImage(imageUrl);
-      
-    //       // Log to verify all data is being set
-    //       console.log('Selected News:', selectedNews);
-    //       console.log('Updated News Form:', {
-    //         category: selectedNews.news_category_id?.toString() || '',
-    //         title: selectedNews.title || '',
-    //         description: selectedNews.description || '',
-    //         showOnTop: selectedNews.showOnTop || false,
-    //         image: imageUrl
-    //       });
-    //     }
-    //   }, [selectedNews]);
-
+    console.log('newsForm', newsForm)
     useEffect(() => {
         if (selectedNews) {
           console.log('Raw Selected News:', selectedNews);
@@ -82,7 +50,10 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
       
           // Create a new object with explicit field mapping
           const newFormState = {
-            category: selectedNews.news_category_id?.toString() || '',
+            // category: selectedNews.news_category_id?.toString() || '',
+            categories: selectedNews.categoryIds
+              ? selectedNews.categoryIds.split(",").map((id) => parseInt(id.trim(), 10))
+              : [],// Convert categoryIds string to array
             title: selectedNews.title || '',
             description: selectedNews.description || '',
             showOnTop: selectedNews.showOnTop || false,
@@ -132,8 +103,8 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
     const validateForm = () => {
       const newErrors = {};
 
-      if (!newsForm.category) {
-        newErrors.category = 'Category is required';
+      if (!newsForm.categories.length) {
+        newErrors.categories = "At least one category is required";
       }
 
       if (!newsForm.title?.trim()) {
@@ -149,6 +120,13 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
       }
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
+    };
+
+    const handleCategoryChange = (selected) => {
+      setNewsForm({ ...newsForm, categories: selected });
+      const newErrors = { ...errors };
+      delete newErrors.categories;
+      setErrors(newErrors);
     };
 
     const handleNewsImage = (event) => {
@@ -198,7 +176,7 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
       try {
         const body = {
           id: selectedNews.id, // Add the news ID for updating
-          categoryId: newsForm.category,
+          categoryId: newsForm.categories,
           title: newsForm.title,
           description: newsForm.description,
           showOnTop: newsForm.showOnTop,
@@ -260,7 +238,7 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
       )}
 
       {
-        newsForm.category && 
+        newsForm.categories && 
         (
             <Card className="border-none shadow-lg">
             <CardHeader>
@@ -278,7 +256,7 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
                 {/* Category Select with Search */}
                 <div className="space-y-2">
                 <Label htmlFor="category">Category*</Label>
-                <Select
+                {/* <Select
                     value={newsForm.category}
                     onValueChange={(value) => {
                     setNewsForm({...newsForm, category: value});
@@ -312,7 +290,49 @@ function EditNews({selectedNews, selectedAge, setShowEditSection}) {
                         ))
                     )}
                     </SelectContent>
-                </Select>
+                </Select> */}
+
+                  <div className="space-y-2">
+                    <Label>Categories*</Label>
+                    <div className="border rounded-lg p-4">
+                      <div className="mb-2">
+                        <Input
+                          placeholder="Search categories..."
+                          value={categorySearchTerm}
+                          onChange={(e) => setCategorySearchTerm(e.target.value)}
+                          className="border-gray-200"
+                        />
+                      </div>
+                      
+                      {categoryLoading ? (
+                        <div className="flex justify-center">
+                          <Loader2 className="animate-spin" />
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {categories.map(cat => (
+                            <div 
+                              key={cat.id} 
+                              className={`
+                                flex items-center space-x-2 p-2 border rounded-lg cursor-pointer 
+                                ${newsForm.categories.includes(cat.id) 
+                                  ? 'bg-orange-100 border-orange-500' 
+                                  : 'hover:bg-gray-100'}
+                              `}
+                              onClick={() => handleCategoryChange(cat.id)}
+                            >
+                              {newsForm.categories.includes(cat.id) && (
+                                <Check className="h-5 w-5 text-orange-500" />
+                              )}
+                              <span>{cat.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {errors.categories && <p className="text-sm text-red-500">{errors.categories}</p>}
+                  </div>
+                
                 {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
                 </div>
 
