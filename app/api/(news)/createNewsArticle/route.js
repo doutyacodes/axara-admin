@@ -265,8 +265,8 @@ export async function POST(request) {
       
       Rewrite this interview in a way understandable for each age group (3 to 12 years old). The rewritten content should:
       
-      1. Maintain the original interview format, keeping all dialogues, questions, and answers intact.
-      2. Change the text to make it age-appropriate for each specified age group.
+      1. Maintain the original interview format, keeping all questions, and answers intact.
+      2. Change the text to make it a simplified and age-appropriate for each specified age group.
       3. Ensure the language and concepts used are easy for the specified age group to understand.
       4. Present the interview in first person, retaining the structure of "<person1>: <some text>, <person2>: <some text>".
       5. Two engaging questions to make the child think or talk about the interview.
