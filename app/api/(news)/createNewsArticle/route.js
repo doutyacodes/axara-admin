@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { authenticate } from '@/lib/jwtMiddleware';
 import axios from 'axios';
+import AddCategoryModal from '@/app/(innerpage)/news/_components/AddCategoryModal/AddCategoryModal';
+import { NEWS_CATEGORIES } from '@/utils/schema';
+import { db } from '@/utils';
+import { inArray } from 'drizzle-orm';
 
 export async function POST(request) {
   const authResult = await authenticate(request, true);
@@ -10,9 +14,9 @@ export async function POST(request) {
 
   const data = await request.json();
 
-  const { title, description, wordDefinitions } = data
+  const { title, description, wordDefinitions, categoryIds } = data
 
-  if (!title || !description || !Array.isArray(wordDefinitions)) {
+  if (!title || !description || !Array.isArray(wordDefinitions) || !Array.isArray(categoryIds)) {
     return NextResponse.json(
       { error: 'Missing required fields or invalid wordDefinitions format.' },
       { status: 400 }
@@ -20,6 +24,14 @@ export async function POST(request) {
   }
 
   try {
+
+     // Fetch category names based on categoryIds
+    //  const categories = await db.select().from(NEWS_CATEGORIES).where(NEWS_CATEGORIES.id.in(categoryIds));
+     const categories = await db.select().from(NEWS_CATEGORIES).where(inArray(NEWS_CATEGORIES.id, categoryIds));
+
+     // Determine if any category name is 'Interview'
+     const isInterview = categories.some(category => category.name.toLowerCase() === 'interview');
+ 
     
     /* ltest usesd */
     // const prompt = `
@@ -206,7 +218,89 @@ export async function POST(request) {
 
     /* --------------------------- */
 
-      const prompt = `
+      // const prompt = `
+      //   Based on the following news:
+      //   Title: "${title}"
+      //   Description: "${description}"
+
+      //   Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
+      //   1. Write a simplified and age-appropriate version of this news story for kids aged 3 to 12, summarizing the content in a way each age group can easily understand.
+      //   2. For each individual age, craft a unique version that fits their comprehension level and attention span.
+  
+      //    For each age group, provide:
+      //      1. A engaging Title tailored to that age group.
+      //      2. A  **description** that summarizes the content in a way each age group can easily understand
+      //      3. Two engaging questions to make the child think or talk about the news.
+
+      //   Ensure the output includes:
+      //   - "wordDefinitions": Always include explanations for terms, ideas, or concepts in the rewritten description that might need clarification for that age group.
+
+      //   Respond in JSON format:
+      //   [
+      //     {
+      //       "age": 3,
+      //       "title": "<title for 3-year-olds>",
+      //       "description": "<The news appropriate fr the age>",
+      //       "questions": ["<question1>", "<question2>"],
+      //       "wordDefinitions": [
+      //         { "word": "<term>", "definition": "<explanation for 3-year-olds>" }
+      //       ]
+      //     },
+      //     {
+      //       "age": 4,
+      //       // Repeat for each age up to 12, ensuring logical and fun tone for every age group
+      //     }
+      //   ]
+      //   `;
+
+    // Select the appropriate prompt
+    const prompt = isInterview
+      ? `
+      Based on the following interview:
+      
+      Title: "${title}"
+      
+      Interviewer and Interviewee Dialogue:
+      "${description}"
+      
+      Rewrite this interview in a way understandable for each age group (3 to 12 years old). The rewritten content should:
+      
+      1. Maintain the original interview format, keeping all dialogues, questions, and answers intact.
+      2. Change the text to make it age-appropriate for each specified age group.
+      3. Ensure the language and concepts used are easy for the specified age group to understand.
+      4. Present the interview in first person, retaining the structure of "<person1>: <some text>, <person2>: <some text>".
+      5. Two engaging questions to make the child think or talk about the interview.
+
+       Ensure the output includes:
+        - "wordDefinitions": Always include explanations for terms, ideas, or concepts in the rewritten description that might need clarification for that age group.
+      
+      For each age group, provide:
+      1. The entire interview text rewritten to be age-appropriate.
+      
+      Respond in JSON format:
+      [
+        {
+          "age": 3,
+           "title": "<title for 3-year-olds>",
+          "description": "<rewritten interview text for 3-year-olds>",
+          "questions": ["<question1>", "<question2>"],
+            "wordDefinitions": [
+              { "word": "<term>", "definition": "<explanation for 3-year-olds>" }
+            ]
+        },
+        {
+          "age": 4,
+           "title": "<title for 3-year-olds>",
+          "description": "<rewritten interview text for 4-year-olds>"
+          "questions": ["<question1>", "<question2>"],
+            "wordDefinitions": [
+              { "word": "<term>", "definition": "<explanation for 4-year-olds>" }
+            ]
+        },
+        // Repeat for each age up to 12, ensuring a clear, engaging tone appropriate for each.
+      ]
+      `
+      : `
         Based on the following news:
         Title: "${title}"
         Description: "${description}"
@@ -241,39 +335,6 @@ export async function POST(request) {
         ]
         `;
 
-      // const prompt = `
-      // Based on the following interview:
-      
-      // Title: "${title}"
-      
-      // Interviewer and Interviewee Dialogue:
-      // "${description}"
-      
-      // Rewrite this interview in a way understandable for each age group (3 to 12 years old). The rewritten content should:
-      
-      // 1. Maintain the original interview format, keeping all dialogues, questions, and answers intact.
-      // 2. Change the text to make it age-appropriate for each specified age group.
-      // 3. Ensure the language and concepts used are easy for the specified age group to understand.
-      // 4. Present the interview in first person, retaining the structure of "<person1>: <some text>, <person2>: <some text>".
-      
-      // For each age group, provide:
-      // 1. The entire interview text rewritten to be age-appropriate.
-      
-      // Respond in JSON format:
-      // [
-      //   {
-      //     "age": 3,
-      //      "title": "<title for 3-year-olds>",
-      //     "description": "<rewritten interview text for 3-year-olds>"
-      //   },
-      //   {
-      //     "age": 4,
-      //      "title": "<title for 3-year-olds>",
-      //     "description": "<rewritten interview text for 4-year-olds>"
-      //   },
-      //   // Repeat for each age group up to 12, ensuring a clear, engaging tone appropriate for each.
-      // ]
-      // `;
       
 
     
@@ -282,7 +343,7 @@ export async function POST(request) {
       {
           model: "gpt-4o-mini", 
           messages: [{ role: "user", content: prompt }],
-          max_tokens: 3500,
+          max_tokens: 3700,
       },
       {
           headers: {
