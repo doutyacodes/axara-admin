@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Upload, Loader2, Check } from 'lucide-react';
+import { Plus, X, Upload, Loader2, Check, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -249,50 +249,6 @@ function AddNews() {
               </Alert>
             )}
 
-            {/* Category Select with Search */}
-            {/* <div className="space-y-2">
-              <Label htmlFor="category">Category*</Label>
-              <Select
-                value={newsForm.category}
-                onValueChange={(value) => {
-                  setNewsForm({...newsForm, category: value});
-                  const newErrors = { ...errors };
-                  delete newErrors.category;
-                  setErrors(newErrors);
-                }}
-              >
-                <SelectTrigger className={`w-full ${errors.category ? 'border-red-500' : ''}`}>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <div className="py-2 px-3 sticky top-0 bg-white">
-                    <Input
-                      placeholder="Search categories..."
-                      value={categorySearchTerm}
-                      onChange={(e) => setCategorySearchTerm(e.target.value)}
-                      className="border-gray-200"
-                    />
-                  </div>
-
-                  {
-                    categoryLoading ? (
-                      <div>
-                      <Loader2 className="animate-spin" />
-                    </div>
-                    ) : (
-                      filteredDropdownCategories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id.toString()}>
-                          {cat.name}
-                        </SelectItem>
-                      ))
-                    )
-                  }
-
-                </SelectContent>
-              </Select>
-              {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
-            </div> */}
-
              {/* Categories Multi-Select */}
              <div className="space-y-2">
               <Label>Categories*</Label>
@@ -396,26 +352,47 @@ function AddNews() {
             </div>
 
            {/* Description */}
-            <div className="space-y-2">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
               <Label htmlFor="description">Description*</Label>
-              <textarea 
-                id="description"
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[200px] ${
-                  errors.description ? 'border-red-500' : 'border-gray-200'
-                }`}
-                value={newsForm.description}
-                onChange={(e) => {
-                  setNewsForm({...newsForm, description: e.target.value});
-                  if (e.target.value.trim()) {
-                    const newErrors = { ...errors };
-                    delete newErrors.description;
-                    setErrors(newErrors);
-                  }
-                }}
-                placeholder="Detailed description of the article"
-              />
-              {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
+            <div className='flex space-x-4'>
+              {newsForm.description.length > 4000 && (
+                  <p className="text-sm text-red-500 flex items-center">
+                    <AlertCircle className="mr-2 h-4 w-4" />
+                    Exceeds recommended character limit
+                  </p>
+                )}
+              <p className={`text-sm ${
+                newsForm.description.length > 4000 
+                  ? 'text-red-500' 
+                  : 'text-gray-500'
+              }`}>
+                {newsForm.description.length} / 4000 characters
+              </p>
             </div>
+            </div>
+            <textarea 
+              id="description"
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[200px] ${
+                errors.description ? 'border-red-500' : 'border-gray-200'
+              } ${
+                newsForm.description.length > 4000 
+                  ? 'border-red-500 ring-2 ring-red-200' 
+                  : ''
+              }`}
+              value={newsForm.description}
+              onChange={(e) => {
+                setNewsForm({...newsForm, description: e.target.value});
+                if (e.target.value.trim()) {
+                  const newErrors = { ...errors };
+                  delete newErrors.description;
+                  setErrors(newErrors);
+                }
+              }}
+              placeholder="Detailed description of the article (Max 4000 characters)"
+            />
+            {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
+          </div>
 
             {/* Show in Home Checkbox */}
             <div className="flex items-center space-x-2">
