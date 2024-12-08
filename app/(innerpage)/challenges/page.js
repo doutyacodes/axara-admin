@@ -37,7 +37,6 @@ const ChallengesAdminPanel = () => {
     }
   };
 
-
   const handleStatusChange = async (challengeId, newStatus) => {
     try {
       setIsLoading(true);

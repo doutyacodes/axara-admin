@@ -253,6 +253,42 @@ export async function POST(request) {
       //   ]
       //   `;
 
+
+      // `
+      //   Based on the following news:
+      //   Title: "${title}"
+      //   Description: "${description}"
+
+      //   Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
+      //   1. Write a simplified and age-appropriate version of this news for kids aged 3 to 12, summarizing the content in a way each age can easily understand.
+      //   2. For each individual age, craft a unique version that fits their comprehension level and attention span.
+  
+      //    For each age, provide:
+      //      1. A engaging Title tailored to that age.
+      //      2. A  **description** that summarizes the content in a way each age can easily understand
+      //      3. Two engaging questions to make the child think or talk about the news.
+
+      //   Ensure the output includes:
+      //   - "wordDefinitions": Always include explanations for terms, ideas, or concepts in the rewritten description that might need clarification for that age.
+
+      //   Respond in JSON format:
+      //   [
+      //     {
+      //       "age": 3,
+      //       "title": "<title for 3-year-olds>",
+      //       "description": "<The news appropriate fr the age>",
+      //       "questions": ["<question1>", "<question2>"],
+      //       "wordDefinitions": [
+      //         { "word": "<term>", "definition": "<explanation for 3-year-olds>" }
+      //       ]
+      //     },
+      //     {
+      //       "age": 4,
+      //       // Repeat for each age up to 12, ensuring logical and fun tone for every age
+      //     }
+      //   ]
+      //   `
+
     // Select the appropriate prompt
     const prompt = isInterview
       ? `
@@ -305,17 +341,14 @@ export async function POST(request) {
         Title: "${title}"
         Description: "${description}"
 
-        Rewrite this news for each age group (3 to 12 years old). The rewritten content should:
-        1. Write a simplified and age-appropriate version of this news story for kids aged 3 to 12, summarizing the content in a way each age group can easily understand.
-        2. For each individual age, craft a unique version that fits their comprehension level and attention span.
-  
-         For each age group, provide:
-           1. A engaging Title tailored to that age group.
-           2. A  **description** that summarizes the content in a way each age group can easily understand
-           3. Two engaging questions to make the child think or talk about the news.
+      Rewrite this news for each age (3 to 12 years old). The rewritten content should contain:
 
+        1. A engaging Title tailored to that age 
+        2. A simplified and age-appropriate version of this news for kids aged 3 to 12, in a paragraph or 2,  summarizing the content in a way each age can easily understand. For each individual age, craft a unique version that fits their comprehension level and attention span.
+        3. Two engaging questions to make the child think or talk about the news.
+              
         Ensure the output includes:
-        - "wordDefinitions": Always include explanations for terms, ideas, or concepts in the rewritten description that might need clarification for that age group.
+        - "wordDefinitions": Always include simple and clear explanations for any terms, ideas, concepts, or complex words in the rewritten description, tailored to the age group. Ensure that the explanations are easy to understand and appropriate for the child's level of knowledge.
 
         Respond in JSON format:
         [
@@ -330,12 +363,10 @@ export async function POST(request) {
           },
           {
             "age": 4,
-            // Repeat for each age up to 12, ensuring logical and fun tone for every age group
+            // Repeat for each age up to 12, ensuring logical and fun tone for every age
           }
         ]
         `;
-
-      
 
     
     const response = await axios.post(
