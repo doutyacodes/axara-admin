@@ -1319,16 +1319,41 @@ export const NEWS_CATEGORIES = mysqlTable("news_categories", {
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
 });
 
+// export const NEWS = mysqlTable("news", {
+//   id: int("id").primaryKey().autoincrement(),
+//   news_category_id: int("news_category_id")
+//     .notNull()
+//     .references(() => NEWS_CATEGORIES.id), 
+//   title: varchar("title", { length: 255 }).notNull(), // Title of the news article
+//   image_url: text("image_url").notNull(), // URL of the featured image
+//   summary: text("summary"), // Brief summary, nullable
+//   description: text("description").notNull(), // Detailed description of the article
+//   age: int("age").notNull(), // Age-related parameter
+//   show_on_top: boolean("show_on_top").default(false),
+//   main_news: boolean("main_news").default(false),
+//   created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
+//   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
+// });
+
+export const NEWS_GROUP = mysqlTable("news_group", {
+  id: int("id").primaryKey().autoincrement(),
+  show_on_top: boolean("show_on_top").default(false),
+  main_news: boolean("main_news").default(false),
+  created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
+});
+
 export const NEWS = mysqlTable("news", {
   id: int("id").primaryKey().autoincrement(),
-  news_category_id: int("news_category_id")
-    .notNull()
-    .references(() => NEWS_CATEGORIES.id), 
+  // news_category_id: int("news_category_id")
+  //   .notNull()
+  //   .references(() => NEWS_CATEGORIES.id), 
   title: varchar("title", { length: 255 }).notNull(), // Title of the news article
   image_url: text("image_url").notNull(), // URL of the featured image
   summary: text("summary"), // Brief summary, nullable
   description: text("description").notNull(), // Detailed description of the article
   age: int("age").notNull(), // Age-related parameter
+  news_group_id: int("news_group_id").notNull(),
   show_on_top: boolean("show_on_top").default(false),
   main_news: boolean("main_news").default(false),
   created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation

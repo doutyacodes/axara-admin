@@ -28,19 +28,31 @@ function AddNews() {
     const [questions, setQuestions] = useState([{ id: 1, question: '' }]);
     const [wordDefinitions, setWordDefinitions] = useState([{ id: 1, word: '', definition: '' }]);
     const [categoryLoading, setCategoryLoading] = useState(false)
+    const [countData, setCountData] = useState({ news_count: 0, news: [] });
+    const [selectedMainNewsSlot, setSelectedMainNewsSlot] = useState(null);
     const router = useRouter();
     
     const { setDataFromPage } = useData(); 
 
+    // const [newsForm, setNewsForm] = useState({
+    //   categories: [], // Changed from single category to array
+    //   title: '',
+    //   // summary: '',
+    //   description: '',
+    //   // age: '',
+    //   showOnTop: false,
+    //   main_news: false,
+    //   image: null
+    // });
+
     const [newsForm, setNewsForm] = useState({
-      categories: [], // Changed from single category to array
+      categories: [],
       title: '',
-      // summary: '',
       description: '',
-      // age: '',
       showOnTop: false,
       main_news: false,
-      image: null
+      image: null,
+      mainNewsSlot: null // New field to store selected slot
     });
   
     console.log('newsForm', newsForm)
@@ -71,6 +83,32 @@ function AddNews() {
       getNewsCategories();
     }, []);
 
+    const getNewsCount = async () => {
+      // setCategoryLoading(true);
+      try {
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        if (!token) {
+          // setCategoryLoading(false);
+          return;
+        }
+  
+        const response = await GlobalApi.GetNewsCount(token);
+        if (response.status === 200) {
+          setCountData(response.data);
+          console.log(response.data);
+        }
+      } catch (err) {
+        console.log(err);
+      } finally {
+        // setCategoryLoading(false);
+      }
+    };
+  
+    useEffect(() => {
+      getNewsCount();
+    }, []);
+
     const validateForm = () => {
       const newErrors = {};
 
@@ -89,6 +127,12 @@ function AddNews() {
       if (!newsForm.image) {
         newErrors.image = 'Image is required';
       }
+
+      // Additional validation for main news slot when main_news is true
+      if (newsForm.main_news && countData.news_count === 2 && !newsForm.mainNewsSlot) {
+        newErrors.mainNewsSlot = 'Please select a slot for main news';
+      }
+
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     };
@@ -164,6 +208,7 @@ function AddNews() {
           description: newsForm.description,
           showOnTop: newsForm.showOnTop,
           main_news: newsForm.main_news,
+          mainNewsSlot: newsForm.mainNewsSlot, // Include selected slot
           questions: questions.filter(q => q.question.trim()).map(q => q.question),
           wordDefinitions: wordDefinitions.filter(wd => 
                             wd.word.trim() && wd.definition.trim()
@@ -198,7 +243,8 @@ function AddNews() {
           // age: '',
           showOnTop: false,
           main_news: false,
-          image: null
+          image: null,
+          mainNewsSlot: null
         });
         setQuestions([{ id: 1, question: '' }]);
         setErrors({});
@@ -396,23 +442,56 @@ function AddNews() {
 
             {/* Show in Home Checkbox */}
             <div className="flex items-center space-x-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="showOnTop"
-                checked={newsForm.showOnTop}
-                onCheckedChange={(checked) => setNewsForm({...newsForm, showOnTop: checked})}
-              />
-              <Label htmlFor="showOnTop">Show on Top</Label>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="showOnTop"
+                  checked={newsForm.showOnTop}
+                  onCheckedChange={(checked) => setNewsForm({...newsForm, showOnTop: checked})}
+                />
+                <Label htmlFor="showOnTop">Show on Top</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="main_news"
+                  checked={newsForm.main_news}
+                  onCheckedChange={(checked) => setNewsForm({...newsForm, main_news: checked})}
+                />
+                <Label htmlFor="main_news">Main News</Label>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="main_news"
-                checked={newsForm.main_news}
-                onCheckedChange={(checked) => setNewsForm({...newsForm, main_news: checked})}
-              />
-              <Label htmlFor="main_news">Main News</Label>
-            </div>
-            </div>
+            {/* Main News Slot Selection */}
+            {newsForm.main_news && countData.news_count === 2 && (
+              <div className="space-y-2">
+                <Label>Select Main News Slot*</Label>
+                <div className="flex space-x-4">
+                  {countData.news.map((news, index) => (
+                    <div 
+                      key={news.id} 
+                      className={`p-4 border rounded-lg cursor-pointer ${
+                        newsForm.mainNewsSlot === news.id 
+                          ? 'border-orange-500 bg-orange-50' 
+                          : 'border-gray-200'
+                      }`}
+                      onClick={() => {
+                        setNewsForm({...newsForm, mainNewsSlot: news.id});
+                        // Clear any previous slot selection errors
+                        const newErrors = {...errors};
+                        delete newErrors.mainNewsSlot;
+                        setErrors(newErrors);
+                      }}
+                    >
+                      <p>Slot {index + 1}</p>
+                      <p className="text-sm text-gray-600 truncate">
+                        {news.title || 'Existing News'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                {errors.mainNewsSlot && (
+                  <p className="text-sm text-red-500">{errors.mainNewsSlot}</p>
+                )}
+              </div>
+            )}
 
             <Button 
               type="submit" 

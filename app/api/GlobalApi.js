@@ -49,6 +49,15 @@ const DeleteNewsCategory = (data) => {
   });
 };
 
+
+const GetNewsCount = (token) => {
+  return axios.get(`/api/getNewsCount`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    }
+  });
+};
+
 const GetLearnSubjects = (token) => {
   return axios.get(`/api/getLearnSubjects`, {
     headers: {
@@ -179,6 +188,7 @@ export default {
   FetchNews,
   FetchNewsReports,
   DeleteNewsArticle,
+  GetNewsCount,
 
   /* Learn */
   GetLearnSubjects,

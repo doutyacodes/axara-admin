@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useData } from '@/context/DataContext';
 import { useRouter } from 'next/navigation';
-import { datas } from './data';
+// import { datas } from './data';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const ageOptions = Array.from({ length: 10 }, (_, i) => i + 3);
@@ -278,6 +278,7 @@ function AddNews() {
         result: formStates,
         imageData,
         fileName,
+        slotId: data.originalData.mainNewsSlot
       };
       
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
