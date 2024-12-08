@@ -1345,9 +1345,9 @@ export const NEWS_GROUP = mysqlTable("news_group", {
 
 export const NEWS = mysqlTable("news", {
   id: int("id").primaryKey().autoincrement(),
-  // news_category_id: int("news_category_id")
-  //   .notNull()
-  //   .references(() => NEWS_CATEGORIES.id), 
+  news_category_id: int("news_category_id")
+    .notNull()
+    .references(() => NEWS_CATEGORIES.id), 
   title: varchar("title", { length: 255 }).notNull(), // Title of the news article
   image_url: text("image_url").notNull(), // URL of the featured image
   summary: text("summary"), // Brief summary, nullable
