@@ -98,15 +98,20 @@ export async function POST(request) {
 
 
     function getIndianTime() {
-      return new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+      const now = new Date();
+      const indianTimeOffset = 330; // IST offset in minutes (UTC+5:30)
+      const utcTime = now.getTime() + now.getTimezoneOffset() * 60000; // Convert to UTC
+      const indianTime = new Date(utcTime + indianTimeOffset * 60000);
+      return indianTime;
     }
+    
 
     // Extract `showOnTop` and `main_news` from the first entry in `entries`
     const { showOnTop = false, main_news = false } = entries[0] || {};
 
     // Insert the news group record with IST timestamps
     // const indianTime = getIndianTime();
-    const indianTime = new Date(getIndianTime());
+    const indianTime = getIndianTime();
     console.log("indianTime", indianTime);
     const newsGroupRecord = await db.insert(NEWS_GROUP).values({
       show_on_top: showOnTop, // Use the value from the first entry
