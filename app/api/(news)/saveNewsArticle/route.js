@@ -1,12 +1,19 @@
-import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import SFTPClient from 'ssh2-sftp-client';
-import { NEWS, NEWS_CATEGORIES, NEWS_GROUP, NEWS_QUESTIONS, NEWS_TO_CATEGORIES, WORDS_MEANINGS } from '@/utils/schema';
-import { authenticate } from '@/lib/jwtMiddleware';
-import os from 'os';
-import { db } from '@/utils';
-import { and, eq } from 'drizzle-orm';
+import { NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
+import SFTPClient from "ssh2-sftp-client";
+import {
+  NEWS,
+  NEWS_CATEGORIES,
+  NEWS_GROUP,
+  NEWS_QUESTIONS,
+  NEWS_TO_CATEGORIES,
+  WORDS_MEANINGS,
+} from "@/utils/schema";
+import { authenticate } from "@/lib/jwtMiddleware";
+import os from "os";
+import { db } from "@/utils";
+import { and, eq } from "drizzle-orm";
 
 export async function POST(request) {
   const authResult = await authenticate(request, true);
@@ -16,7 +23,7 @@ export async function POST(request) {
   const userData = authResult.decoded_Data;
   const userId = userData.id;
 
-  const {result, imageData, fileName, slotId} = await request.json(); // Receive the new data structure
+  const { result, imageData, fileName, slotId } = await request.json(); // Receive the new data structure
 
   // // console.log(result, fileName);
   // return NextResponse.json(
@@ -25,15 +32,14 @@ export async function POST(request) {
   //   },
   //   { status: 400 }
   // );
-  
+
   const entries = Object.values(result); // Convert the data object into an array of entries
-// console.log('entries', entries)
+  // console.log('entries', entries)
 
   // Define the local temp directory dynamically based on platform
   const localTempDir = os.tmpdir();
 
   try {
-
     const duplicateEntries = [];
     const allWordDefinitions = entries.flatMap(({ age, wordDefinitions }) =>
       wordDefinitions.map(({ word }) => ({ age, word }))
@@ -96,7 +102,6 @@ export async function POST(request) {
       console.log(`Updated records for slotId: ${slotId}`);
     }
 
-
     function getIndianTime() {
       const now = new Date();
       const indianTimeOffset = 330; // IST offset in minutes (UTC+5:30)
@@ -104,10 +109,13 @@ export async function POST(request) {
       const indianTime = new Date(utcTime + indianTimeOffset * 60000);
       return indianTime;
     }
-    
 
     // Extract `showOnTop` and `main_news` from the first entry in `entries`
-    const { showOnTop = false, main_news = false } = entries[0] || {};
+    const {
+      showOnTop = false,
+      main_news = false,
+      region_id,
+    } = entries[0] || {};
 
     // Insert the news group record with IST timestamps
     // const indianTime = getIndianTime();
@@ -115,7 +123,7 @@ export async function POST(request) {
     console.log("indianTime", indianTime);
     const newsGroupRecord = await db.insert(NEWS_GROUP).values({
       show_on_top: showOnTop, // Use the value from the first entry
-      main_news: main_news,  // Use the value from the first entry
+      main_news: main_news, // Use the value from the first entry
       created_at: indianTime,
       updated_at: indianTime,
     });
@@ -135,8 +143,8 @@ export async function POST(request) {
         questions,
         wordDefinitions,
       } = entry;
-      console.log("logging 1");
-      
+      console.log("region_id",region_id);
+
       // Save data in NEWS table
       const newsRecord = await db.insert(NEWS).values({
         news_category_id: 8,
@@ -144,11 +152,11 @@ export async function POST(request) {
         image_url: `${fileName}`,
         description,
         age,
-        show_on_top: main_news ? true :showOnTop,
+        show_on_top: main_news ? true : showOnTop,
         main_news: main_news,
-        news_group_id:newsGroupId,
-        created_at:indianTime,
-        updated_at:indianTime
+        news_group_id: newsGroupId,
+        created_at: indianTime,
+        updated_at: indianTime,
       });
 
       const newsId = newsRecord[0].insertId;
@@ -158,6 +166,7 @@ export async function POST(request) {
       if (Array.isArray(category) && category.length > 0) {
         const categoryRecords = category.map((categoryId) => ({
           news_id: newsId,
+          region_id: region_id,
           news_category_id: categoryId,
         }));
 
@@ -167,7 +176,7 @@ export async function POST(request) {
       }
 
       console.log("questions", questions);
-      
+
       // Save questions in NEWS_QUESTIONS table
       if (questions && questions.length > 0) {
         const questionRecords = questions.map((question) => ({
@@ -180,11 +189,13 @@ export async function POST(request) {
       console.log("questions");
       // Save word definitions in WORDS_MEANINGS table
       if (wordDefinitions && wordDefinitions.length > 0) {
-        const wordDefinitionRecords = wordDefinitions.map(({ word, definition }) => ({
-          age,
-          word,
-          description: definition,
-        }));
+        const wordDefinitionRecords = wordDefinitions.map(
+          ({ word, definition }) => ({
+            age,
+            word,
+            description: definition,
+          })
+        );
 
         await db.insert(WORDS_MEANINGS).values(wordDefinitionRecords);
       }
@@ -192,16 +203,16 @@ export async function POST(request) {
 
     const sftp = new SFTPClient();
     await sftp.connect({
-      host: '68.178.163.247',
+      host: "68.178.163.247",
       port: 22,
-      username: 'devusr',
-      password: 'Wowfyuser#123',
+      username: "devusr",
+      password: "Wowfyuser#123",
     });
 
     // Define unique file names for the images
     // const fileName = `${Date.now()}-${category}-${title.replace(/\s+/g, '-')}.png`;
     const localFilePath = path.join(localTempDir, fileName);
-    const cPanelDirectory = '/home/devusr/public_html/testusr/images';
+    const cPanelDirectory = "/home/devusr/public_html/testusr/images";
 
     // Handle file upload process
     if (!fs.existsSync(localTempDir)) {
@@ -209,8 +220,8 @@ export async function POST(request) {
     }
 
     // Decode base64 image and save temporarily on server
-    const base64Image = imageData.split(';base64,').pop();
-    fs.writeFileSync(localFilePath, base64Image, { encoding: 'base64' });
+    const base64Image = imageData.split(";base64,").pop();
+    fs.writeFileSync(localFilePath, base64Image, { encoding: "base64" });
 
     // Upload image to cPanel directory
     await sftp.put(localFilePath, `${cPanelDirectory}/${fileName}`);
@@ -223,16 +234,16 @@ export async function POST(request) {
 
     return NextResponse.json(
       {
-        message: 'News articles saved successfully',
+        message: "News articles saved successfully",
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error uploading image or saving data:', error);
+    console.error("Error uploading image or saving data:", error);
 
     return NextResponse.json(
       {
-        error: 'Failed to upload image and save data',
+        error: "Failed to upload image and save data",
         details: error.message,
       },
       { status: 500 }

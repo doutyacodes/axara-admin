@@ -99,6 +99,7 @@ function AddNews() {
       const categoryId = data.originalData.categoryIds;      
   
       ageOptions.forEach(age => {
+        console.log(data)
         const resultData = data.results.find(r => r.age === age) || {};
         initialStates[age] = {
           category: categoryId, // Ensure category is set consistently
@@ -108,6 +109,7 @@ function AddNews() {
           description: resultData.description || '',
           showOnTop: data.originalData.showOnTop,
           main_news: data.originalData.main_news,
+          region_id: data.originalData.region_id,
           questions: resultData.questions?.map((q, idx) => ({ 
             id: idx + 1, 
             question: q 
@@ -309,9 +311,9 @@ function AddNews() {
         toast.error(data.message || 'Failed to submit article. Please try again.');
         return;
       }
-      // Success case
-      toast.success('News Added Successfully');
-      router.push('/news');
+      // // Success case
+      // toast.success('News Added Successfully');
+      // router.push('/news');
     } catch (error) {
       console.error(error);
       toast.error('Network error occurred. Please try again.');
