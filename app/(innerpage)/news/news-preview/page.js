@@ -311,9 +311,9 @@ function AddNews() {
         toast.error(data.message || 'Failed to submit article. Please try again.');
         return;
       }
-      // // Success case
-      // toast.success('News Added Successfully');
-      // router.push('/news');
+      // Success case
+      toast.success('News Added Successfully');
+      router.push('/news');
     } catch (error) {
       console.error(error);
       toast.error('Network error occurred. Please try again.');
