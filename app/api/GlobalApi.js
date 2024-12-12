@@ -121,6 +121,15 @@ const DeleteNewsArticle = (id) => {
   });
 };
 
+const DeleteWholeNews = (id) => {
+  return axios.delete("/api/deleteWholeNews", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    data: { id },
+  });
+};
+
 
 const FetchActivities = (age, type) => {
   return axios.get(`/api/fetchActivities`, {
@@ -189,6 +198,7 @@ export default {
   FetchNewsReports,
   DeleteNewsArticle,
   GetNewsCount,
+  DeleteWholeNews,
 
   /* Learn */
   GetLearnSubjects,
