@@ -162,8 +162,19 @@ function AddNews() {
   };
 
   const handleEdition = (editionId) => {
-    setNewsForm({ ...newsForm,region_id:editionId })
-    
+    setNewsForm({ ...newsForm, region_id: editionId, categories: [] });
+    // if (editionId !== 1) {
+    //   const filteredCategories = categories.filter((cat) => {
+    //     if (
+    //       cat.region === "no" ||
+    //       (cat.region == "yes" && cat.region_id == editionId)
+    //     ) {
+    //       return true; // Include all categories where region is "no"
+    //     }
+    //     return false; // Exclude any other cases if they exist
+    //   });
+    //   setCategories(filteredCategories);
+    // }
   };
 
   const handleNewsImage = (event) => {
@@ -335,7 +346,7 @@ function AddNews() {
                       className={`
                           flex items-center space-x-2 p-2 border rounded-lg cursor-pointer 
                           ${
-                            newsForm.region_id==edition.id
+                            newsForm.region_id == edition.id
                               ? "bg-orange-100 border-orange-500"
                               : "hover:bg-gray-100"
                           }
@@ -350,7 +361,6 @@ function AddNews() {
                   ))}
                 </div>
               </div>
-             
             </div>
             {/* Categories Multi-Select */}
             <div className="space-y-2">
@@ -371,25 +381,27 @@ function AddNews() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {filteredDropdownCategories.map((cat) => (
-                      <div
-                        key={cat.id}
-                        className={`
-                          flex items-center space-x-2 p-2 border rounded-lg cursor-pointer 
-                          ${
-                            newsForm.categories.includes(cat.id)
-                              ? "bg-orange-100 border-orange-500"
-                              : "hover:bg-gray-100"
-                          }
-                        `}
-                        onClick={() => handleCategoryToggle(cat.id)}
-                      >
-                        {newsForm.categories.includes(cat.id) && (
-                          <Check className="h-5 w-5 text-orange-500" />
-                        )}
-                        <span>{cat.name}</span>
-                      </div>
-                    ))}
+                    {filteredDropdownCategories.map((cat) => {
+                      return (
+                        <div
+                          key={cat.id}
+                          className={`
+                            flex items-center space-x-2 p-2 border rounded-lg cursor-pointer ${(newsForm?.region_id !=1 && (cat.region=="yes" && cat.region_id!=newsForm.region_id)) ? "hidden" :""}
+                            ${
+                              newsForm.categories.includes(cat.id)
+                                ? "bg-orange-100 border-orange-500"
+                                : "hover:bg-gray-100"
+                            }
+                          `}
+                          onClick={() => handleCategoryToggle(cat.id)}
+                        >
+                          {newsForm.categories.includes(cat.id) && (
+                            <Check className="h-5 w-5 text-orange-500" />
+                          )}
+                          <span>{cat.name}</span>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
