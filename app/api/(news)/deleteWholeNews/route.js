@@ -16,7 +16,7 @@ export async function DELETE(request) {
   console.log("lof g id", id)
   try {
     // Step 1: Fetch the image URL associated with the news article
-    const newsRecord = await db.select({ image_url: NEWS.image_url,news_group_id }).from(NEWS).where(eq(NEWS.id, id)).limit(1);
+    const newsRecord = await db.select().from(NEWS).where(eq(NEWS.id, id)).limit(1);
     if (newsRecord.length === 0) {
       return NextResponse.json({ error: 'News article not found' }, { status: 404 });
     }
