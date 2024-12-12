@@ -98,11 +98,13 @@ export async function POST(request) {
       await sftp.end();
 
       // Step 4.5: Update the database with the new image URL
+      const newData =  await db.select().from(NEWS).where(eq(NEWS.id,id))
+      const news_group_id = newData[0].news_group_id
       await db.update(NEWS)
         .set({
           image_url: fileName,
         })
-        .where(eq(NEWS.id, id));
+        .where(eq(NEWS.news_group_id, news_group_id));
     }
 
     return NextResponse.json(
