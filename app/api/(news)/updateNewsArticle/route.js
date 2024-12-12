@@ -22,7 +22,6 @@ export async function POST(request) {
   const localTempDir = os.tmpdir();
 
   try {
-    // Update the news data in the database (always update fields regardless of image edit)
     // Step 1: Update the news fields in the NEWS table
     await db
       .update(NEWS)
@@ -47,11 +46,11 @@ export async function POST(request) {
 
       await db.insert(NEWS_TO_CATEGORIES).values(newMappings);
     }
+
     let fileName = oldImage; // Default to the existing image name
 
-    // Check if the image was edited
+    // Step 4: Handle image upload if it was edited
     if (isImageEdited) {
-      // Delete the old image from the cPanel if it's edited
       const sftp = new SFTPClient();
       await sftp.connect({
         host: '68.178.163.247',
@@ -62,13 +61,11 @@ export async function POST(request) {
 
       const cPanelDirectory = '/home/devusr/public_html/testusr/images';
 
-      // Delete the old image from cPanel directory if a new one is provided
+      // Step 4.1: Delete the old image from cPanel directory
       try {
-        // Attempt to delete the old image
         await sftp.delete(`${cPanelDirectory}/${oldImage}`);
         console.log(`Old image deleted successfully: ${oldImage}`);
       } catch (error) {
-        // Handle the error if the file is not found or another issue occurs
         if (error.code === 'ENOENT') {
           console.log(`File not found: ${oldImage}. Proceeding without deletion.`);
         } else {
@@ -76,22 +73,22 @@ export async function POST(request) {
         }
       }
 
-      // // Define a unique name for the new image
-      // const timestamp = Date.now();
-      // fileName = `${timestamp}-${categoryId}-${title.replace(/\s+/g, '-')}.png`;
+      // Step 4.2: Define a unique name for the new image
+      const timestamp = Date.now();
+      fileName = `${timestamp}-${id}-${title.replace(/\s+/g, '-')}.png`;
 
       const localFilePath = path.join(localTempDir, fileName);
 
-      // Handle file upload process
+      // Ensure the local temp directory exists
       if (!fs.existsSync(localTempDir)) {
         fs.mkdirSync(localTempDir, { recursive: true });
       }
 
-      // Decode base64 image and save temporarily on server
+      // Step 4.3: Decode base64 image and save temporarily on server
       const base64Image = image.split(';base64,').pop();
       fs.writeFileSync(localFilePath, base64Image, { encoding: 'base64' });
 
-      // Upload image to cPanel directory
+      // Step 4.4: Upload image to cPanel directory
       await sftp.put(localFilePath, `${cPanelDirectory}/${fileName}`);
 
       // Clean up temporary file
@@ -99,16 +96,14 @@ export async function POST(request) {
 
       // Close SFTP connection
       await sftp.end();
-    }
 
-    // // If the image was edited, update the image URL in the database
-    // if (isImageEdited) {
-    //   await db.update(NEWS)
-    //     .set({
-    //       image_url: fileName,
-    //     })
-    //     .where(eq(NEWS.id, id));
-    // }
+      // Step 4.5: Update the database with the new image URL
+      await db.update(NEWS)
+        .set({
+          image_url: fileName,
+        })
+        .where(eq(NEWS.id, id));
+    }
 
     return NextResponse.json(
       {
