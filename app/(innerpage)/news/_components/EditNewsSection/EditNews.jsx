@@ -221,13 +221,10 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
     try {
       setIsSubmitting(false);
       const response = GlobalApi.DeleteWholeNews(selectedNews.id);
-      if (response.status === 201) {
+      console.log("status",response.status)
+      if (response.status ==201) {
         toast.success("News Deleted Successfully");
         router.replace("/news")
-      } else {
-        const errorMessage =
-          response.data?.message || "News Deleted Successfully";
-        toast.error(`Error: ${errorMessage}`);
       }
       setDeleteShow(false);
     } catch (error) {
