@@ -539,7 +539,7 @@ function AddNews() {
                     setNewsForm({ ...newsForm, showOnTop: checked })
                   }
                 />
-                <Label htmlFor="showOnTop">Show on Top</Label>
+                <Label htmlFor="showOnTop">Category Headline</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -549,7 +549,7 @@ function AddNews() {
                     setNewsForm({ ...newsForm, main_news: checked })
                   }
                 />
-                <Label htmlFor="main_news">Main News</Label>
+                <Label htmlFor="main_news">Main Headline</Label>
               </div>
             </div>
             {/* Main News Slot Selection */}
