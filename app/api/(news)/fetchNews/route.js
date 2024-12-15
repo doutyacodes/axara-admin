@@ -82,6 +82,7 @@ export async function POST(req) {
       age: NEWS.age,
       image_url: NEWS.image_url,
       summary: NEWS.summary,
+      main_news: NEWS.main_news,
       showOnTop: NEWS.show_on_top,
       created_at: NEWS.created_at,
       updated_at: NEWS.updated_at,

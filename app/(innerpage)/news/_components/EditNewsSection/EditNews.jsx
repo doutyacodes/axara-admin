@@ -29,6 +29,7 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
     title: "",
     description: "",
     showOnTop: false,
+    main_news: false,
     image: null,
   });
   console.log("newsForm", newsForm);
@@ -53,6 +54,7 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
         title: selectedNews.title || "",
         description: selectedNews.description || "",
         showOnTop: selectedNews.showOnTop || false,
+        main_news: selectedNews.main_news || false,
         image: imageUrl,
       };
 
@@ -175,6 +177,7 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
         title: newsForm.title,
         description: newsForm.description,
         showOnTop: newsForm.showOnTop,
+        main_news: newsForm.main_news,
         // Only send base64 image if it's been edited, otherwise send original image namedeleteShow ? base64Image : selectedNews.image_url,
         oldImage: selectedNews.image_url,
         isImageEdited: isImageEdited,
@@ -488,7 +491,17 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
                     setNewsForm({ ...newsForm, showOnTop: checked })
                   }
                 />
-                <Label htmlFor="showOnTop">Show in Home Page</Label>
+                <Label htmlFor="showOnTop">Category Headline</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="main_news"
+                  checked={newsForm.main_news}
+                  onCheckedChange={(checked) =>
+                    setNewsForm({ ...newsForm, main_news: checked })
+                  }
+                />
+                <Label htmlFor="main_news">Main Headline</Label>
               </div>
               <Button
                 type="submit"
