@@ -103,8 +103,7 @@ export async function POST(request) {
     }
 
     const now = new Date(); // Current UTC time
-    const utcTime = now.getTime() + now.getTimezoneOffset() * 60000; // Convert to UTC
-    const indianTime = new Date(utcTime); 
+    const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
 
     // Extract `showOnTop` and `main_news` from the first entry in `entries`
     const {
