@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import SFTPClient from "ssh2-sftp-client";
+import { DateTime } from "luxon";
 import {
   NEWS,
   NEWS_CATEGORIES,
@@ -25,16 +26,7 @@ export async function POST(request) {
 
   const { result, imageData, fileName, slotId } = await request.json(); // Receive the new data structure
 
-  // // console.log(result, fileName);
-  // return NextResponse.json(
-  //   {
-  //     message: 'News articles saved successfully',
-  //   },
-  //   { status: 400 }
-  // );
-
   const entries = Object.values(result); // Convert the data object into an array of entries
-  // console.log('entries', entries)
 
   // Define the local temp directory dynamically based on platform
   const localTempDir = os.tmpdir();
@@ -44,7 +36,6 @@ export async function POST(request) {
     const allWordDefinitions = entries.flatMap(({ age, wordDefinitions }) =>
       wordDefinitions.map(({ word }) => ({ age, word }))
     );
-    console.log("allWordDefinitions", allWordDefinitions);
 
     const filteredWordDefinitions = [];
 
@@ -57,33 +48,21 @@ export async function POST(request) {
       if (existingWords.length > 0) {
         // Log duplicate entries for your reference
         duplicateEntries.push({ age, word });
-        console.log(`Duplicate entry found: age=${age}, word=${word}`);
       } else {
         // If not duplicate, add to the filtered list
         filteredWordDefinitions.push({ age, word });
       }
     }
 
-    // Function to get current date-time in IST
-    // function getIndianTime() {
-    //   const options = {
-    //     timeZone: 'Asia/Kolkata',
-    //     year: 'numeric',
-    //     month: '2-digit',
-    //     day: '2-digit',
-    //     hour: '2-digit',
-    //     minute: '2-digit',
-    //     second: '2-digit',
-    //   };
-    //   const formatter = new Intl.DateTimeFormat('en-GB', options);
-    //   console.log("1 ");
-    //   const parts = formatter.formatToParts(new Date());
-    //   console.log("2 ");
-    //   const date = `${parts.find((p) => p.type === 'day').value}-${parts.find((p) => p.type === 'month').value}-${parts.find((p) => p.type === 'year').value}`;
-    //   const time = `${parts.find((p) => p.type === 'hour').value}:${parts.find((p) => p.type === 'minute').value}:${parts.find((p) => p.type === 'second').value}`;
-    //   console.log("3 ");
-    //   return `${date} ${time}`;
-    // }
+    // Get the current date-time in IST using Luxon
+// Get current Indian Standard Time (IST)
+const formattedIndianTime = DateTime.now().setZone('Asia/Kolkata');
+
+// Convert to plain JavaScript Date object
+const indianTime = formattedIndianTime.toJSDate();
+
+// Format the date to match SQL timestamp (YYYY-MM-DD HH:MM:SS)
+const indianTimeFormatted = formattedIndianTime.toFormat('yyyy-MM-dd HH:mm:ss');
 
     // If slotId is valid, update the tables
     if (slotId !== null) {
@@ -98,12 +77,7 @@ export async function POST(request) {
         .update(NEWS)
         .set({ show_on_top: false, main_news: false })
         .where(eq(NEWS.news_group_id, slotId));
-
-      console.log(`Updated records for slotId: ${slotId}`);
     }
-
-   const now = new Date(); // Current UTC time
-const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
 
     // Extract `showOnTop` and `main_news` from the first entry in `entries`
     const {
@@ -113,12 +87,9 @@ const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkat
     } = entries[0] || {};
 
     // Insert the news group record with IST timestamps
-    // const indianTime = getIndianTime();
-    // const indianTime = getIndianTime();
-    console.log("indianTime", indianTime);
     const newsGroupRecord = await db.insert(NEWS_GROUP).values({
-      show_on_top: showOnTop, // Use the value from the first entry
-      main_news: main_news, // Use the value from the first entry
+      show_on_top: showOnTop,
+      main_news: main_news,
       created_at: indianTime,
       updated_at: indianTime,
     });
@@ -138,7 +109,6 @@ const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkat
         questions,
         wordDefinitions,
       } = entry;
-      console.log("region_id",region_id);
 
       // Save data in NEWS table
       const newsRecord = await db.insert(NEWS).values({
@@ -155,7 +125,6 @@ const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkat
       });
 
       const newsId = newsRecord[0].insertId;
-      console.log("newsId", newsId);
 
       // Save each category ID in the NEWS_CATEGORIES table
       if (Array.isArray(category) && category.length > 0) {
@@ -166,11 +135,7 @@ const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkat
         }));
 
         await db.insert(NEWS_TO_CATEGORIES).values(categoryRecords);
-
-        console.log("logging 3: Saved categories for newsId:", newsId);
       }
-
-      console.log("questions", questions);
 
       // Save questions in NEWS_QUESTIONS table
       if (questions && questions.length > 0) {
@@ -181,7 +146,7 @@ const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkat
 
         await db.insert(NEWS_QUESTIONS).values(questionRecords);
       }
-      console.log("questions");
+
       // Save word definitions in WORDS_MEANINGS table
       if (wordDefinitions && wordDefinitions.length > 0) {
         const wordDefinitionRecords = wordDefinitions.map(
@@ -204,8 +169,6 @@ const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkat
       password: "Wowfyuser#123",
     });
 
-    // Define unique file names for the images
-    // const fileName = `${Date.now()}-${category}-${title.replace(/\s+/g, '-')}.png`;
     const localFilePath = path.join(localTempDir, fileName);
     const cPanelDirectory = "/home/devusr/public_html/testusr/images";
 
