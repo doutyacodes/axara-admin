@@ -23,7 +23,7 @@ export async function POST(request) {
   const userData = authResult.decoded_Data;
   const userId = userData.id;
 
-  const { result, imageData, fileName, slotId } = await request.json(); // Receive the new data structure
+  const { result, imageData, fileName, slotId,indianTime } = await request.json(); // Receive the new data structure
 
   // // console.log(result, fileName);
   // return NextResponse.json(
@@ -102,8 +102,8 @@ export async function POST(request) {
       console.log(`Updated records for slotId: ${slotId}`);
     }
 
-   const now = new Date(); // Current UTC time
-const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+//    const now = new Date(); // Current UTC time
+// const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
 
     // Extract `showOnTop` and `main_news` from the first entry in `entries`
     const {
