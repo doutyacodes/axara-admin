@@ -26,21 +26,6 @@ export async function DELETE(request) {
 
     console.log("imageUrl", imageUrl)
 
-    // Step 2: Set up SFTP to connect to cPanel
-    const sftp = new SFTPClient();
-    await sftp.connect({
-      host: '68.178.163.247',
-      port: 22,
-      username: 'devusr',
-      password: 'Wowfyuser#123',
-    });
-
-    // Step 3: Delete the image file from cPanel (sftp)
-    const cPanelDirectory = '/home/devusr/public_html/testusr/images';
-    await sftp.delete(`${cPanelDirectory}/${imageUrl}`);
-    
-    // Step 4: Disconnect from SFTP after deleting the image
-    await sftp.end();
 
     // Step 5: Delete related questions in the NEWS_QUESTIONS table
     await db.delete(NEWS_QUESTIONS).where(eq(NEWS_QUESTIONS.news_id, id));
