@@ -102,13 +102,9 @@ export async function POST(request) {
       console.log(`Updated records for slotId: ${slotId}`);
     }
 
-    function getIndianTime() {
-      const now = new Date();
-      const indianTimeOffset = 330; // IST offset in minutes (UTC+5:30)
-      const utcTime = now.getTime() + now.getTimezoneOffset() * 60000; // Convert to UTC
-      const indianTime = new Date(utcTime + indianTimeOffset * 60000);
-      return indianTime;
-    }
+    const now = new Date(); // Current UTC time
+    const utcTime = now.getTime() + now.getTimezoneOffset() * 60000; // Convert to UTC
+    const indianTime = new Date(utcTime + 330 * 60000); 
 
     // Extract `showOnTop` and `main_news` from the first entry in `entries`
     const {
@@ -119,7 +115,7 @@ export async function POST(request) {
 
     // Insert the news group record with IST timestamps
     // const indianTime = getIndianTime();
-    const indianTime = getIndianTime();
+    // const indianTime = getIndianTime();
     console.log("indianTime", indianTime);
     const newsGroupRecord = await db.insert(NEWS_GROUP).values({
       show_on_top: showOnTop, // Use the value from the first entry
