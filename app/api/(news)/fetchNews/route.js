@@ -89,6 +89,7 @@ export async function POST(req) {
         showOnTop: NEWS.show_on_top,
         created_at: NEWS.created_at,
         updated_at: NEWS.updated_at,
+        region_id:NEWS_TO_CATEGORIES.region_id
       })
       .from(NEWS)
       .leftJoin(NEWS_TO_CATEGORIES, eq(NEWS.id, NEWS_TO_CATEGORIES.news_id))

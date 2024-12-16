@@ -26,6 +26,7 @@ export async function POST(request) {
     isImageEdited,
     oldImage,
     main_news,
+    regionId,
   } = await request.json();
 
   // Define the local temp directory dynamically based on platform
@@ -52,6 +53,7 @@ export async function POST(request) {
       const newMappings = categoryId.map((catId) => ({
         news_id: id,
         news_category_id: catId,
+        region_id: regionId,
       }));
 
       await db.insert(NEWS_TO_CATEGORIES).values(newMappings);

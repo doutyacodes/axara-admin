@@ -265,6 +265,7 @@ export default function ViewAllNews() {
             selectedNews={selectedNews}
             selectedAge={selectedAge}
             setShowEditSection={setShowEditSection}
+            fetchNews={fetchNews}
           />
         </>
       ) : (

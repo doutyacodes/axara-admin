@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { BsTrash2Fill } from "react-icons/bs";
 import { GoAlertFill } from "react-icons/go";
-function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
+function EditNews({ selectedNews, selectedAge, setShowEditSection,fetchNews }) {
   const [categories, setCategories] = useState([]);
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [errors, setErrors] = useState({});
@@ -23,7 +23,9 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
   const [deleteShow, setDeleteShow] = useState(false);
   const router = useRouter();
 
-  console.log("selectedNews", selectedNews);
+  // console.log("selectedNews", selectedNews);
+  const [regionId, setRegionId] = useState(selectedNews.region_id);
+
   const [newsForm, setNewsForm] = useState({
     categories: [],
     title: "",
@@ -71,7 +73,20 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
       setImage(imageUrl);
     }
   }, [selectedNews]);
-
+  const Editions = [
+    {
+      id: 1,
+      name: "All",
+    },
+    {
+      id: 2,
+      name: "India",
+    },
+    {
+      id: 3,
+      name: "United States",
+    },
+  ];
   const getNewsCategories = async () => {
     setCategoryLoading(true);
     try {
@@ -181,6 +196,7 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
         // Only send base64 image if it's been edited, otherwise send original image namedeleteShow ? base64Image : selectedNews.image_url,
         oldImage: selectedNews.image_url,
         isImageEdited: isImageEdited,
+        regionId
       };
 
       const token =
@@ -201,7 +217,7 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
 
       toast.success("News Updated Successfully");
       setShowEditSection(false);
-
+      fetchNews()
       // Optional: Redirect or refresh data
       // router.push('/news');
     } catch (error) {
@@ -301,7 +317,7 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
 
               {/* Category Select with Search */}
               <div className="space-y-2">
-                <Label htmlFor="category">Category*</Label>
+                {/* <Label htmlFor="category">Category*</Label> */}
                 {/* <Select
                     value={newsForm.category}
                     onValueChange={(value) => {
@@ -337,7 +353,27 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
                     )}
                     </SelectContent>
                 </Select> */}
-
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+                  {Editions.map((edition) => (
+                    <div
+                      key={edition.id}
+                      className={`
+                          flex items-center space-x-2 p-2 border rounded-lg cursor-pointer 
+                          ${
+                            regionId == edition.id
+                              ? "bg-orange-100 border-orange-500"
+                              : "hover:bg-gray-100"
+                          }
+                        `}
+                      onClick={() => setRegionId(edition.id)}
+                    >
+                      {regionId == edition.id && (
+                        <Check className="h-5 w-5 text-orange-500" />
+                      )}
+                      <span>{edition.name}</span>
+                    </div>
+                  ))}
+                </div>
                 <div className="space-y-2">
                   <Label>Categories*</Label>
                   <div className="border rounded-lg p-4">
