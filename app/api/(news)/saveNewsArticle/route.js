@@ -14,7 +14,6 @@ import { authenticate } from "@/lib/jwtMiddleware";
 import os from "os";
 import { db } from "@/utils";
 import { and, eq } from "drizzle-orm";
-const { DateTime } = require("luxon");
 
 export async function POST(request) {
   const authResult = await authenticate(request, true);
@@ -103,13 +102,8 @@ export async function POST(request) {
       console.log(`Updated records for slotId: ${slotId}`);
     }
 
-    const now = new Date(); // Current UTC time
-    const formattedIndianTime = DateTime.now().setZone('Asia/Kolkata');
-
-    // Convert to plain JavaScript Date object
-    const indianTime = formattedIndianTime.toJSDate();
-    const indianTimeFormatted = formattedIndianTime.toFormat('yyyy-MM-dd HH:mm:ss');
-console.log(indianTimeFormatted);
+   const now = new Date(); // Current UTC time
+const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
 
     // Extract `showOnTop` and `main_news` from the first entry in `entries`
     const {
@@ -155,7 +149,6 @@ console.log(indianTimeFormatted);
         age,
         show_on_top: main_news ? true : showOnTop,
         main_news: main_news,
-        show_date:indianTime,
         news_group_id: newsGroupId,
         created_at: indianTime,
         updated_at: indianTime,

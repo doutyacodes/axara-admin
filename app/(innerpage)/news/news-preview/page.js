@@ -276,11 +276,15 @@ function AddNews() {
     }
     setIsSubmitting(true);
     try {
+      const now = new Date(); // Current UTC time
+      const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+      
       const payload = {
         result: formStates,
         imageData,
         fileName,
-        slotId: data.originalData.mainNewsSlot
+        slotId: data.originalData.mainNewsSlot,
+        indianTime
       };
       
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
