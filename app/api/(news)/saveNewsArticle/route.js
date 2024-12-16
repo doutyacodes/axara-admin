@@ -14,6 +14,7 @@ import { authenticate } from "@/lib/jwtMiddleware";
 import os from "os";
 import { db } from "@/utils";
 import { and, eq } from "drizzle-orm";
+const { DateTime } = require("luxon");
 
 export async function POST(request) {
   const authResult = await authenticate(request, true);
@@ -103,7 +104,12 @@ export async function POST(request) {
     }
 
     const now = new Date(); // Current UTC time
-    const indianTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const formattedIndianTime = DateTime.now().setZone('Asia/Kolkata');
+
+    // Convert to plain JavaScript Date object
+    const indianTime = formattedIndianTime.toJSDate();
+
+// console.log(formattedIndianTime);
 
     // Extract `showOnTop` and `main_news` from the first entry in `entries`
     const {
