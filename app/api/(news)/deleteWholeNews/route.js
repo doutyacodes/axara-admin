@@ -5,7 +5,7 @@ import SFTPClient from 'ssh2-sftp-client';
 import { eq } from 'drizzle-orm';
 import { authenticate } from '@/lib/jwtMiddleware';
 
-export async function DELETE(request) {
+export async function POST(request) {
   const authResult = await authenticate(request, true);
   if (!authResult.authenticated) {
     return authResult.response;

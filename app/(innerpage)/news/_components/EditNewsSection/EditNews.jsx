@@ -223,12 +223,13 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
   const handleClick = async () => {
     try {
       setIsSubmitting(false);
-      const response = GlobalApi.DeleteWholeNews(selectedNews.id);
-      // console.log("status", response.status);
-      // console.log("data", response.data);
-      toast.success("News Deleted Successfully");
-      window.location.reload()
-
+      const response = await GlobalApi.DeleteWholeNews(selectedNews.id);
+      console.log("status", response.status);
+      console.log("data", response.data);
+      if (response.status == 201) {
+        toast.success("News Deleted Successfully");
+        window.location.reload;
+      }
       setDeleteShow(false);
     } catch (error) {
       console.log(error);
