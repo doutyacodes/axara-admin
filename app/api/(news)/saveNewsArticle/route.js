@@ -155,6 +155,7 @@ export async function POST(request) {
         age,
         show_on_top: main_news ? true : showOnTop,
         main_news: main_news,
+        show_date:indianTime,
         news_group_id: newsGroupId,
         created_at: indianTime,
         updated_at: indianTime,

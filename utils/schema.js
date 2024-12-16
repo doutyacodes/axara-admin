@@ -1371,6 +1371,7 @@ export const NEWS = mysqlTable("news", {
   age: int("age").notNull(), // Age-related parameter
   news_group_id: int("news_group_id").notNull(),
   show_on_top: boolean("show_on_top").default(false),
+  show_date: datetime("show_date").default(null),
   main_news: boolean("main_news").default(false),
   created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
