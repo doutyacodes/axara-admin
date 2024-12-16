@@ -224,8 +224,8 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
     try {
       setIsSubmitting(false);
       const response = GlobalApi.DeleteWholeNews(selectedNews.id);
-      console.log("status", response.status);
-      console.log("data", response.data);
+      // console.log("status", response.status);
+      // console.log("data", response.data);
       toast.success("News Deleted Successfully");
       window.location.reload()
 
