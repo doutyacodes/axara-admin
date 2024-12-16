@@ -108,8 +108,8 @@ export async function POST(request) {
 
     // Convert to plain JavaScript Date object
     const indianTime = formattedIndianTime.toJSDate();
-
-// console.log(formattedIndianTime);
+    const indianTimeFormatted = formattedIndianTime.toFormat('yyyy-MM-dd HH:mm:ss');
+console.log(indianTimeFormatted);
 
     // Extract `showOnTop` and `main_news` from the first entry in `entries`
     const {
