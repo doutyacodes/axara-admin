@@ -228,7 +228,7 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection }) {
       console.log("data", response.data);
       if (response.status == 201) {
         toast.success("News Deleted Successfully");
-        window.location.reload;
+        window.location.reload();
       }
       setDeleteShow(false);
     } catch (error) {
