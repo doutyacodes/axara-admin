@@ -14,7 +14,7 @@ export async function POST(request) {
 
   const data = await request.json();
 
-  const { title, description, wordDefinitions, categoryIds } = data
+  const { title, description, wordDefinitions, categoryIds,region_id } = data
 
   if (!title || !description || !Array.isArray(wordDefinitions) || !Array.isArray(categoryIds)) {
     return NextResponse.json(
@@ -346,7 +346,9 @@ export async function POST(request) {
         1. A engaging Title tailored to that age 
         2. A simplified and age-appropriate version of this news for kids aged 3 to 12, in a paragraph or 2,  summarizing the content in a way each age can easily understand. For each individual age, craft a unique version that fits their comprehension level and attention span.
         3. Two engaging questions to make the child think or talk about the news.
-              
+        ${
+          region_id ==2 || region_id == 3 && `4. The news should be in the perspective of ${region_id==2 ? "an Indian user" :"an American user"}.`
+        }      
         Ensure the output includes:
         - "wordDefinitions": Always include simple and clear explanations for any terms, ideas, concepts, or complex words in the rewritten description, tailored to the age group. Ensure that the explanations are easy to understand and appropriate for the child's level of knowledge.
 
