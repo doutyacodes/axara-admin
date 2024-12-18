@@ -1,0 +1,60 @@
+{
+    "results": [
+        {
+            "age": 3,
+            "title": "Sandeep Changed Teams!",
+            "summary": "Sandeep left one team and joined another team.",
+            "description": "Sandeep was with a group called Team BJP, but now he is with Team Congress. The people in Team Congress were really nice to him. They hugged him and said welcome. Sandeep said, 'I want to be with nice people!' He felt sad in his old team because they didn’t help him. There is a big day called election coming up soon, but now it’s on a different day because of a fun festival!",
+            "questions": [
+                "Which team did Sandeep leave?",
+                "What did Sandeep want from his new team?"
+            ],
+            "wordDefinitions": [
+                {
+                    "word": "Election",
+                    "definition": "A special day when people choose leaders."
+                },
+                {
+                    "word": "Congress",
+                    "definition": "A group of people who work together in the government."
+                }
+            ]
+        },
+        {
+            "age": 4,
+            "title": "Sandeep Joins Team Congress!",
+            "summary": "Sandeep left Team BJP and joined a new political team called Congress.",
+            "description": "Sandeep, who was part of Team BJP, has switched to Team Congress! When Sandeep joined Congress, the other leaders greeted him warmly and welcomed him with hugs. He explained that he was looking to be with kind-hearted people, unlike his previous team. He felt let down in Team BJP because he thought they didn't listen to him or support him. There's an important election happening soon in Palakkad, but its date was moved from November 13 to November 20 to allow for a significant festival to be celebrated.",
+            "questions": [
+                "What are Sandeep's reasons for leaving Team BJP?",
+                "What festival caused the election date change?"
+            ],
+            "wordDefinitions": [
+                {
+                    "word": "Election",
+                    "definition": "A day when voters choose their leaders from a list of candidates."
+                }
+            ]
+        },
+    ],
+    "originalData": {
+        "categoryId": "1",
+        "title": "Sandeep Joins a New Team!",
+        "summary": "Sandeep joined Team Congress and left Team BJP.\n",
+        "description": "A leader named Sandeep used to be in Team BJP, but now he has joined Team Congress! Big leaders in Congress gave him warm hugs and a special welcome.\n\n\"I Want to Be with Nice People!\" Sandeep said he left his old team because he wants to be with people who spread kindness and love. He didn’t like how Team BJP was behaving.\n\nWhy Did Sandeep Switch? Sandeep felt sad because his old team didn’t listen to him or help him when he needed it. He thought they made too many deals that he didn’t like.\n\nElection Day Changed! There’s an election in Palakkad soon, but the date has moved from November 13 to November 20 because of a big festival. Let’s wait and see what happens next! 😊\n",
+        "showOnTop": true,
+        "wordDefinitions": [
+            {
+                "id": 1,
+                "word": "Election",
+                "definition": "Election  theh election \n"
+            },
+            {
+                "id": 2,
+                "word": "Congress",
+                "definition": "Congress the poilitical party"
+            }
+        ]
+    },
+    "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDIBCQkJDAsMGA0NGDIhHCEyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+}

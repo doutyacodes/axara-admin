@@ -1541,3 +1541,59 @@ export const QUIZ_SCORE = mysqlTable("quiz_score", {
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
+
+export const ADULT_NEWS_GROUP = mysqlTable("adult_news_group", {
+  id: int("id").primaryKey().autoincrement(),
+  show_on_top: boolean("show_on_top").default(false),
+  main_news: boolean("main_news").default(false),
+  created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
+});
+
+export const ADULT_NEWS = mysqlTable("adult_news", {
+  id: int("id").primaryKey().autoincrement(),
+  news_category_id: int("news_category_id")
+    .notNull()
+    .references(() => NEWS_CATEGORIES.id),
+  title: varchar("title", { length: 255 }).notNull(), // Title of the news article
+  image_url: text("image_url").notNull(), // URL of the featured image
+  summary: text("summary"), // Brief summary, nullable
+  description: text("description").notNull(), // Detailed description of the article
+  viewpoint: varchar("viewpoint", { length: 255 }), // Viewpoint of the article
+  news_group_id: int("news_group_id").notNull(),
+  show_date: datetime("show_date").notNull(),
+  show_on_top: boolean("show_on_top").default(false),
+  main_news: boolean("main_news").default(false),
+  created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
+});
+
+export const ADULT_NEWS_TO_CATEGORIES = mysqlTable("adult_news_to_categories", {
+  id: int("id").primaryKey().autoincrement(),
+  news_id: int("news_id")
+    .notNull()
+    .references(() => ADULT_NEWS.id, { onDelete: "cascade" }), // Foreign key referencing NEWS table
+  news_category_id: int("news_category_id")
+    .notNull()
+    .references(() => NEWS_CATEGORIES.id, { onDelete: "cascade" }), // Foreign key referencing NEWS_CATEGORIES table
+});
+
+export const ADULT_NEWS_QUESTIONS = mysqlTable("adult_news_questions", {
+  id: int("id").primaryKey().autoincrement(), // Primary key
+  news_id: int("news_id")
+    .notNull()
+    .references(() => ADULT_NEWS.id), // Foreign key referencing NEWS table
+  questions: text("questions").notNull(), // The question text
+  created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
+});
+
+export const ADULT_NEWS_REPORTS = mysqlTable("adult_news_reports", {
+  id: int("id").primaryKey().autoincrement(),
+  news_id: int("news_id")
+    .notNull()
+    .references(() => ADULT_NEWS.id),
+  user_id: int("user_id").references(() => USER_DETAILS.id), // Nullable
+  report_text: text("report_text"),
+  created_at: timestamp("created_at").defaultNow(),
+});

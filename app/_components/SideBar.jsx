@@ -40,6 +40,7 @@ const SideBar = () => {
 
   const navLinks = [
     { label: "Axara News", links: "/news", icon: FaNewspaper  },  // Changed to "FaBuilding" for About Us    
+    { label: "Viewpoint", links: "/viewpoint", icon: FaNewspaper  },  // Changed to "FaBuilding" for About Us    
     // { label: "Search", links: "/search", icon: FaSearch },
     { label: "Learn", links: "/learn", icon: FaBook },
     { label: "Challenges", links: "/challenges", icon: FaTrophy },    
