@@ -28,16 +28,12 @@ export default function ViewAllNews() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [showNews, setShowNews] = useState(false);
-  const [showId, setShowId] = useState(null);
-  const [selectedAge, setSelectedAge] = useState(3);
   const [hoveredNewsId, setHoveredNewsId] = useState(null);
   const [showReportsModal, setShowReportsModal] = useState(false);
   const [showNewsSection, setShowNewsSection] = useState(false);
   const [showEditSection, setShowEditSection] = useState(false);
   const [selectedNews, setSelectedNews] = useState(null);
   const [newsReports, setNewsReports] = useState([]);
-  const [regionId, setRegionId] = useState(1);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -59,7 +55,7 @@ export default function ViewAllNews() {
   const fetchNews = async () => {
     try {
       setIsLoading(true);
-      const response = await GlobalApi.FetchNews({ age: selectedAge ,regionId});
+      const response = await GlobalApi.FetchNews();
       const { categories = [], news = [] } = response.data;
 
       const allCategory = { id: "all", name: "All" };
@@ -95,7 +91,7 @@ export default function ViewAllNews() {
 
   useEffect(() => {
     fetchNews();
-  }, [selectedAge,regionId]);
+  }, []);
 
   const currentCategoryNews = newsByCategory[selectedCategory] || [];
   const filteredNews = currentCategoryNews.filter(
@@ -250,7 +246,7 @@ export default function ViewAllNews() {
             <span className="ml-2 text-gray-700">Back</span>
           </button>
           {/* <NewsSection selectedNews={selectedNews} /> */}
-          <NewsDetails id={selectedNews.id} selectedAge={selectedAge} />
+          <NewsDetails id={selectedNews.id} />
         </>
       ) : showEditSection ? (
         <>
@@ -263,7 +259,6 @@ export default function ViewAllNews() {
           </button>
           <EditNews
             selectedNews={selectedNews}
-            selectedAge={selectedAge}
             setShowEditSection={setShowEditSection}
             fetchNews={fetchNews}
           />
@@ -271,56 +266,9 @@ export default function ViewAllNews() {
       ) : (
         <div className="max-w-7xl mx-auto">
           {/* Filters Section */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
-            {Editions.map((edition) => (
-              <div
-                key={edition.id}
-                className={`
-                          flex items-center space-x-2 p-2 border rounded-lg cursor-pointer 
-                          ${
-                            regionId == edition.id
-                              ? "bg-orange-100 border-orange-500"
-                              : "hover:bg-gray-100"
-                          }
-                        `}
-                onClick={() => setRegionId(edition.id)}
-              >
-                {regionId == edition.id && (
-                  <Check className="h-5 w-5 text-orange-500" />
-                )}
-                <span>{edition.name}</span>
-              </div>
-            ))}
-          </div>
+          
           <div className="flex space-x-4 mb-8 items-center">
-            <div className="relative w-64">
-              <select
-                value={selectedAge}
-                onChange={(e) => setSelectedAge(Number(e.target.value))}
-                className="w-full appearance-none bg-white border-2 border-orange-500 text-gray-800 
-                  py-3 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-orange-600
-                  text-base font-medium transition duration-300"
-              >
-                {[3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((age) => (
-                  <option
-                    key={age}
-                    value={age}
-                    className="bg-white text-gray-800 hover:bg-orange-50"
-                  >
-                    Age {age}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
-                <svg
-                  className="fill-current h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                </svg>
-              </div>
-            </div>
+            
             <div className="flex-grow relative">
               <input
                 type="text"

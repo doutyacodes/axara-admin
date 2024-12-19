@@ -2,7 +2,8 @@ const { default: axios } = require("axios");
 
 // Set a global timeout of 35 seconds (35000 milliseconds)
 // axios.defaults.timeout = 35000; // 35 seconds
-const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+const token =
+  typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
 const CreateNewUser = (data) => axios.post("/api/user", data);
 const LoginUser = (data) => axios.post("/api/login", data);
@@ -14,7 +15,6 @@ const GetUser = (token) =>
   });
 
 const CreateNewsArticle = (formData) => {
-
   return axios.post(`/api/createNewsArticle`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -27,12 +27,11 @@ const GetNewsCategories = (token) => {
   return axios.get(`/api/getNewsCategories`, {
     headers: {
       Authorization: `Bearer ${token}`,
-    }
+    },
   });
 };
 
 const CreateNewsCategory = (data) => {
-
   return axios.post(`/api/createNewsCategory`, data, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -49,12 +48,11 @@ const DeleteNewsCategory = (data) => {
   });
 };
 
-
 const GetNewsCount = (token) => {
   return axios.get(`/api/getNewsCount`, {
     headers: {
       Authorization: `Bearer ${token}`,
-    }
+    },
   });
 };
 
@@ -62,12 +60,11 @@ const GetLearnSubjects = (token) => {
   return axios.get(`/api/getLearnSubjects`, {
     headers: {
       Authorization: `Bearer ${token}`,
-    }
+    },
   });
 };
 
 const CreateLearnQuiz = (formData) => {
-
   return axios.post(`/api/createLearnQuiz`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -76,7 +73,6 @@ const CreateLearnQuiz = (formData) => {
 };
 
 const CreateLearnTopic = (formData) => {
-
   return axios.post(`/api/CreateLearnTopic`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -85,7 +81,6 @@ const CreateLearnTopic = (formData) => {
 };
 
 const FetchChallenges = async (data) => {
-
   return axios.post(`/api/fetchChallenges`, data, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -101,7 +96,14 @@ const FetchNews = async (data) => {
     },
   });
 };
-
+// New function to fetch news
+const FetchNews2 = async (data) => {
+  return axios.post(`/api/adult/fetchNews`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+    },
+  });
+};
 
 const FetchNewsReports = (newsId) => {
   return axios.get(`/api/fetchNewsReports/${newsId}`, {
@@ -110,7 +112,6 @@ const FetchNewsReports = (newsId) => {
     },
   });
 };
-
 
 const DeleteNewsArticle = (id) => {
   return axios.delete("/api/deleteNewsArticle", {
@@ -122,14 +123,16 @@ const DeleteNewsArticle = (id) => {
 };
 
 const DeleteWholeNews = (id) => {
-  return axios.post("/api/deleteWholeNews",{id}, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    
-  });
+  return axios.post(
+    "/api/deleteWholeNews",
+    { id },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 };
-
 
 const FetchActivities = (age, type) => {
   return axios.get(`/api/fetchActivities`, {
@@ -143,7 +146,7 @@ const FetchActivities = (age, type) => {
   });
 };
 
-const FetchAllUsers= () => {
+const FetchAllUsers = () => {
   return axios.get(`/api/fetchUsers`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -159,7 +162,6 @@ const FetchUserChildren = (userId) => {
   });
 };
 
-
 const FetchUserChallenges = (age, entryType, submissionStatus) => {
   return axios.get(`/api/fetchUserChallenges`, {
     headers: {
@@ -168,21 +170,22 @@ const FetchUserChallenges = (age, entryType, submissionStatus) => {
     params: {
       age,
       entryType,
-      submissionStatus
+      submissionStatus,
     },
   });
 };
 
-  const UpdateChallengeStatus = async (challengeId, status) => {
-    return axios.post(`/api/updateChallengeStatus`, { challengeId, status }, {
+const UpdateChallengeStatus = async (challengeId, status) => {
+  return axios.post(
+    `/api/updateChallengeStatus`,
+    { challengeId, status },
+    {
       headers: {
         Authorization: `Bearer ${token}`, // Include the token in the Authorization header
       },
-    });
-  };
-
-
-
+    }
+  );
+};
 
 export default {
   CreateNewUser,
@@ -199,7 +202,9 @@ export default {
   DeleteNewsArticle,
   GetNewsCount,
   DeleteWholeNews,
+  // Adult
 
+  FetchNews2,
   /* Learn */
   GetLearnSubjects,
   CreateLearnQuiz,
@@ -216,5 +221,4 @@ export default {
   /* Challenges */
   FetchUserChallenges,
   UpdateChallengeStatus,
-
 };
