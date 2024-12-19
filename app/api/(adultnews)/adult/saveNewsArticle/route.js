@@ -44,7 +44,7 @@ console.log("fileName",fileName)
         .where(eq(ADULT_NEWS.news_group_id, slotId));
     }
 
-    const { showOnTop = false, main_news = false } = entries[0] || {};
+    const { showOnTop = false, main_news = false ,region_id} = entries[0] || {};
 
     // Insert news group
     const newsGroupRecord = await db.insert(ADULT_NEWS_GROUP).values({
@@ -80,6 +80,7 @@ console.log("fileName",fileName)
         const categoryRecords = category.map((categoryId) => ({
           news_id: newsId,
           news_category_id: categoryId,
+          region_id
         }));
         await db.insert(ADULT_NEWS_TO_CATEGORIES).values(categoryRecords);
       }

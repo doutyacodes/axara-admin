@@ -1573,6 +1573,7 @@ export const ADULT_NEWS_TO_CATEGORIES = mysqlTable("adult_news_to_categories", {
   news_id: int("news_id")
     .notNull()
     .references(() => ADULT_NEWS.id, { onDelete: "cascade" }), // Foreign key referencing NEWS table
+  region_id: int("region_id").notNull(),
   news_category_id: int("news_category_id")
     .notNull()
     .references(() => NEWS_CATEGORIES.id, { onDelete: "cascade" }), // Foreign key referencing NEWS_CATEGORIES table

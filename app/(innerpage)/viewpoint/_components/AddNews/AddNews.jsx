@@ -29,6 +29,7 @@ function AddNews() {
     title: "",
     description: "",
     showOnTop: false,
+    region_id: 1,
     main_news: false,
     image: null,
     mainNewsSlot: null, // New field to store selected slot
@@ -207,6 +208,7 @@ function AddNews() {
       const body = {
         categoryIds: newsForm.categories, // Send array of category IDs
         title: newsForm.title,
+        region_id: newsForm.region_id,
         description: newsForm.description,
         showOnTop: newsForm.showOnTop,
         viewpoints,
@@ -240,6 +242,7 @@ function AddNews() {
         description: "",
         showOnTop: false,
         main_news: false,
+        region_id: 1,
         image: null,
         mainNewsSlot: null,
       });
@@ -260,7 +263,23 @@ function AddNews() {
   const filteredDropdownCategories = categories.filter((cat) =>
     cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
-
+  const handleEdition = (editionId) => {
+    setNewsForm({ ...newsForm, region_id: editionId, categories: [] });
+  };
+  const Editions = [
+    {
+      id: 1,
+      name: "All",
+    },
+    {
+      id: 2,
+      name: "India",
+    },
+    {
+      id: 3,
+      name: "United States",
+    },
+  ];
   // console.log("filteredDropdownCategories", filteredDropdownCategories);
   return (
     <>
@@ -290,7 +309,32 @@ function AddNews() {
                 <AlertDescription>{errors.submit}</AlertDescription>
               </Alert>
             )}
-
+            <div className="space-y-2">
+              <Label>Edition*</Label>
+              <div className="border rounded-lg p-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {Editions.map((edition) => (
+                    <div
+                      key={edition.id}
+                      className={`
+                          flex items-center space-x-2 p-2 border rounded-lg cursor-pointer 
+                          ${
+                            newsForm.region_id == edition.id
+                              ? "bg-orange-100 border-orange-500"
+                              : "hover:bg-gray-100"
+                          }
+                        `}
+                      onClick={() => handleEdition(edition.id)}
+                    >
+                      {newsForm.region_id == edition.id && (
+                        <Check className="h-5 w-5 text-orange-500" />
+                      )}
+                      <span>{edition.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
             {/* Categories Multi-Select */}
             <div className="space-y-2">
               <Label>Categories*</Label>
@@ -315,13 +359,22 @@ function AddNews() {
                         <div
                           key={cat.id}
                           className={`
-                            flex items-center space-x-2 p-2 border rounded-lg cursor-pointer }
-                            ${
-                              newsForm.categories.includes(cat.id)
-                                ? "bg-orange-100 border-orange-500"
-                                : "hover:bg-gray-100"
-                            }
-                          `}
+                                                flex items-center space-x-2 p-2 border rounded-lg cursor-pointer ${
+                                                  newsForm?.region_id != 1 &&
+                                                  cat.region == "yes" &&
+                                                  cat.region_id !=
+                                                    newsForm.region_id
+                                                    ? "hidden"
+                                                    : ""
+                                                }
+                                                ${
+                                                  newsForm.categories.includes(
+                                                    cat.id
+                                                  )
+                                                    ? "bg-orange-100 border-orange-500"
+                                                    : "hover:bg-gray-100"
+                                                }
+                                              `}
                           onClick={() => handleCategoryToggle(cat.id)}
                         >
                           {newsForm.categories.includes(cat.id) && (

@@ -44,6 +44,7 @@ function AddNews() {
           viewpoint: result.viewpoint,
           title: result.title || '',
           description: result.description || '',
+          region_id: data.originalData.region_id,
           showOnTop: data.originalData.showOnTop,
         };
       });
