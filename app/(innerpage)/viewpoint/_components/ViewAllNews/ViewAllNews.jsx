@@ -55,7 +55,7 @@ export default function ViewAllNews() {
   const fetchNews = async () => {
     try {
       setIsLoading(true);
-      const response = await GlobalApi.FetchNews();
+      const response = await GlobalApi.FetchNews2();
       const { categories = [], news = [] } = response.data;
 
       const allCategory = { id: "all", name: "All" };

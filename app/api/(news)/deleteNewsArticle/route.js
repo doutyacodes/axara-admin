@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/utils';
-import { NEWS, NEWS_QUESTIONS } from '@/utils/schema';
+import { ADULT_NEWS } from '@/utils/schema';
 import SFTPClient from 'ssh2-sftp-client';
 import { eq } from 'drizzle-orm';
 import { authenticate } from '@/lib/jwtMiddleware';
@@ -16,7 +16,7 @@ export async function DELETE(request) {
   console.log("lof g id", id)
   try {
     // Step 1: Fetch the image URL associated with the news article
-    const newsRecord = await db.select({ image_url: NEWS.image_url }).from(NEWS).where(eq(NEWS.id, id)).limit(1);
+    const newsRecord = await db.select({ image_url: ADULT_NEWS.image_url }).from(ADULT_NEWS).where(eq(ADULT_NEWS.id, id)).limit(1);
     if (newsRecord.length === 0) {
       return NextResponse.json({ error: 'News article not found' }, { status: 404 });
     }
@@ -41,11 +41,8 @@ export async function DELETE(request) {
     // Step 4: Disconnect from SFTP after deleting the image
     await sftp.end();
 
-    // Step 5: Delete related questions in the NEWS_QUESTIONS table
-    await db.delete(NEWS_QUESTIONS).where(eq(NEWS_QUESTIONS.news_id, id));
-
-    // Step 6: Delete the news article from the NEWS table
-    await db.delete(NEWS).where(eq(NEWS.id, id));
+    // Step 6: Delete the news article from the ADULT_NEWS table
+    await db.delete(ADULT_NEWS).where(eq(ADULT_NEWS.id, id));
 
     return NextResponse.json({ message: 'News article and associated data deleted successfully' }, { status: 201 });
 

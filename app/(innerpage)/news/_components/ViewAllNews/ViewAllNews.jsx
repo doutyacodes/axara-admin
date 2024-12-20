@@ -24,19 +24,14 @@ const truncateTitle = (title, length = 40) =>
 export default function ViewAllNews() {
   const [newsCategories, setNewsCategories] = useState([]);
   const [newsByCategory, setNewsByCategory] = useState({});
-  // const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [showNews, setShowNews] = useState(false);
-  const [showId, setShowId] = useState(null);
-  const [selectedAge, setSelectedAge] = useState(3);
-  const [hoveredNewsId, setHoveredNewsId] = useState(null);
-  const [showReportsModal, setShowReportsModal] = useState(false);
   const [showNewsSection, setShowNewsSection] = useState(false);
   const [showEditSection, setShowEditSection] = useState(false);
   const [selectedNews, setSelectedNews] = useState(null);
-  const [newsReports, setNewsReports] = useState([]);
+  const [hoveredNewsId, setHoveredNewsId] = useState(null);
+  const [showReportsModal, setShowReportsModal] = useState(false);
   const [regionId, setRegionId] = useState(1);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -59,7 +54,7 @@ export default function ViewAllNews() {
   const fetchNews = async () => {
     try {
       setIsLoading(true);
-      const response = await GlobalApi.FetchNews({ age: selectedAge ,regionId});
+      const response = await GlobalApi.FetchNews({ regionId });
       const { categories = [], news = [] } = response.data;
 
       const allCategory = { id: "all", name: "All" };
@@ -84,7 +79,6 @@ export default function ViewAllNews() {
 
   const fetchNewsReports = async (newsId) => {
     try {
-      // Mock API call - replace with actual API
       const response = await GlobalApi.FetchNewsReports(newsId);
       setNewsReports(response.data.reports || []);
     } catch (error) {
@@ -95,7 +89,7 @@ export default function ViewAllNews() {
 
   useEffect(() => {
     fetchNews();
-  }, [selectedAge,regionId]);
+  }, [regionId]);
 
   const currentCategoryNews = newsByCategory[selectedCategory] || [];
   const filteredNews = currentCategoryNews.filter(
@@ -103,20 +97,6 @@ export default function ViewAllNews() {
       article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       article.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  function getCategoryNamesByIds(ids) {
-    // Handle case where ids is a single ID or an array of IDs
-    const idsArray = Array.isArray(ids) ? ids : [ids];
-
-    // Get category names for the given IDs
-    const categoryNames = idsArray.map((id) => {
-      const category = newsCategories.find((cat) => cat.id === id);
-      return category ? category.name : null; // Return category name or null if not found
-    });
-
-    // Filter out null values and join the category names with commas
-    return categoryNames.filter((name) => name !== null).join(", ");
-  }
 
   const handleViewReports = (article) => {
     fetchNewsReports(article.id);
@@ -128,6 +108,7 @@ export default function ViewAllNews() {
     setSelectedNews(article);
     setShowNewsSection(true);
   };
+
   const Editions = [
     {
       id: 1,
@@ -142,6 +123,7 @@ export default function ViewAllNews() {
       name: "United States",
     },
   ];
+
   const handleEditNews = (article) => {
     setSelectedNews(article);
     setShowEditSection(true);
@@ -155,20 +137,17 @@ export default function ViewAllNews() {
   const handleDeleteConfirmation = async () => {
     setIsDeleting(true);
     try {
-      // Replace with your actual API endpoint for deleting news
-      const response = await GlobalApi.DeleteNewsArticle(selectedNews.id);
+      const response = await GlobalApi.DeleteNewsArticle2(selectedNews.id);
 
       if (response.status === 201) {
         toast.success("News Deleted Successfully");
       } else {
-        const errorMessage =
-          response.data?.message || "News Deleted Successfully";
+        const errorMessage = response.data?.message || "Error deleting news";
         toast.error(`Error: ${errorMessage}`);
       }
       setIsDeleteModalOpen(false);
     } catch (error) {
       console.error("Failed to delete news:", error);
-      // Optionally show an error toast or message
       toast.error(`Error: ${error}`);
     } finally {
       setIsDeleting(false);
@@ -176,62 +155,24 @@ export default function ViewAllNews() {
     }
   };
 
-  console.log("selectedNews", selectedNews);
+  const categoriesList = (data) => {
+    if (!data) return null; // Handle cases where data is null or undefined
+    const categoryNames = data;
+    const result = categoryNames.split(",");
 
-  const ReportsModal = () => (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
-    >
-      <motion.div
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        className="bg-white rounded-lg w-[800px] max-h-[800px] p-8 relative"
-      >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-            <AlertTriangle className="mr-3 text-orange-500" size={32} />
-            Reports for: {selectedNews?.title}
-          </h2>
-          <button
-            onClick={() => setShowReportsModal(false)}
-            className="text-gray-500 hover:text-gray-800"
+    return (
+      <>
+        {result.map((item, index) => (
+          <div
+            key={index} // Always add a unique key when rendering lists
+            className="  text-[7.9px] text-white text-xs font-medium bg-orange-500 bg-opacity-80 px-2 py-[2px] rounded-md"
           >
-            <X size={28} />
-          </button>
-        </div>
-
-        <div className="overflow-y-auto max-h-[650px] space-y-4">
-          {newsReports.length > 0 ? (
-            newsReports.map((report, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-gray-100 rounded-lg p-5 border-l-4 border-orange-500"
-              >
-                <p className="text-gray-700 text-base">{report.reportText}</p>
-                <div className="mt-2 text-sm text-gray-500">
-                  Reported on: {new Date().toLocaleDateString()}
-                </div>
-              </motion.div>
-            ))
-          ) : (
-            <div className="text-center text-gray-500 py-16">
-              <AlertTriangle
-                className="mx-auto mb-6 text-orange-500"
-                size={64}
-              />
-              <p className="text-xl">No reports found for this news</p>
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </motion.div>
-  );
+            {item.trim()} {/* Remove extra spaces */}
+          </div>
+        ))}
+      </>
+    );
+  };
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -249,8 +190,7 @@ export default function ViewAllNews() {
             <FaArrowLeft className="w-6 h-3 text-gray-700 hover:text-gray-900" />
             <span className="ml-2 text-gray-700">Back</span>
           </button>
-          {/* <NewsSection selectedNews={selectedNews} /> */}
-          <NewsDetails id={selectedNews.id} selectedAge={selectedAge} />
+          <NewsDetails id={selectedNews.id} />
         </>
       ) : showEditSection ? (
         <>
@@ -263,7 +203,6 @@ export default function ViewAllNews() {
           </button>
           <EditNews
             selectedNews={selectedNews}
-            selectedAge={selectedAge}
             setShowEditSection={setShowEditSection}
             fetchNews={fetchNews}
           />
@@ -293,34 +232,6 @@ export default function ViewAllNews() {
             ))}
           </div>
           <div className="flex space-x-4 mb-8 items-center">
-            <div className="relative w-64">
-              <select
-                value={selectedAge}
-                onChange={(e) => setSelectedAge(Number(e.target.value))}
-                className="w-full appearance-none bg-white border-2 border-orange-500 text-gray-800 
-                  py-3 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-orange-600
-                  text-base font-medium transition duration-300"
-              >
-                {[3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((age) => (
-                  <option
-                    key={age}
-                    value={age}
-                    className="bg-white text-gray-800 hover:bg-orange-50"
-                  >
-                    Age {age}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
-                <svg
-                  className="fill-current h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                </svg>
-              </div>
-            </div>
             <div className="flex-grow relative">
               <input
                 type="text"
@@ -389,7 +300,9 @@ export default function ViewAllNews() {
                         fill
                         className="object-cover"
                       />
-
+                      <span className="absolute bottom-2 left-2 flex gap-[3px] items-center ">
+                        {categoriesList(article.categoryNames)}
+                      </span>
                       {/* Hover Overlay */}
                       {hoveredNewsId === article.id && (
                         <motion.div

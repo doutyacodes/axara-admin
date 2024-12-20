@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/utils';
-import { NEWS, NEWS_QUESTIONS } from '@/utils/schema';
+import { NEWS, } from '@/utils/schema';
 import SFTPClient from 'ssh2-sftp-client';
 import { eq } from 'drizzle-orm';
 import { authenticate } from '@/lib/jwtMiddleware';
@@ -25,25 +25,9 @@ export async function DELETE(request) {
 
     console.log("imageUrl", imageUrl)
 
-    // Step 2: Set up SFTP to connect to cPanel
-    const sftp = new SFTPClient();
-    await sftp.connect({
-      host: '68.178.163.247',
-      port: 22,
-      username: 'devusr',
-      password: 'Wowfyuser#123',
-    });
-
-    // Step 3: Delete the image file from cPanel (sftp)
-    const cPanelDirectory = '/home/devusr/public_html/testusr/images';
-    await sftp.delete(`${cPanelDirectory}/${imageUrl}`);
-    
-    // Step 4: Disconnect from SFTP after deleting the image
-    await sftp.end();
+   
 
     // Step 5: Delete related questions in the NEWS_QUESTIONS table
-    await db.delete(NEWS_QUESTIONS).where(eq(NEWS_QUESTIONS.news_id, id));
-
     // Step 6: Delete the news article from the NEWS table
     await db.delete(NEWS).where(eq(NEWS.id, id));
 

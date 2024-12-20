@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { BsTrash2Fill } from "react-icons/bs";
 import { GoAlertFill } from "react-icons/go";
-function EditNews({ selectedNews, selectedAge, setShowEditSection,fetchNews }) {
+function EditNews({ selectedNews,  setShowEditSection,fetchNews }) {
   const [categories, setCategories] = useState([]);
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [errors, setErrors] = useState({});
@@ -195,14 +195,15 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection,fetchNews }) {
         main_news: newsForm.main_news,
         // Only send base64 image if it's been edited, otherwise send original image namedeleteShow ? base64Image : selectedNews.image_url,
         oldImage: selectedNews.image_url,
+        image,
         isImageEdited: isImageEdited,
         regionId
       };
-
+// console.log("image")
       const token =
         typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-      const response = await fetch("/api/updateNewsArticle", {
+      const response = await fetch("/api/adult/updateNewsArticle", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -297,14 +298,14 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection,fetchNews }) {
         <Card className="border-none shadow-lg">
           {/* <CardHeader> */}
           {/* </CardHeader> */}
-          <div className="w-full flex justify-end items-end p-4">
-            <div
+          <div className="w-full flex justify-end items-end p-4 mt-2">
+            {/* <div
               onClick={() => setDeleteShow(true)}
               className="flex items-center text-white p-2 px-4 cursor-pointer bg-red-600 rounded-md gap-3"
             >
               <BsTrash2Fill size={20} color="white" />
               Delete
-            </div>
+            </div> */}
           </div>
           <CardContent>
             <form className="space-y-6" onSubmit={handleSubmit}>
@@ -469,7 +470,7 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection,fetchNews }) {
                   <p className="text-sm text-red-500">{errors.image}</p>
                 )}
               </div>
-              <CardTitle>{`Edit News Article (Age : ${selectedAge})`}</CardTitle>
+              <CardTitle>{`Edit News Article`}</CardTitle>
 
               {/* Title */}
               <div className="space-y-2">

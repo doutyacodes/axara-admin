@@ -1,80 +1,48 @@
 import { NextResponse } from "next/server";
 import { db } from "@/utils";
-import { NEWS, NEWS_CATEGORIES, NEWS_TO_CATEGORIES } from "@/utils/schema";
-import { authenticate } from "@/lib/jwtMiddleware";
-import { and, desc, eq, sql } from "drizzle-orm";
+import {
+  ADULT_NEWS,
+  NEWS_CATEGORIES,
+  ADULT_NEWS_TO_CATEGORIES,
+  REGIONS,
+} from "@/utils/schema";
+import { and, asc, desc, eq, gt, lt, or, sql } from "drizzle-orm";
 
 export async function POST(req) {
-  const authResult = await authenticate(req, true);
-  if (!authResult.authenticated) {
-    return authResult.response;
-  }
-
-  // const userId = authResult.decoded_Data.id;
-  const { age, regionId } = await req.json();
-
-  if (!age) {
-    return NextResponse.json({ error: "Age is required." }, { status: 400 });
-  }
-
   try {
+    const { region = "India" } = await req.json();
+    const Regions = await db
+      .select()
+      .from(REGIONS)
+      .where(eq(REGIONS.name, region))
+      .execute();
+
+    let region_id = 2;
+
+    if (Regions.length > 0) {
+      region_id = Regions[0].id;
+    }
     // Fetch news categories
-    const newsCategories = await db.select().from(NEWS_CATEGORIES).execute();
-
-    // // Fetch news based on the provided age
-    // const news = await db
-    //   .select({
-    //     id: NEWS.id,
-    //     title: NEWS.title,
-    //     description: NEWS.description,
-    //     category: NEWS_CATEGORIES.name,
-    //     age: NEWS.age,
-    //     news_category_id: NEWS.news_category_id,
-    //     image_url: NEWS.image_url, // URL of the featured image
-    //     summary: NEWS.summary, // Brief summary, nullable
-    //     showOnTop: NEWS.show_on_top,
-    //     created_at: NEWS.created_at, // Timestamp for record creation
-    //     updated_at: NEWS.updated_at,
-    //   })
-    //   .from(NEWS)
-    //   .leftJoin(NEWS_CATEGORIES, eq(NEWS.news_category_id, NEWS_CATEGORIES.id)) // Join on category ID
-    //   .where(eq(NEWS.age, age))
-    //   .orderBy(desc(NEWS.created_at)) // Order by `created_at` in descending order
-    //   .execute();
-
-    // Fetch news based on the provided age and join with the new `news_to_categories` table
-    // const news = await db
-    //   .select({
-    //     id: NEWS.id,
-    //     title: NEWS.title,
-    //     description: NEWS.description,
-    //     news_category_id: NEWS_TO_CATEGORIES.news_category_id,
-    //     category: NEWS_CATEGORIES.name,
-    //     age: NEWS.age,
-    //     image_url: NEWS.image_url,
-    //     summary: NEWS.summary,
-    //     showOnTop: NEWS.show_on_top,
-    //     created_at: NEWS.created_at,
-    //     updated_at: NEWS.updated_at,
-    //   })
-    //   .from(NEWS)
-    //   .leftJoin(
-    //     NEWS_TO_CATEGORIES,
-    //     eq(NEWS.id, NEWS_TO_CATEGORIES.news_id) // Join on `news_id` from `news_to_categories`
-    //   )
-    //   .leftJoin(
-    //     NEWS_CATEGORIES,
-    //     eq(NEWS_TO_CATEGORIES.news_category_id, NEWS_CATEGORIES.id) // Join on `news_category_id` from `news_to_categories`
-    //   )
-    //   .where(eq(NEWS.age, age))
-    //   .orderBy(desc(NEWS.created_at)) // Order by `created_at` in descending order
-    //   .execute();
+    const newsCategories = await db
+      .select()
+      .from(NEWS_CATEGORIES)
+      .orderBy(asc(NEWS_CATEGORIES.order_no))
+      .where(
+        or(
+          eq(NEWS_CATEGORIES.region, "no"),
+          and(
+            eq(NEWS_CATEGORIES.region, "yes"),
+            eq(NEWS_CATEGORIES.region_id, region_id)
+          )
+        )
+      )
+      .execute();
 
     const news = await db
       .select({
-        id: NEWS.id,
-        title: NEWS.title,
-        description: NEWS.description,
+        id: ADULT_NEWS.id,
+        title: ADULT_NEWS.title,
+        description: ADULT_NEWS.description,
         categoryIds: sql`GROUP_CONCAT(${NEWS_CATEGORIES.id} SEPARATOR ',')`.as(
           "categoryIds"
         ),
@@ -82,36 +50,54 @@ export async function POST(req) {
           sql`GROUP_CONCAT(${NEWS_CATEGORIES.name} SEPARATOR ',')`.as(
             "categoryNames"
           ),
-        age: NEWS.age,
-        image_url: NEWS.image_url,
-        summary: NEWS.summary,
-        main_news: NEWS.main_news,
-        showOnTop: NEWS.show_on_top,
-        created_at: NEWS.created_at,
-        updated_at: NEWS.updated_at,
-        region_id:NEWS_TO_CATEGORIES.region_id
+        image_url: ADULT_NEWS.image_url,
+        summary: ADULT_NEWS.summary,
+        created_at: ADULT_NEWS.created_at,
+        updated_at: ADULT_NEWS.updated_at,
+        news_group_id: ADULT_NEWS.news_group_id, // Include news_group_id
       })
-      .from(NEWS)
-      .leftJoin(NEWS_TO_CATEGORIES, eq(NEWS.id, NEWS_TO_CATEGORIES.news_id))
-
+      .from(ADULT_NEWS)
+      .leftJoin(
+        ADULT_NEWS_TO_CATEGORIES,
+        eq(ADULT_NEWS.id, ADULT_NEWS_TO_CATEGORIES.news_id)
+      )
       .leftJoin(
         NEWS_CATEGORIES,
-        eq(NEWS_TO_CATEGORIES.news_category_id, NEWS_CATEGORIES.id)
+        eq(ADULT_NEWS_TO_CATEGORIES.news_category_id, NEWS_CATEGORIES.id)
       )
-      .where(and(eq(NEWS.age, age), eq(NEWS_TO_CATEGORIES.region_id, regionId)))
-      .groupBy(NEWS.id)
-      .orderBy(desc(NEWS.created_at))
+      .where(
+        or(
+          eq(ADULT_NEWS_TO_CATEGORIES.region_id, region_id),
+          eq(ADULT_NEWS_TO_CATEGORIES.region_id, 1)
+        )
+      )
+      .groupBy(ADULT_NEWS.id)
+      .orderBy(desc(ADULT_NEWS.created_at))
       .execute();
 
-    // const processedNews = news.map((item) => ({
-    //   ...item,
-    //   categories: item.categoryIds ? item.categoryIds.split(',').map(Number) : [], // Category IDs
-    //   categoryNames: item.categoryNames ? item.categoryNames.split(',') : [], // Category Names
-    // }));
+    // Function to group news by news_group_id
+    const groupByNewsGroupId = (newsData) => {
+      return newsData.reduce((acc, currentNews) => {
+        const { news_group_id } = currentNews;
+        if (!acc[news_group_id]) {
+          acc[news_group_id] = [];
+        }
+        acc[news_group_id].push(currentNews);
+        return acc;
+      }, {});
+    };
 
+    const groupedNews = groupByNewsGroupId(news);
+
+    const groupedNewsArray = Object.keys(groupedNews).map((groupId) => ({
+      news_group_id: groupId,
+      newsItems: groupedNews[groupId],
+    }));
+
+    
     return NextResponse.json({
       categories: newsCategories,
-      news,
+      newsGroupedByGroupId: groupedNewsArray, // Return grouped normal news
     });
   } catch (error) {
     console.error("Error fetching news categories or news:", error);

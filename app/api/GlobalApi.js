@@ -122,6 +122,15 @@ const DeleteNewsArticle = (id) => {
   });
 };
 
+const DeleteNewsArticle2 = (id) => {
+  return axios.delete("/api/adult/deleteNewsArticle", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    data: { id },
+  });
+};
+
 const DeleteWholeNews = (id) => {
   return axios.post(
     "/api/deleteWholeNews",
@@ -205,6 +214,7 @@ export default {
   // Adult
 
   FetchNews2,
+  DeleteNewsArticle2,
   /* Learn */
   GetLearnSubjects,
   CreateLearnQuiz,
