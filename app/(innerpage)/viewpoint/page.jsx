@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddCategories from './_components/AddCategories/AddCategories';
 import AddNews from './_components/AddNews/AddNews';
 import ViewAllNews from './_components/ViewAllNews/ViewAllNews';
+import AnalyticsPage from './_components/AnalyticsPage/page';
 
 const NewsAdminPanel = () => {
 
@@ -36,6 +37,13 @@ const NewsAdminPanel = () => {
             >
               View All News
             </TabsTrigger>
+
+            <TabsTrigger 
+              value="view-analytics" 
+              className="flex-1 data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg transition-all duration-200"
+            >
+              View Analytics
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="add-news">
@@ -48,6 +56,10 @@ const NewsAdminPanel = () => {
 
           <TabsContent value="view-news">
             <ViewAllNews />
+          </TabsContent>
+
+          <TabsContent value="view-analytics">
+            <AnalyticsPage />
           </TabsContent>
         </Tabs>
       </div>

@@ -3,6 +3,7 @@ import { db } from "@/utils";
 import { ADULT_NEWS, NEWS_CATEGORIES, ADULT_NEWS_TO_CATEGORIES } from "@/utils/schema";
 import { authenticate } from "@/lib/jwtMiddleware";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { PERSPECTIVE_VIEWS } from "@/utils/analyticsSchema";
 
 export async function POST(req) {
   const authResult = await authenticate(req, true);
@@ -35,7 +36,11 @@ export async function POST(req) {
         showOnTop: ADULT_NEWS.show_on_top,
         created_at: ADULT_NEWS.created_at,
         updated_at: ADULT_NEWS.updated_at,
-        viewpoint:ADULT_NEWS.viewpoint
+        viewpoint:ADULT_NEWS.viewpoint,
+        views: sql`COALESCE(SUM(${PERSPECTIVE_VIEWS.views}), 0)`.as("views"), // Total views for this article
+        engagementTime: sql`COALESCE(SUM(${PERSPECTIVE_VIEWS.engagement_time}), 0)`.as(
+          "engagementTime"
+        ), // Total engagement time for this article
       })
       .from(ADULT_NEWS)
       .leftJoin(ADULT_NEWS_TO_CATEGORIES, eq(ADULT_NEWS.id, ADULT_NEWS_TO_CATEGORIES.news_id))
@@ -43,11 +48,13 @@ export async function POST(req) {
         NEWS_CATEGORIES,
         eq(ADULT_NEWS_TO_CATEGORIES.news_category_id, NEWS_CATEGORIES.id)
       )
+      .leftJoin(
+        PERSPECTIVE_VIEWS,
+        eq(PERSPECTIVE_VIEWS.article_id, ADULT_NEWS.id)
+      ) // Join with the perspective views table
       .groupBy(ADULT_NEWS.id)
       .orderBy(desc(ADULT_NEWS.created_at))
       .execute();
-
-
 
     return NextResponse.json({
       categories: newsCategories,

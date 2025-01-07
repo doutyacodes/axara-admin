@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import SFTPClient from "ssh2-sftp-client";
-import { NEWS, NEWS_TO_CATEGORIES } from "@/utils/schema";
+import { ADULT_NEWS, ADULT_NEWS_TO_CATEGORIES, NEWS, NEWS_TO_CATEGORIES } from "@/utils/schema";
 import { authenticate } from "@/lib/jwtMiddleware";
 import os from "os";
 import { db } from "@/utils";
@@ -35,20 +35,20 @@ export async function POST(request) {
   try {
     // Step 1: Update the news fields in the NEWS table
     await db
-      .update(NEWS)
+      .update(ADULT_NEWS)
       .set({
         title,
         description,
         show_on_top: showOnTop,
       })
-      .where(eq(NEWS.id, id));
+      .where(eq(ADULT_NEWS.id, id));
 
     // Step 2: Remove existing category mappings for this news ID in NEWS_TO_CATEGORIES
     await db
-      .delete(NEWS_TO_CATEGORIES)
-      .where(eq(NEWS_TO_CATEGORIES.news_id, id));
+      .delete(ADULT_NEWS_TO_CATEGORIES)
+      .where(eq(ADULT_NEWS_TO_CATEGORIES.news_id, id));
 
-    // Step 3: Insert new category mappings into NEWS_TO_CATEGORIES
+    // Step 3: Insert new category mappings into ADULT_NEWS_TO_CATEGORIES
     if (Array.isArray(categoryId) && categoryId.length > 0) {
       const newMappings = categoryId.map((catId) => ({
         news_id: id,
@@ -56,7 +56,7 @@ export async function POST(request) {
         region_id: regionId,
       }));
 
-      await db.insert(NEWS_TO_CATEGORIES).values(newMappings);
+      await db.insert(ADULT_NEWS_TO_CATEGORIES).values(newMappings);
     }
 
     let fileName = oldImage; // Default to the existing image name
@@ -112,15 +112,15 @@ export async function POST(request) {
       await sftp.end();
 
       // Step 4.5: Update the database with the new image URL
-      const newData = await db.select().from(NEWS).where(eq(NEWS.id, id));
+      const newData = await db.select().from(ADULT_NEWS).where(eq(ADULT_NEWS.id, id));
       const news_group_id = newData[0].news_group_id;
       await db
-        .update(NEWS)
+        .update(ADULT_NEWS)
         .set({
           image_url: fileName,
           main_news: main_news,
         })
-        .where(eq(NEWS.news_group_id, news_group_id));
+        .where(eq(ADULT_NEWS.news_group_id, news_group_id));
     }
 
     return NextResponse.json(

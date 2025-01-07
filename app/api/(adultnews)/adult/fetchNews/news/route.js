@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/utils";
-import { NEWS, NEWS_QUESTIONS, WORDS_MEANINGS } from "@/utils/schema";
+import { ADULT_NEWS, ADULT_NEWS_QUESTIONS, NEWS, NEWS_QUESTIONS, WORDS_MEANINGS } from "@/utils/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(req) {
@@ -17,12 +17,12 @@ export async function POST(req) {
     // Fetch the specific news and associated questions
     const newsWithQuestions = await db
       .select({
-        news: NEWS,
-        questions: NEWS_QUESTIONS.questions,
+        news: ADULT_NEWS,
+        questions: ADULT_NEWS_QUESTIONS.questions,
       })
-      .from(NEWS)
-      .leftJoin(NEWS_QUESTIONS, eq(NEWS.id, NEWS_QUESTIONS.news_id))
-      .where(eq(NEWS.id, id))
+      .from(ADULT_NEWS)
+      .leftJoin(ADULT_NEWS_QUESTIONS, eq(ADULT_NEWS.id, ADULT_NEWS_QUESTIONS.news_id))
+      .where(eq(ADULT_NEWS.id, id))
       .execute();
 
     if (newsWithQuestions.length === 0) {

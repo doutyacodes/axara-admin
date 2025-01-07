@@ -202,7 +202,7 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection,fetchNews }) {
       const token =
         typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-      const response = await fetch("/api/updateNewsArticle", {
+      const response = await fetch("/api/adult/updateNewsArticle", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

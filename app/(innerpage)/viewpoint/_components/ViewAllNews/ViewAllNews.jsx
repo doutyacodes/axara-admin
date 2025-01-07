@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   Trash2,
   Check,
+  Clock, BarChart2 
 } from "lucide-react";
 import GlobalApi from "@/app/api/GlobalApi";
 import Link from "next/link";
@@ -17,9 +18,11 @@ import NewsDetails from "../NewsDetails/NewsDetails";
 import { FaArrowLeft } from "react-icons/fa";
 import EditNews from "../EditNewsSection/EditNews";
 import toast, { Toaster } from "react-hot-toast";
+import AnalyticsModal from "../AnalyticsModal/AnalyticsModal";
 
 const truncateTitle = (title, length = 40) =>
   title.length > length ? `${title.slice(0, length)}...` : title;
+
 
 export default function ViewAllNews() {
   const [newsCategories, setNewsCategories] = useState([]);
@@ -36,6 +39,8 @@ export default function ViewAllNews() {
   const [newsReports, setNewsReports] = useState([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState(null);
 
   const formatDate = (date) => {
     const options = {
@@ -52,10 +57,24 @@ export default function ViewAllNews() {
     return new Date(date).toLocaleString("en-IN", options).replace(",", "");
   };
 
+  const formatTime = (seconds) => {
+    if (seconds < 60) {
+      return `${seconds}s`;
+    } else if (seconds < 3600) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+    } else {
+      const hours = Math.floor(seconds / 3600);
+      const remainingMinutes = Math.floor((seconds % 3600) / 60);
+      return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+    }
+  };
+
   const fetchNews = async () => {
     try {
       setIsLoading(true);
-      const response = await GlobalApi.FetchNews();
+      const response = await GlobalApi.FetchNews2();
       const { categories = [], news = [] } = response.data;
 
       const allCategory = { id: "all", name: "All" };
@@ -152,7 +171,7 @@ export default function ViewAllNews() {
     setIsDeleting(true);
     try {
       // Replace with your actual API endpoint for deleting news
-      const response = await GlobalApi.DeleteNewsArticle(selectedNews.id);
+      const response = await GlobalApi.DeleteNewsArticle2(selectedNews.id);
 
       if (response.status === 201) {
         toast.success("News Deleted Successfully");
@@ -323,84 +342,196 @@ export default function ViewAllNews() {
             >
               {filteredNews.length > 0 ? (
                 filteredNews.map((article) => (
+                  // <motion.div
+                  //   key={article.id}
+                  //   className="bg-white shadow-md rounded-lg overflow-hidden relative group"
+                  //   onMouseEnter={() => setHoveredNewsId(article.id)}
+                  //   onMouseLeave={() => setHoveredNewsId(null)}
+                  // >
+                  //   {/* Image */}
+                  //   <div className="h-56 w-full relative">
+                  //     <Image
+                  //       src={`https://wowfy.in/testusr/images/${article.image_url}`}
+                  //       alt={article.title}
+                  //       fill
+                  //       className="object-cover"
+                  //     />
+
+                  //     {/* Hover Overlay */}
+                  //     {hoveredNewsId === article.id && (
+                  //       <motion.div
+                  //         initial={{ opacity: 0 }}
+                  //         animate={{ opacity: 1 }}
+                  //         exit={{ opacity: 0 }}
+                  //         className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center space-y-4 z-10 p-4"
+                  //       >
+                  //         <motion.button
+                  //           whileHover={{ scale: 1.05 }}
+                  //           whileTap={{ scale: 0.95 }}
+                  //           onClick={() => handleViewNews(article)}
+                  //           className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
+                  //         >
+                  //           <Eye className="mr-2" />
+                  //           <span>View News</span>
+                  //         </motion.button>
+
+                  //         <motion.button
+                  //           whileHover={{ scale: 1.05 }}
+                  //           whileTap={{ scale: 0.95 }}
+                  //           onClick={() => handleViewReports(article)}
+                  //           className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
+                  //         >
+                  //           <FileText className="mr-2" />
+                  //           <span>View Reports</span>
+                  //         </motion.button>
+
+                  //         <motion.button
+                  //           whileHover={{ scale: 1.05 }}
+                  //           whileTap={{ scale: 0.95 }}
+                  //           onClick={() => handleEditNews(article)}
+                  //           className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
+                  //         >
+                  //           <Edit2 className="mr-2" />
+                  //           <span>Edit News</span>
+                  //         </motion.button>
+
+                  //         <motion.button
+                  //           whileHover={{ scale: 1.05 }}
+                  //           whileTap={{ scale: 0.95 }}
+                  //           onClick={() => handleDeleteNews(article)}
+                  //           className="w-4/5 bg-white text-red-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-red-50 transition"
+                  //         >
+                  //           <Trash2 className="mr-2" />
+                  //           <span>Delete News</span>
+                  //         </motion.button>
+                  //       </motion.div>
+                  //     )}
+                  //   </div>
+
+                  //   {/* Content */}
+                  //   <div className="p-4">
+                  //     <h3 className="text-lg font-medium text-gray-800 mb-2">
+                  //       {truncateTitle(article.title)}
+                  //     </h3>
+                  //     <div className="flex justify-between items-center">
+                  //       <span className="text-sm text-gray-500">
+                  //         {formatDate(article.created_at)}
+                  //       </span>
+                  //     </div>
+                  //   </div>
+                  // </motion.div>
                   <motion.div
-                    key={article.id}
-                    className="bg-white shadow-md rounded-lg overflow-hidden relative group"
-                    onMouseEnter={() => setHoveredNewsId(article.id)}
-                    onMouseLeave={() => setHoveredNewsId(null)}
-                  >
-                    {/* Image */}
-                    <div className="h-56 w-full relative">
-                      <Image
-                        src={`https://wowfy.in/testusr/images/${article.image_url}`}
-                        alt={article.title}
-                        fill
-                        className="object-cover"
-                      />
-
-                      {/* Hover Overlay */}
-                      {hoveredNewsId === article.id && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center space-y-4 z-10 p-4"
+                  className="bg-white shadow-lg rounded-xl overflow-hidden relative group w-full max-w-sm hover:shadow-xl transition-shadow duration-300"
+                  onMouseEnter={() => setHoveredNewsId(article.id)}
+                  onMouseLeave={() => setHoveredNewsId(null)}
+                >
+                  {/* Perspective Badge */}
+                  <div className="absolute top-4 left-4 z-20">
+                    <span className="bg-orange-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      {article.viewpoint}
+                    </span>
+                  </div>
+            
+                  {/* Image Container */}
+                  <div className="h-64 w-full relative">
+                    <Image
+                      src={`https://wowfy.in/testusr/images/${article.image_url}`}
+                      alt={article.title}
+                      fill
+                      className="object-cover"
+                    />
+            
+                    {/* Hover Overlay */}
+                    {hoveredNewsId === article.id && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center space-y-3 z-10 p-6"
+                      >
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleViewNews(article)}
+                          className="w-full bg-white text-orange-600 py-2.5 px-4 rounded-lg flex items-center justify-center hover:bg-orange-50 transition-colors"
                         >
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleViewNews(article)}
-                            className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
-                          >
-                            <Eye className="mr-2" />
-                            <span>View News</span>
-                          </motion.button>
+                          <Eye className="mr-2 h-4 w-4" />
+                          <span>View News</span>
+                        </motion.button>
+            
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleViewReports(article)}
+                          className="w-full bg-white text-orange-600 py-2.5 px-4 rounded-lg flex items-center justify-center hover:bg-orange-50 transition-colors"
+                        >
+                          <FileText className="mr-2 h-4 w-4" />
+                          <span>View Reports</span>
+                        </motion.button>
+            
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleEditNews(article)}
+                          className="w-full bg-white text-orange-600 py-2.5 px-4 rounded-lg flex items-center justify-center hover:bg-orange-50 transition-colors"
+                        >
+                          <Edit2 className="mr-2 h-4 w-4" />
+                          <span>Edit News</span>
+                        </motion.button>
+            
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleDeleteNews(article)}
+                          className="w-full bg-white text-red-600 py-2.5 px-4 rounded-lg flex items-center justify-center hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Delete News</span>
+                        </motion.button>
+                      </motion.div>
+                    )}
+                  </div>
+            
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3 line-clamp-2">
+                      {truncateTitle(article.title)}
+                    </h3>
 
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleViewReports(article)}
-                            className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
-                          >
-                            <FileText className="mr-2" />
-                            <span>View Reports</span>
-                          </motion.button>
-
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleEditNews(article)}
-                            className="w-4/5 bg-white text-orange-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-50 transition"
-                          >
-                            <Edit2 className="mr-2" />
-                            <span>Edit News</span>
-                          </motion.button>
-
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleDeleteNews(article)}
-                            className="w-4/5 bg-white text-red-600 py-2 px-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-red-50 transition"
-                          >
-                            <Trash2 className="mr-2" />
-                            <span>Delete News</span>
-                          </motion.button>
-                        </motion.div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4">
-                      <h3 className="text-lg font-medium text-gray-800 mb-2">
-                        {truncateTitle(article.title)}
-                      </h3>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500">
-                          {formatDate(article.created_at)}
-                        </span>
+                    <div 
+                      className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                      onClick={() => {
+                        setIsAnalyticsOpen(true);
+                        setSelectedArticle(article);
+                      }}
+                    >
+                      {/* Metrics Grid */}
+                      <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div className="flex items-center">
+                          <BarChart2 className="h-4 w-4 text-gray-400 mr-2" />
+                          <div className="flex flex-col">
+                            <span className="text-xs text-gray-500">Article Views</span>
+                            <span className="text-sm font-medium text-gray-700">{article.views.toLocaleString()}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 text-gray-400 mr-2" />
+                          <div className="flex flex-col">
+                            <span className="text-xs text-gray-500">Engagement</span>
+                            <span className="text-sm font-medium text-gray-700">{formatTime(article.engagementTime)}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </motion.div>
+            
+                    {/* Date */}
+                    <div className="flex justify-center items-center">
+                      <span className="text-sm text-gray-500">
+                        {formatDate(article.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
                 ))
               ) : (
                 <p className="text-center col-span-full text-gray-600">
@@ -414,6 +545,15 @@ export default function ViewAllNews() {
 
       {/* Modals */}
       <AnimatePresence>{showReportsModal && <ReportsModal />}</AnimatePresence>
+
+      <AnalyticsModal 
+        articleId={selectedArticle?.id}
+        isOpen={isAnalyticsOpen}
+        onClose={() => {
+          setIsAnalyticsOpen(false);
+          selectedArticle(null)
+        }}
+      />
 
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (

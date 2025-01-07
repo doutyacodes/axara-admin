@@ -13,7 +13,7 @@ export default function NewsDetails({ id, selectedAge }) {
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const response = await fetch("/api/fetchNews/news", {
+        const response = await fetch("/api/adult/fetchNews/news", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: parseInt(id), age: selectedAge }),
