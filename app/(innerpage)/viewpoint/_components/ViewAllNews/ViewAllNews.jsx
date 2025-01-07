@@ -421,6 +421,7 @@ export default function ViewAllNews() {
                   //   </div>
                   // </motion.div>
                   <motion.div
+                  key={article.id}
                   className="bg-white shadow-lg rounded-xl overflow-hidden relative group w-full max-w-sm hover:shadow-xl transition-shadow duration-300"
                   onMouseEnter={() => setHoveredNewsId(article.id)}
                   onMouseLeave={() => setHoveredNewsId(null)}
