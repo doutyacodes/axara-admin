@@ -29,15 +29,43 @@ function AddNews() {
   const [imageData, setImageData] = useState(null);
   const [fileName, setFileName] = useState(null);
   const isFirstRender = useRef(true);
+  const [showMediaDialog, setShowMediaDialog] = useState(false);
+  const [base64Media, setBase64Media] = useState(null);
+  const [isVideo, setIsVideo] = useState(false);
+  const [mediaType, setMediaType] = useState('image'); // 'image' or 'video'
 
   const router = useRouter();
+console.log(data)
+console.log("base64Media", base64Media);
+
+  // useEffect(() => {
+  //   if (data) {
+  //     const initialStates = {};
+  //     const categoryId = data.originalData.categoryIds;
+
+  //     // Set initial form states
+  //     data.results.forEach((result) => {
+  //       initialStates[result.viewpoint] = {
+  //         category: categoryId,
+  //         viewpoint: result.viewpoint,
+  //         title: result.title || '',
+  //         description: result.description || '',
+  //         region_id: data.originalData.region_id,
+  //         showOnTop: data.originalData.showOnTop,
+  //       };
+  //     });
+  //     console.log(initialStates)
+  //     setFormStates(initialStates);
+  //     setViewpoints(data.results.map(result => result.viewpoint));
+  //     setImageData(data.image);
+  //   }
+  // }, [data]);
 
   useEffect(() => {
     if (data) {
       const initialStates = {};
       const categoryId = data.originalData.categoryIds;
-
-      // Set initial form states
+  
       data.results.forEach((result) => {
         initialStates[result.viewpoint] = {
           category: categoryId,
@@ -48,10 +76,12 @@ function AddNews() {
           showOnTop: data.originalData.showOnTop,
         };
       });
-console.log(initialStates)
+  
       setFormStates(initialStates);
       setViewpoints(data.results.map(result => result.viewpoint));
-      setImageData(data.image);
+      setBase64Media(data.mediaData);
+      setIsVideo(data.mediaType === 'video');
+      setMediaType(data.mediaType || 'image');
     }
   }, [data]);
 
@@ -79,16 +109,43 @@ console.log(initialStates)
     getNewsCategories();
   }, [data]);
 
+  // useEffect(() => {
+  //   console.log(formStates);
+  //   const category = formStates[viewpoints]?.category;
+  //   const title = formStates[viewpoints]?.title;
+  //   if (category && title) {
+  //     const fileName = `${Date.now()}-${category}-${title.replace(/\s+/g, '-')}.png`;
+  //     setFileName(fileName);
+  //   }
+  // }, [formStates]);
+
   useEffect(() => {
     console.log(formStates);
     const category = formStates[viewpoints]?.category;
     const title = formStates[viewpoints]?.title;
     if (category && title) {
-      const fileName = `${Date.now()}-${category}-${title.replace(/\s+/g, '-')}.png`;
+      const extension = isVideo ? '.mp4' : '.png';
+      const fileName = `${Date.now()}-${category}-${title.replace(/\s+/g, '-')}${extension}`;
       setFileName(fileName);
     }
-  }, [formStates]);
+  }, [formStates, isVideo]);
   
+  const handleMediaChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const isVideoFile = file.type.startsWith('video/');
+      setIsVideo(isVideoFile);
+      setMediaType(isVideoFile ? 'video' : 'image');
+  
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBase64Media(reader.result);
+        setImageData(reader.result); // Keep this for backward compatibility
+      };
+      reader.readAsDataURL(file);
+    }
+    setShowMediaDialog(false);
+  };
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -132,12 +189,22 @@ console.log(initialStates)
     }
     setIsSubmitting(true);
     try {
+
+      const extension = isVideo ? '.mp4' : '.png';
       const payload = {
         result: formStates,
-        imageData,
-        fileName: `${Date.now()}-axara.png`,
+        mediaData: base64Media,
+        mediaType: mediaType,
+        fileName: `${Date.now()}-axara${extension}`,
         slotId: data.originalData.mainNewsSlot,
       };
+  
+      // const payload = {
+      //   result: formStates,
+      //   imageData,
+      //   fileName: `${Date.now()}-axara.png`,
+      //   slotId: data.originalData.mainNewsSlot,
+      // };
 
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
@@ -178,7 +245,7 @@ console.log(initialStates)
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 relative">
-          <img
+          {/* <img
             src={base64Image}
             alt="Article"
             className="w-full h-96 object-cover rounded-lg cursor-pointer"
@@ -186,7 +253,30 @@ console.log(initialStates)
           />
           <Button className="absolute bottom-4 right-4" onClick={() => setShowImageDialog(true)}>
             Change Image
-          </Button>
+          </Button> */}
+          <div className="mb-8 relative">
+            {isVideo ? (
+              <video
+                src={base64Media}
+                controls
+                className="w-full h-96 object-cover rounded-lg cursor-pointer"
+                onClick={() => setShowMediaDialog(true)}
+              />
+            ) : (
+              <img
+                src={base64Media}
+                alt="Article"
+                className="w-full h-96 object-cover rounded-lg cursor-pointer"
+                onClick={() => setShowMediaDialog(true)}
+              />
+            )}
+            <Button 
+              className="absolute bottom-4 right-4" 
+              onClick={() => setShowMediaDialog(true)}
+            >
+              Change {isVideo ? 'Video' : 'Image'}
+            </Button>
+          </div>
         </div>
 
         <div className="mb-6">
@@ -273,7 +363,7 @@ console.log(initialStates)
           </CardContent>
         </Card>
 
-        <AlertDialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        {/* <AlertDialog open={showImageDialog} onOpenChange={setShowImageDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Change Article Image</AlertDialogTitle>
@@ -285,6 +375,37 @@ console.log(initialStates)
                 <>
                   <input className="hidden" type="file" id="image" accept="image/jpeg,image/png,image/jpg" onChange={handleImageChange} />
                   <label htmlFor="image" className="bg-black text-white py-2 px-4 rounded cursor-pointer hover:bg-gray-800">Change Image</label>
+                </>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog> */}
+
+        <AlertDialog open={showMediaDialog} onOpenChange={setShowMediaDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Change Article {isVideo ? 'Video' : 'Image'}</AlertDialogTitle>
+              <AlertDialogDescription>
+                Would you like to change the article {isVideo ? 'video' : 'image'}?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <>
+                  <input 
+                    className="hidden" 
+                    type="file" 
+                    id="media" 
+                    accept="image/jpeg,image/png,image/jpg,video/mp4,video/webm" 
+                    onChange={handleMediaChange} 
+                  />
+                  <label 
+                    htmlFor="media" 
+                    className="bg-black text-white py-2 px-4 rounded cursor-pointer hover:bg-gray-800"
+                  >
+                    Change {isVideo ? 'Video' : 'Image'}
+                  </label>
                 </>
               </AlertDialogAction>
             </AlertDialogFooter>

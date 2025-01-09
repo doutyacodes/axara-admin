@@ -23,7 +23,19 @@ export async function GET() {
       .from(VISITORS)
       .execute();
 
-    const uniqueVisitors = uniqueVisitorsResult[0]?.uniqueVisitors || 0;
+    const uniqueVisitors = uniqueVisitorsResult[0]?.uniqueVisitors || 0;3
+
+    // Debugging: Fetch only session_end IS NOT NULL rows
+    const validSessions = await db
+    .select({
+      sessionStart: SESSIONS.session_start,
+      sessionEnd: SESSIONS.session_end,
+    })
+    .from(SESSIONS)
+    .where(sql`${SESSIONS.session_end} IS NOT NULL`)
+    .execute();
+
+    console.log(validSessions); // Check fetched rows
 
     // Fetch average session duration (in seconds)
     const avgSessionDurationResult = await db
@@ -36,18 +48,49 @@ export async function GET() {
 
     const avgSessionDuration = avgSessionDurationResult[0]?.avgSessionDuration || 0;
 
-    // Fetch returning visitors (distinct visitors with multiple sessions)
-    const returningVisitorsResult = await db
-      .select({
-        returningVisitors: sql`COUNT(DISTINCT ${VISITORS.id})`,
-      })
-      .from(VISITORS)
-      .innerJoin(SESSIONS, eq(VISITORS.id, SESSIONS.visitor_id)) // Join visitors and sessions
-      .groupBy(VISITORS.id) // Group by visitor_id to identify multiple sessions
-      .having(sql`COUNT(${SESSIONS.id}) > 1`) // Filter to only those with more than one session
-      .execute();
+    // // Fetch returning visitors (distinct visitors with multiple sessions)
+    // const returningVisitorsResult = await db
+    //   .select({
+    //     returningVisitors: sql`COUNT(DISTINCT ${VISITORS.id})`,
+    //   })
+    //   .from(VISITORS)
+    //   .innerJoin(SESSIONS, eq(VISITORS.id, SESSIONS.visitor_id)) // Join visitors and sessions
+    //   .groupBy(VISITORS.id) // Group by visitor_id to identify multiple sessions
+    //   .having(sql`COUNT(${SESSIONS.id}) > 1`) // Filter to only those with more than one session
+    //   .execute();
 
-    const returningVisitors = returningVisitorsResult[0]?.returningVisitors || 0;
+    // const returningVisitors = returningVisitorsResult[0]?.returningVisitors || 0;
+
+  //   const returningVisitorsResult = await db
+  //   .select({
+  //     returningVisitors: sql`COUNT(DISTINCT ${VISITORS.id})`,
+  //   })
+  //   .from(VISITORS)
+  //   .innerJoin(SESSIONS, eq(VISITORS.id, SESSIONS.visitor_id)) // Join visitors and sessions
+  //   .groupBy(VISITORS.id) // Group by visitor_id to identify multiple sessions
+  //   .having(sql`COUNT(${SESSIONS.id}) > 1`) // Filter for visitors with more than one session
+  //   .execute();
+
+  // const returningVisitors = returningVisitorsResult[0]?.returningVisitors || 0;
+
+  const returningVisitorsResult = await db
+  .select({
+    visitorId: SESSIONS.visitor_id,
+    sessionCount: sql`COUNT(${SESSIONS.id})`
+  })
+  .from(SESSIONS)
+  .innerJoin(VISITORS, eq(SESSIONS.visitor_id, VISITORS.id))
+  .groupBy(SESSIONS.visitor_id)
+  .having(sql`COUNT(${SESSIONS.id}) > 1`) // Ensures only those visitors with multiple sessions are counted
+  .execute();
+
+console.log(returningVisitorsResult); // Log to verify the output
+
+// Now count how many distinct visitors have more than one session
+const returningVisitors = returningVisitorsResult.length;
+
+// Retrieve the count of returning visitors
+// const returningVisitors = returningVisitorsResult[0]?.returningVisitors || 0;
 
     // Return the calculated data as JSON
     return NextResponse.json(

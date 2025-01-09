@@ -22,6 +22,10 @@ function AddNews() {
   const [countData, setCountData] = useState({ news_count: 0, news: [] });
   const router = useRouter();
 
+  const [mediaPreview, setMediaPreview] = useState(null);
+  const [isVideo, setIsVideo] = useState(false);
+  const [base64Media, setBase64Media] = useState(null);
+
   const { setDataFromPage } = useData();
 
   const [newsForm, setNewsForm] = useState({
@@ -106,36 +110,100 @@ function AddNews() {
     getNewsCount();
   }, []);
 
+  // const validateForm = () => {
+  //   const newErrors = {};
+
+  //   if (newsForm.categories.length === 0) {
+  //     newErrors.categories = "At least one category is required";
+  //   }
+
+  //   if (!newsForm.title?.trim()) {
+  //     newErrors.title = "Title is required";
+  //   }
+
+  //   if (!newsForm.description?.trim()) {
+  //     newErrors.description = "Description is required";
+  //   }
+
+  //   if (!newsForm.image) {
+  //     newErrors.image = "Image is required";
+  //   }
+  //   if (viewpoints.some((vp) => !vp.trim())) {
+  //     newErrors.viewpoints = "All viewpoints must be filled.";
+  //   }
+  //   // Additional validation for main news slot when main_news is true
+  //   if (
+  //     newsForm.main_news &&
+  //     countData.news_count === 2 &&
+  //     !newsForm.mainNewsSlot
+  //   ) {
+  //     newErrors.mainNewsSlot = "Please select a slot for main news";
+  //   }
+
+  //   setErrors(newErrors);
+  //   return Object.keys(newErrors).length === 0;
+  // };
   const validateForm = () => {
     const newErrors = {};
-
+  
+    // Category validation
     if (newsForm.categories.length === 0) {
       newErrors.categories = "At least one category is required";
     }
-
+  
+    // Title validation
     if (!newsForm.title?.trim()) {
       newErrors.title = "Title is required";
     }
-
+  
+    // Description validation
     if (!newsForm.description?.trim()) {
       newErrors.description = "Description is required";
     }
-
-    if (!newsForm.image) {
-      newErrors.image = "Image is required";
+  
+    // Media validation
+    if (!newsForm.media) {
+      newErrors.media = "Image or video is required";
+    } else {
+      // Check file type
+      const fileType = newsForm.media.type;
+      if (!fileType.startsWith('image/') && !fileType.startsWith('video/')) {
+        newErrors.media = "Please upload a valid image or video file";
+      }
+  
+      // Check file size
+      const maxSize = fileType.startsWith('video/') ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+      if (newsForm.media.size > maxSize) {
+        newErrors.media = `File must be less than ${fileType.startsWith('video/') ? '50MB' : '10MB'}`;
+      }
+  
+      // Video-specific validations
+      if (fileType.startsWith('video/')) {
+        const validVideoTypes = ['video/mp4', 'video/webm'];
+        if (!validVideoTypes.includes(fileType)) {
+          newErrors.media = "Please upload MP4 or WebM video format only";
+        }
+      }
+  
+      // Image-specific validations
+      if (fileType.startsWith('image/')) {
+        const validImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!validImageTypes.includes(fileType)) {
+          newErrors.media = "Please upload JPG or PNG image format only";
+        }
+      }
     }
+  
+    // Viewpoints validation
     if (viewpoints.some((vp) => !vp.trim())) {
       newErrors.viewpoints = "All viewpoints must be filled.";
     }
-    // Additional validation for main news slot when main_news is true
-    if (
-      newsForm.main_news &&
-      countData.news_count === 2 &&
-      !newsForm.mainNewsSlot
-    ) {
+  
+    // Main news slot validation
+    if (newsForm.main_news && countData.news_count === 2 && !newsForm.mainNewsSlot) {
       newErrors.mainNewsSlot = "Please select a slot for main news";
     }
-
+  
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -155,6 +223,42 @@ function AddNews() {
         categories: updatedCategories,
       };
     });
+  };
+
+  const handleMediaUpload = (event) => {
+    const selectedFile = event.target.files[0];
+    console.log(selectedFile)
+    setNewsForm({ ...newsForm, media: selectedFile });
+    
+    // Clear media error if exists
+    const newErrors = { ...errors };
+    delete newErrors.media;
+    setErrors(newErrors);
+  
+    // Validate file size (50MB max for videos)
+    const maxSize = selectedFile.type.startsWith('video/') ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (selectedFile.size > maxSize) {
+      setErrors({
+        ...errors,
+        media: `File size must be less than ${selectedFile.type.startsWith('video/') ? '50MB' : '10MB'}`,
+      });
+      return;
+    }
+  
+    // Check if the selected file is an image or video
+    if (selectedFile && (selectedFile.type.startsWith('image/') || selectedFile.type.startsWith('video/'))) {
+      setIsVideo(selectedFile.type.startsWith('video/'));
+      setMediaPreview(URL.createObjectURL(selectedFile));
+  
+      // Convert the file to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBase64Media(reader.result);
+      };
+      reader.readAsDataURL(selectedFile);
+    } else {
+      alert('Please upload a valid image or video file.');
+    }
   };
 
   const handleNewsImage = (event) => {
@@ -194,7 +298,7 @@ function AddNews() {
   };
 
   const handleSubmit = async (e) => {
-    // console.log("handleing");
+    console.log("handleing");
 
     e.preventDefault();
 
@@ -214,11 +318,13 @@ function AddNews() {
         viewpoints,
         main_news: newsForm.main_news,
         mainNewsSlot: newsForm.mainNewsSlot, // Include selected slot
+        mediaType: isVideo ? 'video' : 'image',
+        // mediaData: base64Media
       };
-
+      console.log("handleing w2");
       const token =
         typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
+        console.log("handleing3");
       const response = await fetch("/api/adult/createNewsArticle", {
         method: "POST",
         headers: {
@@ -233,7 +339,7 @@ function AddNews() {
         throw new Error("Failed to submit article");
       }
       const data = await response.json();
-      const payload = { ...data, image: base64Image }; // Include the image in the payload
+      const payload = { ...data, mediaData: base64Media }; // Include the image in the payload
       setDataFromPage(payload);
       router.push("/viewpoint/news-preview");
       setNewsForm({
@@ -359,22 +465,22 @@ function AddNews() {
                         <div
                           key={cat.id}
                           className={`
-                                                flex items-center space-x-2 p-2 border rounded-lg cursor-pointer ${
-                                                  newsForm?.region_id != 1 &&
-                                                  cat.region == "yes" &&
-                                                  cat.region_id !=
-                                                    newsForm.region_id
-                                                    ? "hidden"
-                                                    : ""
-                                                }
-                                                ${
-                                                  newsForm.categories.includes(
-                                                    cat.id
-                                                  )
-                                                    ? "bg-orange-100 border-orange-500"
-                                                    : "hover:bg-gray-100"
-                                                }
-                                              `}
+                                    flex items-center space-x-2 p-2 border rounded-lg cursor-pointer ${
+                                      newsForm?.region_id != 1 &&
+                                      cat.region == "yes" &&
+                                      cat.region_id !=
+                                        newsForm.region_id
+                                        ? "hidden"
+                                        : ""
+                                    }
+                                    ${
+                                      newsForm.categories.includes(
+                                        cat.id
+                                      )
+                                        ? "bg-orange-100 border-orange-500"
+                                        : "hover:bg-gray-100"
+                                    }
+                                  `}
                           onClick={() => handleCategoryToggle(cat.id)}
                         >
                           {newsForm.categories.includes(cat.id) && (
@@ -431,7 +537,7 @@ function AddNews() {
             </div>
 
             {/* Image Upload */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="image">Article Image*</Label>
               <div
                 className={`border-2 border-dashed rounded-lg p-6 hover:border-orange-500 transition-colors ${
@@ -475,6 +581,59 @@ function AddNews() {
               </div>
               {errors.image && (
                 <p className="text-sm text-red-500">{errors.image}</p>
+              )}
+            </div> */}
+
+            <div className="space-y-2">
+              <Label htmlFor="media">Article Media (Image or Video)*</Label>
+              <div
+                className={`border-2 border-dashed rounded-lg p-6 hover:border-orange-500 transition-colors ${
+                  errors.media ? "border-red-500" : "border-gray-300"
+                }`}
+              >
+                <input
+                  type="file"
+                  id="media"
+                  accept="image/jpeg,image/png,image/jpg,video/mp4,video/webm"
+                  onChange={handleMediaUpload}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="media"
+                  className="flex flex-col items-center justify-center cursor-pointer"
+                >
+                  {newsForm.media ? (
+                    <div className="space-y-2 text-center">
+                      {isVideo ? (
+                        <video 
+                          src={mediaPreview} 
+                          controls 
+                          className="max-h-40 rounded-lg mx-auto"
+                        />
+                      ) : (
+                        <img
+                          src={mediaPreview}
+                          alt="Preview"
+                          className="max-h-40 rounded-lg mx-auto"
+                        />
+                      )}
+                      <p className="text-sm text-gray-600">
+                        Click to change {isVideo ? 'video' : 'image'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 text-center">
+                      <Upload className="w-12 h-12 mx-auto text-gray-400" />
+                      <p className="text-gray-600">Click to upload media</p>
+                      <p className="text-sm text-gray-400">
+                        PNG, JPG, MP4, WebM up to 50MB
+                      </p>
+                    </div>
+                  )}
+                </label>
+              </div>
+              {errors.media && (
+                <p className="text-sm text-red-500">{errors.media}</p>
               )}
             </div>
 

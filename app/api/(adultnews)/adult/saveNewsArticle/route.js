@@ -22,7 +22,8 @@ export async function POST(request) {
   const userData = authResult.decoded_Data;
   const userId = userData.id;
 
-  const { result, imageData, fileName, slotId } = await request.json(); // Receive the new data structure
+  const { result, mediaData, fileName, mediaType, slotId } = await request.json();
+  // const { result, imageData, fileName, slotId } = await request.json(); // Receive the new data structure
   const entries = Object.values(result); // Convert the data object into an array of entries
   const localTempDir = os.tmpdir(); // Define the local temp directory dynamically based on platform
 console.log("fileName",fileName)
@@ -60,10 +61,26 @@ console.log("fileName",fileName)
     for (const entry of entries) {
       const { category, title, viewpoint, description } = entry;
 
+      // const newsRecord = await db.insert(ADULT_NEWS).values({
+      //   news_category_id: 8, // Default category
+      //   title,
+      //   image_url: fileName,
+      //   description,
+      //   viewpoint,
+      //   show_on_top: main_news || showOnTop,
+      //   main_news,
+      //   news_group_id: newsGroupId,
+      //   show_date: indianTime.toJSDate(),
+      //   created_at: indianTime.toJSDate(),
+      //   updated_at: indianTime.toJSDate(),
+      // });
+
+      // Modify the news record insertion to include media type
       const newsRecord = await db.insert(ADULT_NEWS).values({
-        news_category_id: 8, // Default category
+        news_category_id: 8,
         title,
         image_url: fileName,
+        media_type: mediaType, // Add this field to your database
         description,
         viewpoint,
         show_on_top: main_news || showOnTop,
@@ -102,7 +119,7 @@ console.log("fileName",fileName)
       fs.mkdirSync(localTempDir, { recursive: true });
     }
 
-    const base64Image = imageData.split(";base64,").pop();
+    const base64Image = mediaData.split(";base64,").pop();
     fs.writeFileSync(localFilePath, base64Image, { encoding: "base64" });
     await sftp.put(localFilePath, `${cPanelDirectory}/${fileName}`);
     fs.unlinkSync(localFilePath);

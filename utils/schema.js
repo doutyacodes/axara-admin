@@ -1564,6 +1564,12 @@ export const ADULT_NEWS = mysqlTable("adult_news", {
   show_date: datetime("show_date").notNull(),
   show_on_top: boolean("show_on_top").default(false),
   main_news: boolean("main_news").default(false),
+  media_type: mysqlEnum("media_type", [
+    "video",
+    "image",
+  ])
+    .notNull()
+    .default("image"),
   created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(), // Timestamp for updates
 });
