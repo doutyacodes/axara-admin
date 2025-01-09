@@ -80,8 +80,8 @@ console.log("base64Media", base64Media);
       setFormStates(initialStates);
       setViewpoints(data.results.map(result => result.viewpoint));
       setBase64Media(data.mediaData);
-      setIsVideo(data.mediaType === 'video');
-      setMediaType(data.mediaType || 'image');
+      setIsVideo(data.originalData.mediaType === 'video');
+      setMediaType(data.originalData.mediaType || 'image');
     }
   }, [data]);
 
