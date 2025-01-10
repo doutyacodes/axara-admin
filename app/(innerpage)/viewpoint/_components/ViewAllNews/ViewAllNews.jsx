@@ -515,11 +515,19 @@ export default function ViewAllNews() {
                             <span className="text-sm font-medium text-gray-700">{article.views.toLocaleString()}</span>
                           </div>
                         </div>
-                        <div className="flex items-center">
+                        {/* <div className="flex items-center">
                           <Clock className="h-4 w-4 text-gray-400 mr-2" />
                           <div className="flex flex-col">
                             <span className="text-xs text-gray-500">Engagement</span>
                             <span className="text-sm font-medium text-gray-700">{formatTime(article.engagementTime)}</span>
+                          </div>
+                        </div> */}
+
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 text-gray-400 mr-2" />
+                          <div className="flex flex-col">
+                            <span className="text-xs text-gray-500">Total Shares</span>
+                            <span className="text-sm font-medium text-gray-700">{article.individualShares}</span>
                           </div>
                         </div>
                       </div>

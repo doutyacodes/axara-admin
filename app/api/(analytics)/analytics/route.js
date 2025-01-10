@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '@/utils';
-import { SESSIONS, VISITORS } from '@/utils/analyticsSchema';
+import { ARTICLE_INTERACTIONS, SESSIONS, VISITORS } from '@/utils/analyticsSchema';
 
 export async function GET() {
   try {
@@ -48,49 +48,34 @@ export async function GET() {
 
     const avgSessionDuration = avgSessionDurationResult[0]?.avgSessionDuration || 0;
 
-    // // Fetch returning visitors (distinct visitors with multiple sessions)
-    // const returningVisitorsResult = await db
-    //   .select({
-    //     returningVisitors: sql`COUNT(DISTINCT ${VISITORS.id})`,
-    //   })
-    //   .from(VISITORS)
-    //   .innerJoin(SESSIONS, eq(VISITORS.id, SESSIONS.visitor_id)) // Join visitors and sessions
-    //   .groupBy(VISITORS.id) // Group by visitor_id to identify multiple sessions
-    //   .having(sql`COUNT(${SESSIONS.id}) > 1`) // Filter to only those with more than one session
-    //   .execute();
+    const returningVisitorsResult = await db
+    .select({
+      visitorId: SESSIONS.visitor_id,
+      sessionCount: sql`COUNT(${SESSIONS.id})`
+    })
+    .from(SESSIONS)
+    .innerJoin(VISITORS, eq(SESSIONS.visitor_id, VISITORS.id))
+    .groupBy(SESSIONS.visitor_id)
+    .having(sql`COUNT(${SESSIONS.id}) > 1`) // Ensures only those visitors with multiple sessions are counted
+    .execute();
 
-    // const returningVisitors = returningVisitorsResult[0]?.returningVisitors || 0;
+  console.log(returningVisitorsResult); // Log to verify the output
 
-  //   const returningVisitorsResult = await db
-  //   .select({
-  //     returningVisitors: sql`COUNT(DISTINCT ${VISITORS.id})`,
-  //   })
-  //   .from(VISITORS)
-  //   .innerJoin(SESSIONS, eq(VISITORS.id, SESSIONS.visitor_id)) // Join visitors and sessions
-  //   .groupBy(VISITORS.id) // Group by visitor_id to identify multiple sessions
-  //   .having(sql`COUNT(${SESSIONS.id}) > 1`) // Filter for visitors with more than one session
-  //   .execute();
+  // Now count how many distinct visitors have more than one session
+  const returningVisitors = returningVisitorsResult.length;
 
+  // Retrieve the count of returning visitors
   // const returningVisitors = returningVisitorsResult[0]?.returningVisitors || 0;
 
-  const returningVisitorsResult = await db
+  // Fetch total shares (count of all actions in ARTICLE_INTERACTIONS)
+  const totalSharesResult = await db
   .select({
-    visitorId: SESSIONS.visitor_id,
-    sessionCount: sql`COUNT(${SESSIONS.id})`
+    totalShares: sql`COUNT(${ARTICLE_INTERACTIONS.id})`,
   })
-  .from(SESSIONS)
-  .innerJoin(VISITORS, eq(SESSIONS.visitor_id, VISITORS.id))
-  .groupBy(SESSIONS.visitor_id)
-  .having(sql`COUNT(${SESSIONS.id}) > 1`) // Ensures only those visitors with multiple sessions are counted
+  .from(ARTICLE_INTERACTIONS)
   .execute();
 
-console.log(returningVisitorsResult); // Log to verify the output
-
-// Now count how many distinct visitors have more than one session
-const returningVisitors = returningVisitorsResult.length;
-
-// Retrieve the count of returning visitors
-// const returningVisitors = returningVisitorsResult[0]?.returningVisitors || 0;
+  const totalShares = totalSharesResult[0]?.totalShares || 0;
 
     // Return the calculated data as JSON
     return NextResponse.json(
@@ -99,6 +84,7 @@ const returningVisitors = returningVisitorsResult.length;
         uniqueVisitors,
         avgSessionDuration,
         returningVisitors,
+        totalShares,
       },
       { status: 200 }
     );

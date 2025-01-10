@@ -57,3 +57,16 @@ import { ADULT_NEWS } from "./schema";
     session_id: varchar("session_id", { length: 255 }).notNull(), // Session ID of the user (or user ID if authenticated)
   });
   
+  export const ARTICLE_INTERACTIONS = mysqlTable("article_interactions", {
+    id: int("id").primaryKey().autoincrement(),
+    article_id: int("article_id").notNull().references(() => ADULT_NEWS.id), // Reference to the article
+    visitor_uuid: varchar("visitor_uuid", { length: 255 }).notNull(), // UUID from cookies
+    action_type: mysqlEnum("action_type", [
+      "copy_link",
+      "share_facebook",
+      "share_twitter",
+      "share_whatsapp",
+      "share_telegram",
+    ]).notNull(), // Types of actions
+    created_at: timestamp("created_at").defaultNow(), // Timestamp of action creation
+  });

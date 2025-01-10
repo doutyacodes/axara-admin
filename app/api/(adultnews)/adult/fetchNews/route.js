@@ -3,7 +3,7 @@ import { db } from "@/utils";
 import { ADULT_NEWS, NEWS_CATEGORIES, ADULT_NEWS_TO_CATEGORIES } from "@/utils/schema";
 import { authenticate } from "@/lib/jwtMiddleware";
 import { and, desc, eq, sql } from "drizzle-orm";
-import { PERSPECTIVE_VIEWS } from "@/utils/analyticsSchema";
+import { ARTICLE_INTERACTIONS, PERSPECTIVE_VIEWS } from "@/utils/analyticsSchema";
 
 export async function POST(req) {
   const authResult = await authenticate(req, true);
@@ -41,6 +41,9 @@ export async function POST(req) {
         engagementTime: sql`COALESCE(SUM(${PERSPECTIVE_VIEWS.engagement_time}), 0)`.as(
           "engagementTime"
         ), // Total engagement time for this article
+        individualShares: sql`COUNT(DISTINCT ${ARTICLE_INTERACTIONS.id})`.as(
+          "individualShares"
+        ), // Count distinct shares for this article
       })
       .from(ADULT_NEWS)
       .leftJoin(ADULT_NEWS_TO_CATEGORIES, eq(ADULT_NEWS.id, ADULT_NEWS_TO_CATEGORIES.news_id))
@@ -51,6 +54,10 @@ export async function POST(req) {
       .leftJoin(
         PERSPECTIVE_VIEWS,
         eq(PERSPECTIVE_VIEWS.article_id, ADULT_NEWS.id)
+      ) // Join with the perspective views table
+      .leftJoin(
+        ARTICLE_INTERACTIONS,
+        eq(ARTICLE_INTERACTIONS.article_id, ADULT_NEWS.id)
       ) // Join with the perspective views table
       .groupBy(ADULT_NEWS.id)
       .orderBy(desc(ADULT_NEWS.created_at))
