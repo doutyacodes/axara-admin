@@ -181,33 +181,167 @@ console.log("base64Media", base64Media);
     return Object.keys(newErrors).length === 0;
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!validateForm()) {
+  //     toast.error("Please fill in all required fields for all viewpoints");
+  //     return;
+  //   }
+  //   setIsSubmitting(true);
+  //   try {
+
+  //     const extension = isVideo ? '.mp4' : '.png';
+  //     const payload = {
+  //       result: formStates,
+  //       mediaData: base64Media,
+  //       mediaType: mediaType,
+  //       fileName: `${Date.now()}-axara${extension}`,
+  //       slotId: data.originalData.mainNewsSlot,
+  //     };
+
+
+  //     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  //     const response = await fetch("/api/adult/saveNewsArticle", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     if (!response.ok) {
+  //       toast.error(data.message || "Failed to submit article. Please try again.");
+  //       return;
+  //     }
+  //     toast.success("News Added Successfully");
+  //     router.push("/viewpoint");
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error("Network error occurred. Please try again.");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  // Utility function to split base64 string into chunks
+const splitIntoChunks = (base64String, chunkSize) => {
+  const chunks = [];
+  for (let i = 0; i < base64String.length; i += chunkSize) {
+    chunks.push(base64String.slice(i, i + chunkSize));
+  }
+  return chunks;
+};
+
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!validateForm()) {
+  //     toast.error("Please fill in all required fields for all viewpoints");
+  //     return;
+  //   }
+  
+  //   setIsSubmitting(true);
+  //   const uploadToast = toast.loading("Uploading media...");
+  
+  //   try {
+  //     const extension = isVideo ? '.mp4' : '.png';
+  //     const fileName = `${Date.now()}-axara${extension}`;
+  //     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  
+  //     // Split the base64 media into chunks (3MB each)
+  //     const CHUNK_SIZE = 3 * 1024 * 1024;
+  //     const chunks = splitIntoChunks(base64Media, CHUNK_SIZE);
+  //     let uploadedChunks = 0;
+  
+  //     // Upload each chunk
+  //     for (let i = 0; i < chunks.length; i++) {
+  //       const chunkPayload = {
+  //         chunk: chunks[i],
+  //         chunkIndex: i,
+  //         totalChunks: chunks.length,
+  //         fileName,
+  //         sessionId: Date.now().toString(), // Unique session ID for this upload
+  //       };
+  
+  //       const chunkResponse = await fetch("/api/adult/upload-chunk", {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify(chunkPayload),
+  //       });
+  
+  //       if (!chunkResponse.ok) {
+  //         throw new Error(`Failed to upload chunk ${i + 1}`);
+  //       }
+  
+  //       uploadedChunks++;
+  //       const progress = Math.round((uploadedChunks / chunks.length) * 100);
+  //       toast.loading(`Uploading: ${progress}%`, { id: uploadToast });
+  //     }
+  
+  //     // After all chunks are uploaded, save the news article
+  //     const payload = {
+  //       result: formStates,
+  //       fileName,
+  //       mediaType,
+  //       slotId: data.originalData.mainNewsSlot,
+  //     };
+  
+  //     const response = await fetch("/api/adult/saveNewsArticle", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+  
+  //     const responseData = await response.json();
+  
+  //     if (!response.ok) {
+  //       throw new Error(responseData.message || "Failed to submit article");
+  //     }
+  
+  //     toast.success("News Added Successfully", { id: uploadToast });
+  //     router.push("/viewpoint");
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error(error.message || "Network error occurred. Please try again.", { 
+  //       id: uploadToast 
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
       toast.error("Please fill in all required fields for all viewpoints");
       return;
     }
+    
     setIsSubmitting(true);
+    const uploadToast = toast.loading("Uploading media...");
+  
     try {
-
       const extension = isVideo ? '.mp4' : '.png';
+      const fileName = `${Date.now()}-axara${extension}`;
+      
       const payload = {
         result: formStates,
         mediaData: base64Media,
-        mediaType: mediaType,
-        fileName: `${Date.now()}-axara${extension}`,
+        mediaType,
+        fileName,
         slotId: data.originalData.mainNewsSlot,
       };
   
-      // const payload = {
-      //   result: formStates,
-      //   imageData,
-      //   fileName: `${Date.now()}-axara.png`,
-      //   slotId: data.originalData.mainNewsSlot,
-      // };
-
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
+  
       const response = await fetch("/api/adult/saveNewsArticle", {
         method: "POST",
         headers: {
@@ -216,21 +350,26 @@ console.log("base64Media", base64Media);
         },
         body: JSON.stringify(payload),
       });
-
+  
+      const responseData = await response.json();
+  
       if (!response.ok) {
-        toast.error(data.message || "Failed to submit article. Please try again.");
-        return;
+        throw new Error(responseData.error || responseData.message || "Failed to upload file");
       }
-      toast.success("News Added Successfully");
+  
+      toast.success("News Added Successfully", { id: uploadToast });
       router.push("/viewpoint");
     } catch (error) {
-      console.error(error);
-      toast.error("Network error occurred. Please try again.");
+      console.error('Upload error:', error);
+      toast.error(error.message || "Failed to upload file. Please try again.", {
+        id: uploadToast,
+        duration: 5000
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   return (
     <>
       <Toaster />
