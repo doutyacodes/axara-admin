@@ -35,6 +35,8 @@ function AddNews() {
   const [isVideo, setIsVideo] = useState(false);
   const [mediaType, setMediaType] = useState('image'); // 'image' or 'video'
 
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   const router = useRouter();
 console.log(data)
 console.log("base64Media", base64Media);
@@ -415,6 +417,107 @@ const splitIntoChunks = (base64String, chunkSize) => {
   //   }
   // };
 
+/* working */
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!validateForm()) {
+  //     toast.error("Please fill in all required fields for all viewpoints");
+  //     return;
+  //   }
+    
+  //   setIsSubmitting(true);
+  //   try {
+  //     const extension = isVideo ? '.mp4' : '.png';
+  //     const fileName = `${Date.now()}-axara${extension}`;
+      
+  //     // First, upload the media file if it exists
+  //     if (base64Media) {
+  //       // Convert base64 to Blob
+  //       const base64Response = await fetch(base64Media);
+  //       const blob = await base64Response.blob();
+        
+  //       // Split into chunks
+  //       const chunks = chunkFile(blob);
+  //       const totalChunks = chunks.length;
+        
+  //       // Upload each chunk
+  //       for (let i = 0; i < chunks.length; i++) {
+  //         const formData = new FormData();
+  //         formData.append('file', chunks[i]);
+  //         formData.append('fileName', fileName);
+  //         formData.append('chunkIndex', i);
+  //         formData.append('totalChunks', totalChunks);
+          
+  //         const uploadResponse = await fetch('/api/adult/uploadChunk', {
+  //           method: 'POST',
+            
+  //           body: formData,
+  //         });
+
+  //         // headers: {
+  //         //   Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //         // },
+          
+  //         if (!uploadResponse.ok) {
+  //           throw new Error('Failed to upload file chunk');
+  //         }
+  //       }
+  //     }
+      
+  //     // Then submit the article data
+  //     const payload = {
+  //       result: formStates,
+  //       fileName,
+  //       mediaType,
+  //       slotId: data.originalData.mainNewsSlot,
+  //     };
+      
+  //     const response = await fetch("/api/adult/saveNewsArticle", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+  
+  //     if (!response.ok) {
+  //       throw new Error(response.statusText);
+  //     }
+      
+  //     toast.success("News Added Successfully");
+  //     router.push("/viewpoint");
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error("Upload failed. Please try again.");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  const uploadChunkWithRetry = async (chunk, fileName, chunkIndex, totalChunks, maxRetries = 3) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const formData = new FormData();
+        formData.append('file', chunk);
+        formData.append('fileName', fileName);
+        formData.append('chunkIndex', chunkIndex);
+        formData.append('totalChunks', totalChunks);
+
+        const response = await fetch('/api/adult/uploadChunk', {
+          method: 'POST',
+          body: formData,
+          timeout: chunkIndex === totalChunks - 1 ? 30000 : 10000,
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+      } catch (error) {
+        if (attempt === maxRetries) throw error;
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+      }
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -424,52 +527,39 @@ const splitIntoChunks = (base64String, chunkSize) => {
     }
     
     setIsSubmitting(true);
+    setUploadProgress(0); // Reset progress at start
+    
     try {
       const extension = isVideo ? '.mp4' : '.png';
       const fileName = `${Date.now()}-axara${extension}`;
       
-      // First, upload the media file if it exists
       if (base64Media) {
-        // Convert base64 to Blob
         const base64Response = await fetch(base64Media);
         const blob = await base64Response.blob();
         
-        // Split into chunks
-        const chunks = chunkFile(blob);
-        const totalChunks = chunks.length;
+        // Create smaller chunks (1MB each)
+        const chunkSize = 1024 * 1024;
+        const chunks = [];
+        for (let i = 0; i < blob.size; i += chunkSize) {
+          chunks.push(blob.slice(i, i + chunkSize));
+        }
         
-        // Upload each chunk
+        // Upload chunks with progress tracking
         for (let i = 0; i < chunks.length; i++) {
-          const formData = new FormData();
-          formData.append('file', chunks[i]);
-          formData.append('fileName', fileName);
-          formData.append('chunkIndex', i);
-          formData.append('totalChunks', totalChunks);
-          
-          const uploadResponse = await fetch('/api/adult/uploadChunk', {
-            method: 'POST',
-            
-            body: formData,
-          });
-
-          // headers: {
-          //   Authorization: `Bearer ${localStorage.getItem("token")}`,
-          // },
-          
-          if (!uploadResponse.ok) {
-            throw new Error('Failed to upload file chunk');
-          }
+          await uploadChunkWithRetry(chunks[i], fileName, i, chunks.length);
+          // Update progress after each chunk
+          setUploadProgress(Math.round((i + 1) * 100 / chunks.length));
         }
       }
       
-      // Then submit the article data
+      // Rest of your form submission logic...
       const payload = {
         result: formStates,
         fileName,
         mediaType,
         slotId: data.originalData.mainNewsSlot,
       };
-      
+
       const response = await fetch("/api/adult/saveNewsArticle", {
         method: "POST",
         headers: {
@@ -478,9 +568,9 @@ const splitIntoChunks = (base64String, chunkSize) => {
         },
         body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) {
-        throw new Error(response.statusText);
+        throw new Error('Failed to save article');
       }
       
       toast.success("News Added Successfully");
@@ -490,8 +580,10 @@ const splitIntoChunks = (base64String, chunkSize) => {
       toast.error("Upload failed. Please try again.");
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0); // Reset progress after completion
     }
   };
+  
   return (
     <>
       <Toaster />
