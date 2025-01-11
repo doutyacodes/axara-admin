@@ -7,6 +7,9 @@ import { existsSync } from 'fs';
 import path from 'path';
 import os from 'os';
 
+export const maxDuration = 60; // This function can run for a maximum of 5 seconds
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
 //   const authResult = await authenticate(request, true);
 //   if (!authResult.authenticated) {
