@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useData } from "@/context/DataContext";
+import { chunkFile } from "@/utils/uploadHelpers";
 import { Check, FileText, Loader2, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -370,49 +371,127 @@ const splitIntoChunks = (base64String, chunkSize) => {
   //   }
   // };
 
+  /* original */
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!validateForm()) {
+  //     toast.error("Please fill in all required fields for all viewpoints");
+  //     return;
+  //   }
+  //   setIsSubmitting(true);
+  //   try {
+
+  //     const extension = isVideo ? '.mp4' : '.png';
+  //     const payload = {
+  //       result: formStates,
+  //       mediaData: base64Media,
+  //       mediaType: mediaType,
+  //       fileName: `${Date.now()}-axara${extension}`,
+  //       slotId: data.originalData.mainNewsSlot,
+  //     };
+
+  //     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  //     const response = await fetch("/api/adult/saveNewsArticle", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     if (!response.ok) {
+  //       toast.error(data.message || "Failed to submit article. Please try again.");
+  //       return;
+  //     }
+  //     toast.success("News Added Successfully");
+  //     router.push("/viewpoint");
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error("Network error occurred. Please try again.");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
       toast.error("Please fill in all required fields for all viewpoints");
       return;
     }
+    
     setIsSubmitting(true);
     try {
-
       const extension = isVideo ? '.mp4' : '.png';
+      const fileName = `${Date.now()}-axara${extension}`;
+      
+      // First, upload the media file if it exists
+      if (base64Media) {
+        // Convert base64 to Blob
+        const base64Response = await fetch(base64Media);
+        const blob = await base64Response.blob();
+        
+        // Split into chunks
+        const chunks = chunkFile(blob);
+        const totalChunks = chunks.length;
+        
+        // Upload each chunk
+        for (let i = 0; i < chunks.length; i++) {
+          const formData = new FormData();
+          formData.append('file', chunks[i]);
+          formData.append('fileName', fileName);
+          formData.append('chunkIndex', i);
+          formData.append('totalChunks', totalChunks);
+          
+          const uploadResponse = await fetch('/api/adult/uploadChunk', {
+            method: 'POST',
+            
+            body: formData,
+          });
+
+          // headers: {
+          //   Authorization: `Bearer ${localStorage.getItem("token")}`,
+          // },
+          
+          if (!uploadResponse.ok) {
+            throw new Error('Failed to upload file chunk');
+          }
+        }
+      }
+      
+      // Then submit the article data
       const payload = {
         result: formStates,
-        mediaData: base64Media,
-        mediaType: mediaType,
-        fileName: `${Date.now()}-axara${extension}`,
+        fileName,
+        mediaType,
         slotId: data.originalData.mainNewsSlot,
       };
-
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
+      
       const response = await fetch("/api/adult/saveNewsArticle", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify(payload),
       });
-
+  
       if (!response.ok) {
-        toast.error(data.message || "Failed to submit article. Please try again.");
-        return;
+        throw new Error(response.statusText);
       }
+      
       toast.success("News Added Successfully");
       router.push("/viewpoint");
     } catch (error) {
       console.error(error);
-      toast.error("Network error occurred. Please try again.");
+      toast.error("Upload failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
-
   return (
     <>
       <Toaster />
