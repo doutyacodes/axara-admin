@@ -84,9 +84,9 @@ export function Login() {
                 <FormItem>
                   <div className="flex justify-between items-center">
                     <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
-                    <Link href="/forgot-password" className="text-sm text-red-800 hover:underline">
+                    {/* <Link href="/forgot-password" className="text-sm text-red-800 hover:underline">
                       Forgot password?
-                    </Link>
+                    </Link> */}
                   </div>
                   <FormControl>
                     <div className="relative">
