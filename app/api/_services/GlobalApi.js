@@ -16,6 +16,23 @@ const SearchUser = (token, data) => {
 const SignUpUser = (data) => axios.post("/api/signup", data);
 const LoginUser = (data) => axios.post("/api/login", data);
 
+const SignupAdmin =  async (data) => {
+  const response = await fetch(`/api/signup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw { response: { data: errorData, status: response.status } };
+  }
+
+  return { data: await response.json() };
+}
+
 // New functions to fetch and add children
 const GetUserChildren = async () => {
   const token = localStorage.getItem("token"); // Adjust based on your auth token storage
@@ -654,6 +671,7 @@ const GetFeedbacksData = (month, year, week, childId, token,) => {
 export default {
   SearchUser,
   SignUpUser,
+  SignupAdmin,
   LoginUser,
   GetUserChildren, // Export the new function
   AddChild, // Export the new function

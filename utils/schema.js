@@ -292,8 +292,6 @@ export const USER_BADGES = mysqlTable("user_badges", {
   earned_at: timestamp("earned_at").defaultNow(), // Timestamp for when the badge was earned
 });
 
-// new added
-
 // Define the schema for the 'page' table
 export const PAGE = mysqlTable("page", {
   id: int("id").primaryKey().notNull(),
@@ -456,6 +454,7 @@ export const OPTIONS = mysqlTable("options", {
   analytic_id: int("analytic_id").notNull(),
   question_id: int("question_id").notNull(),
 });
+
 export const OPTIONS_KIDS = mysqlTable("options_kids", {
   id: int("id").primaryKey().autoincrement(),
   option_text: varchar("option_text", { length: 300 }).notNull(),

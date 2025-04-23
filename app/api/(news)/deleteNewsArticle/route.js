@@ -30,13 +30,18 @@ export async function DELETE(request) {
     await sftp.connect({
       host: '68.178.163.247',
       port: 22,
-      username: 'devusr',
-      password: 'Wowfyuser#123',
+      username: 'devuser',
+      password: 'Wowfy#user',
     });
 
     // Step 3: Delete the image file from cPanel (sftp)
     const cPanelDirectory = '/home/devusr/public_html/testusr/images';
-    await sftp.delete(`${cPanelDirectory}/${imageUrl}`);
+    try {
+      await sftp.delete(`${cPanelDirectory}/${imageUrl}`);
+    } catch (sftpError) {
+      console.warn('Could not delete file from SFTP:', sftpError.message);
+      // continue anyway
+    }
     
     // Step 4: Disconnect from SFTP after deleting the image
     await sftp.end();

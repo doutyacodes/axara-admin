@@ -5,9 +5,37 @@ import AddCategories from './_components/AddCategories/AddCategories';
 import AddNews from './_components/AddNews/AddNews';
 import ViewAllNews from './_components/ViewAllNews/ViewAllNews';
 import AnalyticsPage from './_components/AnalyticsPage/page';
+import useAuth from '@/app/hooks/useAuth';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 const NewsAdminPanel = () => {
-
+  const { isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+  
+  useEffect(() => {
+    // Only redirect after the authentication check is complete
+    if (!loading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isAuthenticated, loading, router]);
+  
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black/10 shadow-lg z-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-xl flex flex-col items-center">
+          <Loader2 className="h-12 w-12 animate-spin text-orange-500 mb-4" />
+          <p className="text-xl font-semibold">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // Only render the protected content if authenticated
+  if (!isAuthenticated) {
+    return null; // Return nothing while redirecting
+  }
   return (
     <div className="min-h-screen bg-gray-50/30">
       <div className="p-6 max-w-7xl mx-auto">
