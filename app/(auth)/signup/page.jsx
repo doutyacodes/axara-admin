@@ -48,6 +48,12 @@ export function Signup() {
 
   const router = useRouter();
 
+  useEffect(() => {
+    router.push('/login')
+  }, [])
+
+  return null
+
   const onSubmit = async (data) => {
     try {
       // Remove confirmPassword before sending to API

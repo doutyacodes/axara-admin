@@ -112,14 +112,14 @@ export function Login() {
             </form>
           </Form>
           
-          <div className="mt-8 text-center">
+          {/* <div className="mt-8 text-center">
             <p className="text-gray-600">
               Don&apos;t have an account?{" "}
               <Link href="/signup" className="text-red-800 font-semibold hover:underline">
                 Create Account
               </Link>
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
