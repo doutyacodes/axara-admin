@@ -39,8 +39,8 @@ const SideBar = () => {
   };
 
   const navLinks = [
-    { label: "Axara News", links: "/news", icon: FaNewspaper  },  // Changed to "FaBuilding" for About Us    
-    { label: "Viewpoint", links: "/viewpoint", icon: FaNewspaper  },  // Changed to "FaBuilding" for About Us    
+    { label: "Zaeser Kids", links: "/news", icon: FaNewspaper  },  // Changed to "FaBuilding" for About Us    
+    { label: "Zaeser Perspective", links: "/viewpoint", icon: FaNewspaper  },  // Changed to "FaBuilding" for About Us    
     // { label: "Search", links: "/search", icon: FaSearch },
     { label: "Learn", links: "/learn", icon: FaBook },
     { label: "Challenges", links: "/challenges", icon: FaTrophy },    
@@ -54,40 +54,43 @@ const SideBar = () => {
 
   return (
     <>
+      {/* Mobile Menu Button - Always visible on mobile */}
       <div
         onClick={toggleCollapse}
-        className={cn(
-          "",
-          isCollapsed
-            ? "block absolute top-7 left-3 z-[999999999] md:hidden"
-            : "hidden"
-        )}
+        className="block md:hidden absolute top-7 left-3 z-[999999999] p-2 bg-white rounded-md shadow-md"
       >
         <Menu />
       </div>
+
+      {/* Overlay for mobile when sidebar is open */}
       {!isCollapsed && (
         <div
           onClick={toggleCollapse}
           className="fixed inset-0 bg-black bg-opacity-50 z-[9998] md:hidden"
         />
       )}
+
+      {/* Main Sidebar */}
       <motion.div
-        animate={{ width: isCollapsed ? "6rem" : "14rem" }}
+        animate={{ 
+          width: isCollapsed ? "6rem" : "14rem",
+          x: isCollapsed && window.innerWidth < 768 ? -100 : 0 
+        }}
         className={cn(
-          "min-h-screen shadow-lg bg-[#f8f8f8] relative max-md:fixed z-[9999999] flex flex-col p-3 rounded-md lg:block ",
-          isCollapsed ? "hidden" : "flex"
+          "min-h-screen shadow-lg bg-[#f8f8f8] relative z-[9999999] flex flex-col p-3 rounded-md",
+          "md:block", // Always block on md screens and up
+          isCollapsed ? "md:block hidden" : "block" // Hide on mobile when collapsed
         )}
         initial={{ width: "6rem" }}
       >
-        {/* Sidebar Header */}
+        {/* Sidebar Header - Collapse Toggle Button */}
         <div
-          className="flex items-center justify-between rounded-full bg-orange-500 w-fit absolute -right-2 top-5 z-[99999999]"
+          className="flex items-center justify-between rounded-full bg-orange-500 w-fit absolute -right-2 top-5 z-[99999999] cursor-pointer"
           onClick={toggleCollapse}
         >
           <motion.div
             initial={{ rotate: 0 }}
             animate={{ rotate: isCollapsed ? 0 : 180 }}
-
             transition={{ duration: 0.4, ease: "easeInOut" }}
             className="text-2xl font-bold text-white"
           >
