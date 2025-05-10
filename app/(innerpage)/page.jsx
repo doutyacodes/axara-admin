@@ -6,28 +6,37 @@ import LoadingSpinner from "../_components/LoadingSpinner";
 import { redirect } from "next/navigation";
 
 const Home = () => {
+
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const checkAuth = async () => {
+      const res = await fetch("/api/verify-token", { method: "GET" });
 
-    if (!token) {
-      redirect("/login");
-      return;
-    }
+      if (!res.ok) {
+        redirect("/login");
+        return;
+      }
 
-    try {
-      const decoded = jwt.decode(token);
-      const role = decoded?.role;
+      const data = await res.json();
+      const role = data.role;
 
       if (role === "newsmap_admin") {
+        console.log("news ,ap")
+
         redirect("/news-map");
       } else {
+        console.log("else")
         redirect("/news");
       }
-    } catch (err) {
-      console.error("Token decode failed", err);
+    };
+
+    checkAuth().catch((err) => {
+      console.error("Unexpected error in auth check", err);
       redirect("/login");
-    }
+    });
+  
+    checkAuth();
   }, []);
+  
 
   return <LoadingSpinner />;
 };

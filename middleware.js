@@ -8,17 +8,24 @@ export async function middleware(req) {
     }
   });
 
-  const publicRoutes = ['/login', '/signup'];
+  const publicRoutes = ['/', '/login', '/signup'];
   const path = req.nextUrl.pathname;
 
-  const isPublicRoute = publicRoutes.some(route => path.startsWith(route));
+  console.log("pth, path", path)
 
+  // Allow public routes
+  const isPublicRoute = publicRoutes.some(route => path.startsWith(route));
   if (isPublicRoute) {
     return res;
   }
 
-  const token = req.cookies.get('auth_token')?.value;
+  // // ✅ Allow root ("/") to be accessed by all logged-in roles
+  // if (path === '/') {
+  //   return res;
+  // }
 
+  // Check for token
+  const token = req.cookies.get('auth_token')?.value;
   if (!token) {
     console.log("No token — redirecting to /login");
     return NextResponse.redirect(new URL('/login', req.url));
@@ -30,15 +37,13 @@ export async function middleware(req) {
 
     const role = payload.role;
 
-    // Path-specific access control
+    // ✅ Now check per-path access after allowing "/"
     if (path.startsWith('/news-map')) {
-      // Only superadmin and newsmap_admin can access /news-map
       if (role !== 'superadmin' && role !== 'newsmap_admin') {
         console.log("Unauthorized access to /news-map by", role);
         return NextResponse.redirect(new URL('/login', req.url));
       }
     } else {
-      // All other routes — only superadmin and admin allowed
       if (role !== 'superadmin' && role !== 'admin') {
         console.log("Unauthorized access to general route by", role);
         return NextResponse.redirect(new URL('/login', req.url));
@@ -52,9 +57,9 @@ export async function middleware(req) {
   }
 }
 
-// Apply middleware to all routes except:
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|assets|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ]
 };
+
