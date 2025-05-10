@@ -172,7 +172,7 @@ export default function AdminNewsPage() {
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Confirm Deletion</h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete "{newsToDelete?.title}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{newsToDelete?.title}&quot;? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
               <button 
