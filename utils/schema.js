@@ -21,7 +21,7 @@ export const ADMIN_DETAILS = mysqlTable("admin_details", {
   name: varchar("name", { length: 255 }).notNull(),
   username: varchar("username", { length: 255 }).notNull().unique(),
   password: varchar("password", { length: 255 }).notNull(),
-  role: mysqlEnum("role", ["superadmin", "admin"]).default("admin").notNull(),
+  role: mysqlEnum("role", ["superadmin", "admin", "newsmap_admin"]).default("admin").notNull(),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
   is_active: boolean("is_active").default(true),
@@ -1602,4 +1602,22 @@ export const ADULT_NEWS_REPORTS = mysqlTable("adult_news_reports", {
   user_id: int("user_id").references(() => USER_DETAILS.id), // Nullable
   report_text: text("report_text"),
   created_at: timestamp("created_at").defaultNow(),
+});
+
+// map_news table schema
+export const MAP_NEWS = mysqlTable("map_news", {
+  id: int("id").primaryKey().autoincrement(),
+  title: varchar("title", { length: 255 }).notNull(),
+  image_url: text("image_url").notNull(),
+  article_url: text("article_url").notNull(),
+  source_name: varchar("source_name", { length: 100 }),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  category_id: int("category_id").references(() => MAP_NEWS_CATEGORIES.id),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const MAP_NEWS_CATEGORIES = mysqlTable("map_news_categories", {
+  id: int("id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 100 }).notNull(),
 });

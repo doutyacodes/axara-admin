@@ -16,6 +16,7 @@ import {
   FaBuilding,
   FaNewspaper,
   FaTrophy,
+  FaMapMarkedAlt,
 } from "react-icons/fa";
 import Image from "next/image";
 import { ChevronRight, Menu } from "lucide-react";
@@ -28,7 +29,8 @@ import { BsActivity } from "react-icons/bs";
 const SideBar = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const pathname = usePathname();
-  const { isAuthenticated, loading, logout } = useAuth();
+  const { isAuthenticated, loading, logout, user } = useAuth();
+
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -38,19 +40,35 @@ const SideBar = () => {
     setIsCollapsed(true);
   };
 
-  const navLinks = [
-    { label: "Zaeser Kids", links: "/news", icon: FaNewspaper  },  // Changed to "FaBuilding" for About Us    
-    { label: "Zaeser Perspective", links: "/viewpoint", icon: FaNewspaper  },  // Changed to "FaBuilding" for About Us    
-    // { label: "Search", links: "/search", icon: FaSearch },
-    { label: "Learn", links: "/learn", icon: FaBook },
-    { label: "Challenges", links: "/challenges", icon: FaTrophy },    
-    // { label: "Tests", links: "/tests", icon: FaTasks },
-    { label: "Activities", links: "/activities", icon: BsActivity },
-    { label: "Users", links: "/users", icon: FaUserFriends },
-    // { label: "Our Story", links: "/our-story", icon: FaInfoCircle },
-    // { label: "Our Features", links: "/our-features", icon: FaStar },
-    // { label: "About Us", links: "/about-us", icon: FaBuilding },  // Changed to "FaBuilding" for About Us    
-  ];
+// Define all available links
+const allLinks = [
+  { label: "Zaeser Kids", links: "/news", icon: FaNewspaper },
+  { label: "Zaeser Perspective", links: "/viewpoint", icon: FaNewspaper },
+  // { label: "Search", links: "/search", icon: FaSearch },
+  { label: "Learn", links: "/learn", icon: FaBook },
+  { label: "Challenges", links: "/challenges", icon: FaTrophy },
+  // { label: "Tests", links: "/tests", icon: FaTasks },
+  { label: "Activities", links: "/activities", icon: BsActivity },
+  { label: "Users", links: "/users", icon: FaUserFriends },
+  // { label: "Our Story", links: "/our-story", icon: FaInfoCircle },
+  // { label: "Our Features", links: "/our-features", icon: FaStar },
+  // { label: "About Us", links: "/about-us", icon: FaBuilding },
+];
+
+const newsMapLink = {
+  label: "News Map",
+  links: "/news-map",
+  icon: FaMapMarkedAlt,
+};
+
+let navLinks = [];
+
+// Role-based rendering
+if (user?.role === "super_admin" || user?.role === "admin") {
+  navLinks = [...allLinks, newsMapLink];
+} else if (user?.role === "newsmap_admin") {
+  navLinks = [newsMapLink];
+}
 
   return (
     <>

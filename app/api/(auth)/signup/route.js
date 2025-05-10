@@ -36,14 +36,18 @@ export async function POST(req) {
         name,
         username,
         password: hashedPassword,
-        role: "admin", // Default as specified
+        role: "newsmap_admin", // Default as specified
         is_active: true, // Default as specified
       })
       .execute();
 
     // Fetch the newly created user
     const createdAdmin = await db
-      .select({ id: ADMIN_DETAILS.id, username: ADMIN_DETAILS.username })
+      .select({
+        id: ADMIN_DETAILS.id,
+        username: ADMIN_DETAILS.username,
+        role: ADMIN_DETAILS.role
+      })
       .from(ADMIN_DETAILS)
       .where(eq(ADMIN_DETAILS.username, username))
       .limit(1)
@@ -51,17 +55,30 @@ export async function POST(req) {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: createdAdmin[0].id, username: createdAdmin[0].username },
+      { id: createdAdmin[0].id,
+        username: createdAdmin[0].username,
+        role: createdAdmin[0].role
+      },
       JWT_SECRET
     );
 
-    return NextResponse.json(
-      { 
-        message: "Account created successfully", 
+    const response = NextResponse.json(
+      {
         token,
+        message: "Account created successfully",
       },
       { status: 201 }
     );
+
+    response.cookies.set("auth_token", token, {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    return response;
+
   } catch (error) {
     console.error("Signup Error:", error);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
