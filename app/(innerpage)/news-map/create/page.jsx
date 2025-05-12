@@ -110,6 +110,7 @@ export default function CreateNewsPage() {
       const res = await fetch('/api/news-map', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(dataToSubmit),

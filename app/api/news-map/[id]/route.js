@@ -53,10 +53,10 @@ export async function GET(req, { params }) {
 // PUT - Update a specific news item
 export async function PUT(req, { params }) {
   // Authenticate user
-  // const authResult = await authenticate(req);
-  // if (!authResult.authenticated) {
-  //   return authResult.response;
-  // }
+  const authResult = await authenticate(req);
+  if (!authResult.authenticated) {
+    return authResult.response;
+  }
 
   const { id } = params;
 

@@ -9,7 +9,11 @@ import { usePathname } from "next/navigation";
 const Navbar = () => {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
-  const logoSrc = pathname?.startsWith("/news") ? "/images/logo3.png" : "/images/logo2.png";
+  const logoSrc = pathname?.startsWith("/news-map")
+  ? "/images/newsmap.png"
+  : pathname?.startsWith("/news")
+  ? "/images/logo3.png"
+  : "/images/logo2.png";
 
   return (
     <nav className="w-full bg-transparent min-h-16 border-b-4 border-[#f59e1e]">

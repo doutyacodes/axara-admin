@@ -1614,6 +1614,7 @@ export const MAP_NEWS = mysqlTable("map_news", {
   latitude: decimal("latitude", { precision: 10, scale: 7 }),
   longitude: decimal("longitude", { precision: 10, scale: 7 }),
   category_id: int("category_id").references(() => MAP_NEWS_CATEGORIES.id),
+  created_by: int("created_by").references(() => ADMIN_DETAILS.id),
   created_at: timestamp("created_at").defaultNow(),
 });
 

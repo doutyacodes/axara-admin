@@ -7,29 +7,34 @@ import { desc, eq } from "drizzle-orm";
 // GET - Fetch all news
 export async function GET(req) {
   // Authenticate user
-  // const authResult = await authenticate(req);
-  // if (!authResult.authenticated) {
-  //   return authResult.response;
-  // }
+  const authResult = await authenticate(req);
+  if (!authResult.authenticated) {
+    return authResult.response;
+  }
+
+  const userData = authResult.decoded_Data;
+  const adminId = userData.id;
+  console.log("user id", adminId)
 
   try {
     // Fetch all news items with their associated categories
     const news = await db
-      .select({
-        id: MAP_NEWS.id,
-        title: MAP_NEWS.title,
-        image_url: MAP_NEWS.image_url,
-        article_url: MAP_NEWS.article_url,
-        source_name: MAP_NEWS.source_name,
-        latitude: MAP_NEWS.latitude,
-        longitude: MAP_NEWS.longitude,
-        category_id: MAP_NEWS.category_id,
-        created_at: MAP_NEWS.created_at,
-        category_name: MAP_NEWS_CATEGORIES.name,
-      })
-      .from(MAP_NEWS)
-      .leftJoin(MAP_NEWS_CATEGORIES, eq(MAP_NEWS.category_id, MAP_NEWS_CATEGORIES.id))
-      .orderBy(desc(MAP_NEWS.created_at));
+    .select({
+      id: MAP_NEWS.id,
+      title: MAP_NEWS.title,
+      image_url: MAP_NEWS.image_url,
+      article_url: MAP_NEWS.article_url,
+      source_name: MAP_NEWS.source_name,
+      latitude: MAP_NEWS.latitude,
+      longitude: MAP_NEWS.longitude,
+      category_id: MAP_NEWS.category_id,
+      created_at: MAP_NEWS.created_at,
+      category_name: MAP_NEWS_CATEGORIES.name,
+    })
+    .from(MAP_NEWS)
+    .leftJoin(MAP_NEWS_CATEGORIES, eq(MAP_NEWS.category_id, MAP_NEWS_CATEGORIES.id))
+    .where(eq(MAP_NEWS.created_by, adminId))
+    .orderBy(desc(MAP_NEWS.created_at));
 
     // Send the news items as a JSON response
     return NextResponse.json(
@@ -48,10 +53,12 @@ export async function GET(req) {
 // POST - Create a new news item
 export async function POST(req) {
   // Authenticate user
-  // const authResult = await authenticate(req);
-  // if (!authResult.authenticated) {
-  //   return authResult.response;
-  // }
+  const authResult = await authenticate(req);
+  if (!authResult.authenticated) {
+    return authResult.response;
+  }
+  const userData = authResult.decoded_Data;
+  const adminId = userData.id;
 
   try {
     const {
@@ -80,6 +87,7 @@ export async function POST(req) {
       source_name: source_name || null,
       latitude: latitude || null,
       longitude: longitude || null,
+      created_by: adminId,
       category_id: category_id || null,
     });
 
