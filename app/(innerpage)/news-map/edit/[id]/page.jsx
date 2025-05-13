@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, Loader2, AlertCircle, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
 export default function EditNewsPage({ params }) {
-  const { id } = params;
+  const unwrappedParams = use(params);  // Unwrap the params Promise
+  const { id } = unwrappedParams;
+
   const router = useRouter();
   const [formData, setFormData] = useState({
     title: '',
@@ -28,10 +30,16 @@ export default function EditNewsPage({ params }) {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [originalImageUrl, setOriginalImageUrl] = useState('');
 
+  const [adminRole, setAdminRole] = useState('');
+  const [sourceNames, setSourceNames] = useState([]);
+  const [customSource, setCustomSource] = useState(false);
+
+
   useEffect(() => {
     Promise.all([
       fetchNewsItem(),
-      fetchCategories()
+      fetchCategories(),
+      fetchAdminInfo()
     ]).then(() => {
       setLoading(false);
     }).catch(err => {
@@ -39,6 +47,34 @@ export default function EditNewsPage({ params }) {
       setLoading(false);
     });
   }, [id]);
+
+  // function to fetch admin info and source names
+  const fetchAdminInfo = async () => {
+    try {
+      // Verify token and get admin role
+      const tokenRes = await fetch("/api/verify-token", { method: "GET" });
+      if (!tokenRes.ok) {
+        throw new Error('Failed to verify authentication');
+      }
+      const tokenData = await tokenRes.json();
+      const adminRole = tokenData.role;
+      setAdminRole(adminRole);
+      
+      // Fetch source names based on admin role
+      const sourcesRes = await fetch("/api/news-map/source-names", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!sourcesRes.ok) {
+        throw new Error('Failed to fetch source names');
+      }
+      const sourcesData = await sourcesRes.json();
+      setSourceNames(sourcesData.sourceNames);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const fetchNewsItem = async () => {
     try {
@@ -88,6 +124,18 @@ export default function EditNewsPage({ params }) {
     }
   };
 
+  const toggleCustomSource = () => {
+    setCustomSource(!customSource);
+    if (customSource) {
+      // When switching back to dropdown, reset the source name
+      if (sourceNames.length > 0) {
+        setFormData(prev => ({ ...prev, source_name: sourceNames[0].name }));
+      } else {
+        setFormData(prev => ({ ...prev, source_name: '' }));
+      }
+    }
+  };
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -384,22 +432,61 @@ export default function EditNewsPage({ params }) {
                 />
               </div>
               
-              {/* Source Name */}
+              {/* Source Name - Updated Section */}
               <div>
-                <label htmlFor="source_name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Source Name
-                </label>
-                <input
-                  type="text"
-                  id="source_name"
-                  name="source_name"
-                  value={formData.source_name}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
-                  placeholder="E.g., The Hindu, Times Express"
-                />
+                <div className="flex justify-between items-center mb-1">
+                  <label htmlFor="source_name" className="block text-sm font-medium text-gray-700">
+                    Source Name <span className="text-red-500">*</span>
+                  </label>
+                  
+                  {/* Only show toggle for superadmin and admin */}
+                  {(adminRole === "superadmin" || adminRole === "admin") && (
+                    <button 
+                      type="button"
+                      onClick={toggleCustomSource}
+                      className="text-xs text-red-600 hover:text-red-800 underline"
+                    >
+                      {customSource ? "Select from list" : "Enter custom source"}
+                    </button>
+                  )}
+                </div>
+                
+                {adminRole === "newsmap_admin" || !customSource ? (
+                  <select
+                    id="source_name"
+                    name="source_name"
+                    value={formData.source_name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                    disabled={adminRole === "newsmap_admin"}
+                  >
+                    <option value="" disabled>Select a source</option>
+                    {sourceNames.map((source, index) => (
+                      <option key={index} value={source.name}>
+                        {source.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    id="source_name"
+                    name="source_name"
+                    value={formData.source_name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                    placeholder="Enter custom source name"
+                  />
+                )}
+                {adminRole === "newsmap_admin" && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    As a News Page admin, you can only post news under your company name.
+                  </p>
+                )}
               </div>
-              
+                            
               {/* Location */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

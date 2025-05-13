@@ -23,14 +23,15 @@ import { ChevronRight, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import useAuth from "../hooks/useAuth";
 import { BsActivity } from "react-icons/bs";
 
 const SideBar = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const pathname = usePathname();
+  const router = useRouter();
   const { isAuthenticated, loading, logout, user } = useAuth();
-
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -38,6 +39,14 @@ const SideBar = () => {
 
   const handleItemClick = () => {
     setIsCollapsed(true);
+  };
+
+  const handleLogout = async () => {
+    await fetch('/api/logout', { method: 'GET' });
+    localStorage.removeItem("token");
+    // Remove specific cookie (auth_token)
+    document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+    router.push("/login");
   };
 
 // Define all available links
@@ -155,6 +164,34 @@ if (user?.role === "super_admin" || user?.role === "admin") {
               </motion.div>
             );
           })}
+          
+          {/* Logout Button */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: navLinks.length * 0.1 }}
+            onClick={handleItemClick} // Collapse sidebar when item is clicked
+          >
+            <div
+              onClick={handleLogout}
+              className={cn(
+                "flex items-center p-2 hover:bg-blue-100 rounded-lg cursor-pointer mt-auto",
+                isCollapsed ? "flex-col justify-center gap-2" : "flex-row"
+              )}
+            >
+              <FaSignOutAlt
+                size={24}
+                className="text-black"
+              />
+              <span
+                className={`${
+                  isCollapsed ? "text-[10px] text-nowrap" : "block ml-3"
+                } transition-all duration-300`}
+              >
+                Logout
+              </span>
+            </div>
+          </motion.div>
         </nav>
       </motion.div>
     </>

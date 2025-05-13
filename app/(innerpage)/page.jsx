@@ -20,11 +20,8 @@ const Home = () => {
       const role = data.role;
 
       if (role === "newsmap_admin") {
-        console.log("news ,ap")
-
         redirect("/news-map");
       } else {
-        console.log("else")
         redirect("/news");
       }
     };

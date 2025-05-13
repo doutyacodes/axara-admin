@@ -18,7 +18,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useEffect } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useEffect, useState } from "react";
 
 const signupSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -27,33 +34,36 @@ const signupSchema = z.object({
     .string()
     .min(6, { message: "Password must be at least 6 characters." })
     .max(100),
-    // .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/, {
-    //   message: "Password must contain at least one uppercase letter, one lowercase letter, and one number."
-    // }),
   confirmPassword: z.string().min(6, { message: "Confirm password is required." }),
+  role: z.enum(["superadmin", "admin", "newsmap_admin"], {
+    required_error: "Please select an admin type",
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
 
 export function Signup() {
+  const [adminType, setAdminType] = useState("admin");
+
   const form = useForm({
     resolver: zodResolver(signupSchema),
     defaultValues: {
       name: "",
       username: "",
       password: "",
-      confirmPassword: ""
+      confirmPassword: "",
+      role: "admin"
     },
   });
 
   const router = useRouter();
 
-  // useEffect(() => {
-  //   router.push('/login')
-  // }, [])
-
-  // return null
+  // Update form when admin type changes
+  const onRoleChange = (value) => {
+    setAdminType(value);
+    form.setValue("role", value);
+  };
 
   const onSubmit = async (data) => {
     try {
@@ -89,19 +99,55 @@ export function Signup() {
         <div className="p-8">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <FormField control={form.control} name="role" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-700 font-medium">Admin Type</FormLabel>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      onRoleChange(value);
+                    }} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-gray-50 border-gray-200 focus:border-red-800 focus:ring-1 focus:ring-red-800">
+                        <SelectValue placeholder="Select the type of admin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="superadmin">Super Admin</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="newsmap_admin">News Page</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-red-600" />
+                </FormItem>
+              )} />
+
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">Full Name</FormLabel>
+                  <FormLabel className="text-gray-700 font-medium">
+                    {adminType === "newsmap_admin" 
+                      ? "News Company Name" 
+                      : "Full Name"}
+                  </FormLabel>
                   <FormControl>
                     <div className="relative">
                       <UserCircle className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input 
-                        placeholder="Enter your full name" 
+                        placeholder={adminType === "newsmap_admin" 
+                          ? "Enter the news company name (e.g., Times of India, The Hindu)" 
+                          : "Enter your full name"} 
                         className="pl-10 py-6 bg-gray-50 border-gray-200 focus:border-red-800 focus:ring-1 focus:ring-red-800" 
                         {...field} 
                       />
                     </div>
                   </FormControl>
+                  {adminType === "newsmap_admin" && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Please enter the official name of the news company exactly as it should appear.
+                    </p>
+                  )}
                   <FormMessage className="text-red-600" />
                 </FormItem>
               )} />

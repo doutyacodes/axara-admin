@@ -26,8 +26,14 @@ export default function CreateNewsPage() {
   const [uploading, setUploading] = useState(false);
   const [formSubmitting, setFormSubmitting] = useState(false);
 
+  // New state variables for admin role and source names
+  const [adminRole, setAdminRole] = useState('');
+  const [sourceNames, setSourceNames] = useState([]);
+  const [customSource, setCustomSource] = useState(false);
+
   useEffect(() => {
     fetchCategories();
+    fetchAdminInfo();
   }, []);
 
   const fetchCategories = async () => {
@@ -43,9 +49,55 @@ export default function CreateNewsPage() {
     }
   };
 
+   // Function to fetch admin info and source names
+   const fetchAdminInfo = async () => {
+    try {
+      // Verify token and get admin role
+      const tokenRes = await fetch("/api/verify-token", { method: "GET" });
+      if (!tokenRes.ok) {
+        throw new Error('Failed to verify authentication');
+      }
+      const tokenData = await tokenRes.json();
+      const adminRole = tokenData.role;
+      setAdminRole(adminRole);
+      
+      // Fetch source names based on admin role
+      const sourcesRes = await fetch("/api/news-map/source-names",{
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!sourcesRes.ok) {
+        throw new Error('Failed to fetch source names');
+      }
+      const sourcesData = await sourcesRes.json();
+      setSourceNames(sourcesData.sourceNames);
+      
+      // If newsmap_admin, set the source name automatically
+      if (adminRole === "newsmap_admin" && sourcesData.currentAdminName) {
+        setFormData(prev => ({ ...prev, source_name: sourcesData.currentAdminName }));
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const toggleCustomSource = () => {
+    setCustomSource(!customSource);
+    if (customSource) {
+      // When switching back to dropdown, reset the source name
+      if (sourceNames.length > 0) {
+        setFormData(prev => ({ ...prev, source_name: sourceNames[0].name }));
+      } else {
+        setFormData(prev => ({ ...prev, source_name: '' }));
+      }
+    }
   };
 
   const handleFileChange = (e) => {
@@ -85,7 +137,7 @@ export default function CreateNewsPage() {
     }
   };
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
     setFormSubmitting(true);
     setError(null);
@@ -270,7 +322,7 @@ export default function CreateNewsPage() {
               </div>
               
               {/* Source Name */}
-              <div>
+              {/* <div>
                 <label htmlFor="source_name" className="block text-sm font-medium text-gray-700 mb-1">
                   Source Name
                 </label>
@@ -283,7 +335,61 @@ export default function CreateNewsPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
                   placeholder="E.g., The Hindu, Times Express"
                 />
-              </div>
+              </div> */}
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label htmlFor="source_name" className="block text-sm font-medium text-gray-700">
+                      Source Name <span className="text-red-500">*</span>
+                    </label>
+                    
+                    {/* Only show toggle for superadmin and admin */}
+                    {(adminRole === "superadmin" || adminRole === "admin") && (
+                      <button 
+                        type="button"
+                        onClick={toggleCustomSource}
+                        className="text-xs text-red-600 hover:text-red-800 underline"
+                      >
+                        {customSource ? "Select from list" : "Enter custom source"}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {adminRole === "newsmap_admin" || !customSource ? (
+                    <select
+                      id="source_name"
+                      name="source_name"
+                      value={formData.source_name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                      disabled={adminRole === "newsmap_admin"}
+                    >
+                      <option value="" disabled>Select a source</option>
+                      {sourceNames.map((source, index) => (
+                        <option key={index} value={source.name}>
+                          {source.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      id="source_name"
+                      name="source_name"
+                      value={formData.source_name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                      placeholder="Enter custom source name"
+                    />
+                  )}
+                  {adminRole === "newsmap_admin" && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      As a News Page admin, you can only post news under your company name.
+                    </p>
+                  )}
+                </div>
               
               {/* Location */}
               <div>

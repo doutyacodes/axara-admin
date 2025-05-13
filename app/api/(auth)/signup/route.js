@@ -9,7 +9,16 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
 
 export async function POST(req) {
   try {
-    const { name, username, password } = await req.json();
+    const { name, username, password, role } = await req.json();
+
+    // Validate role
+    const validRoles = ["superadmin", "admin", "newsmap_admin"];
+    if (!validRoles.includes(role)) {
+      return NextResponse.json(
+        { message: "Invalid admin role specified." },
+        { status: 400 }
+      );
+    }
 
     // Check if username already exists
     const existingUser = await db
@@ -36,7 +45,7 @@ export async function POST(req) {
         name,
         username,
         password: hashedPassword,
-        role: "newsmap_admin", // Default as specified
+        role,
         is_active: true, // Default as specified
       })
       .execute();
