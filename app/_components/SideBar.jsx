@@ -51,8 +51,8 @@ const SideBar = () => {
 
 // Define all available links
 const allLinks = [
-  { label: "Zaeser Kids", links: "/news", icon: FaNewspaper },
-  { label: "Zaeser Perspective", links: "/viewpoint", icon: FaNewspaper },
+  { label: "Doutya Kids", links: "/news", icon: FaNewspaper },
+  { label: "Doutya Perspective", links: "/viewpoint", icon: FaNewspaper },
   // { label: "Search", links: "/search", icon: FaSearch },
   { label: "Learn", links: "/learn", icon: FaBook },
   { label: "Challenges", links: "/challenges", icon: FaTrophy },
