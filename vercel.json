@@ -1,8 +1,13 @@
 {
-    "functions": {
-      "app/api/**/*.js": {
-        "maxDuration": 300
-      }
+  "functions": {
+    "app/api/**/*.js": {
+      "maxDuration": 300
     }
-  }
-  
+  },
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-news",
+      "schedule": "0 */6 * * *"
+    }
+  ]
+}

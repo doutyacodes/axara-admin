@@ -69,6 +69,7 @@ export async function POST(req) {
       latitude,
       longitude,
       category_id,
+      delete_after_hours,
     } = await req.json();
 
     // Validate required fields
@@ -89,6 +90,7 @@ export async function POST(req) {
       longitude: longitude || null,
       created_by: adminId,
       category_id: category_id || null,
+      delete_after_hours: delete_after_hours || 24, // with fallback to default
     });
 
     return NextResponse.json(

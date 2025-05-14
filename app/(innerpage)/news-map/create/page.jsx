@@ -15,6 +15,8 @@ export default function CreateNewsPage() {
     latitude: '',
     longitude: '',
     category_id: '',
+    delete_after_hours: 24, 
+
   });
   
   const [categories, setCategories] = useState([]);
@@ -449,6 +451,57 @@ export default function CreateNewsPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Delete After Hours */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Delete After Hours <span className="text-red-500">*</span>
+                </label>
+                <div className="flex space-x-6">
+                  <div className="flex items-center">
+                    <input
+                      id="delete-24"
+                      name="delete_after_hours"
+                      type="radio"
+                      value="24"
+                      checked={formData.delete_after_hours === 24}
+                      onChange={(e) => setFormData({...formData, delete_after_hours: parseInt(e.target.value)})}
+                      className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"
+                    />
+                    <label htmlFor="delete-24" className="ml-2 block text-sm text-gray-700">
+                      24 hours
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      id="delete-36"
+                      name="delete_after_hours"
+                      type="radio"
+                      value="36"
+                      checked={formData.delete_after_hours === 36}
+                      onChange={(e) => setFormData({...formData, delete_after_hours: parseInt(e.target.value)})}
+                      className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"
+                    />
+                    <label htmlFor="delete-36" className="ml-2 block text-sm text-gray-700">
+                      36 hours
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      id="delete-48"
+                      name="delete_after_hours"
+                      type="radio"
+                      value="48"
+                      checked={formData.delete_after_hours === 48}
+                      onChange={(e) => setFormData({...formData, delete_after_hours: parseInt(e.target.value)})}
+                      className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"
+                    />
+                    <label htmlFor="delete-48" className="ml-2 block text-sm text-gray-700">
+                      48 hours
+                    </label>
+                  </div>
+                </div>
               </div>
               
               {/* Submit Button */}
