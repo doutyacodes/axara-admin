@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { db } from "@/lib/db";
 import { MAP_NEWS } from "@/utils/schema";
 import { eq, lt } from "drizzle-orm";
 import { Client } from 'ssh2-sftp-client';
+import { db } from '@/utils';
 
 // Add this header to make this a protected endpoint that only Vercel cron can call
 export const dynamic = 'force-dynamic';
