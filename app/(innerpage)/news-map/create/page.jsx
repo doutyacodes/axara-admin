@@ -16,7 +16,6 @@ export default function CreateNewsPage() {
     longitude: '',
     category_id: '',
     delete_after_hours: 24, 
-
   });
   
   const [categories, setCategories] = useState([]);

@@ -4,6 +4,9 @@ import { eq, and, lt } from "drizzle-orm";
 import SFTPClient from 'ssh2-sftp-client';
 import { db } from '@/utils';
 
+// To test this 
+// curl -H "Authorization: Bearer 6fd7e23c-a4b2-4e39-9cb8-c23fb8e6b511" https://axara-admin.vercel.app/api/cron/cleanup-news
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 

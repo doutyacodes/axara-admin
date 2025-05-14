@@ -77,6 +77,7 @@ export async function PUT(req, { params }) {
       latitude,
       longitude,
       category_id,
+      delete_after_hours,
       deleteOldImage,
       oldImagePath
     } = await req.json();
@@ -142,6 +143,7 @@ export async function PUT(req, { params }) {
         latitude: latitude || null,
         longitude: longitude || null,
         category_id: category_id || null,
+        delete_after_hours
       })
       .where(eq(MAP_NEWS.id, newsId))
 
