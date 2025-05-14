@@ -1,53 +1,44 @@
 import { NextResponse } from 'next/server';
 import { MAP_NEWS } from "@/utils/schema";
-import { lt } from "drizzle-orm";
-import { Client } from 'ssh2-sftp-client';
+import { eq, and, lt } from "drizzle-orm";
+import SFTPClient from 'ssh2-sftp-client';
 import { db } from '@/utils';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(req) {
-  const startTime = new Date();
-  console.log(`[CRON] News cleanup started at ${startTime.toISOString()}`);
+  const cronStartTime = new Date().toISOString();
+  console.log(`[CRON] Started at ${cronStartTime}`);
 
   try {
     const authHeader = req.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET_TOKEN}`) {
-      console.warn("[CRON] Unauthorized access attempt");
+      console.warn('[CRON] Unauthorized attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch all news with delete_after_hours defined
-    const allNews = await db.select().from(MAP_NEWS);
-
-    console.log(`[CRON] Total news fetched: ${allNews.length}`);
-
     const now = new Date();
-    const newsToDelete = allNews.filter((news) => {
-      const createdAt = new Date(news.created_at);
-      const deleteHours = news.delete_after_hours ?? 24; // Fallback just in case
-      const expiryTime = new Date(createdAt.getTime() + deleteHours * 60 * 60 * 1000);
 
-      const shouldDelete = expiryTime < now;
-
-      console.log(`[CRON] News ID: ${news.id}, Created: ${createdAt.toISOString()}, Expires: ${expiryTime.toISOString()}, Now: ${now.toISOString()}, Will delete: ${shouldDelete}`);
-      
-      return shouldDelete;
+    // Fetch all news entries with expired time
+    const allNews = await db.select().from(MAP_NEWS);
+    const expiredNews = allNews.filter(news => {
+      const deleteAfter = news.delete_after_hours ?? 24;
+      const expirationTime = new Date(news.created_at.getTime() + deleteAfter * 60 * 60 * 1000);
+      return expirationTime <= now;
     });
 
-    console.log(`[CRON] News items to delete: ${newsToDelete.length}`);
+    console.log(`[CRON] Found ${expiredNews.length} news items to delete`);
 
     let deletedCount = 0;
     let errorCount = 0;
 
-    for (const newsItem of newsToDelete) {
+    for (const newsItem of expiredNews) {
       try {
         const imageUrl = newsItem.image_url;
-
-        if (imageUrl && imageUrl.includes('testusr/images/')) {
+        if (imageUrl?.includes('testusr/images/')) {
           const filename = imageUrl.split('/').pop();
-          const sftp = new Client();
+          const sftp = new SFTPClient(); // ✅ Use correct constructor
 
           try {
             await sftp.connect({
@@ -59,7 +50,6 @@ export async function GET(req) {
 
             const remotePath = `/home/devusr/uploads/${filename}`;
             const exists = await sftp.exists(remotePath);
-
             if (exists) {
               await sftp.delete(remotePath);
               console.log(`[CRON] Deleted image: ${remotePath}`);
@@ -73,7 +63,8 @@ export async function GET(req) {
           }
         }
 
-        await db.delete(MAP_NEWS).where(lt(MAP_NEWS.id, newsItem.id));
+        await db.delete(MAP_NEWS).where(eq(MAP_NEWS.id, newsItem.id));
+        console.log(`[CRON] Deleted news ID ${newsItem.id}`);
         deletedCount++;
       } catch (itemError) {
         console.error(`[CRON] Error deleting news ID ${newsItem.id}:`, itemError);
@@ -81,16 +72,16 @@ export async function GET(req) {
       }
     }
 
-    const endTime = new Date();
-    console.log(`[CRON] Completed at ${endTime.toISOString()}. Deleted: ${deletedCount}, Errors: ${errorCount}`);
+    const endTime = new Date().toISOString();
+    console.log(`[CRON] Completed at ${endTime}. Deleted: ${deletedCount}, Errors: ${errorCount}`);
 
     return NextResponse.json({
-      message: `Cleanup done. Deleted ${deletedCount} news. Errors: ${errorCount}.`,
+      message: `Cleanup completed. Deleted ${deletedCount} news items with ${errorCount} errors.`,
     });
   } catch (error) {
     console.error("[CRON] Fatal error during cleanup:", error);
     return NextResponse.json(
-      { message: "Fatal error during cleanup", details: error.message },
+      { message: "Error during news cleanup", details: error.message },
       { status: 500 }
     );
   }
