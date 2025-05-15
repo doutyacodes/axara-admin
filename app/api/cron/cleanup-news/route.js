@@ -15,8 +15,15 @@ export async function GET(req) {
   console.log(`[CRON] Started at ${cronStartTime}`);
 
   try {
+
     const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET_TOKEN}`) {
+    const vercelCronHeader = req.headers.get('x-vercel-cron');
+
+    const isAuthorized = 
+    authHeader === `Bearer ${process.env.CRON_SECRET_TOKEN}` || 
+    vercelCronHeader === '1';
+
+    if (!isAuthorized) {
       console.warn('[CRON] Unauthorized attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
