@@ -16,17 +16,17 @@ export async function GET(req) {
 
   try {
 
-    const authHeader = req.headers.get('authorization');
-    const vercelCronHeader = req.headers.get('x-vercel-cron');
+    // const authHeader = req.headers.get('authorization');
+    // const vercelCronHeader = req.headers.get('x-vercel-cron');
 
-    console.log(`[CRON] vercelCronHeader ${vercelCronHeader}`);
-    const isAuthorized = 
-    authHeader === `Bearer ${process.env.CRON_SECRET_TOKEN}` || vercelCronHeader === '1';
+    // console.log(`[CRON] vercelCronHeader ${vercelCronHeader}`);
+    // const isAuthorized = 
+    // authHeader === `Bearer ${process.env.CRON_SECRET_TOKEN}` || vercelCronHeader === '1';
 
-    if (!isAuthorized) {
-      console.warn('[CRON] Unauthorized attempt');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // if (!isAuthorized) {
+    //   console.warn('[CRON] Unauthorized attempt');
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // }
 
     const now = new Date();
 
