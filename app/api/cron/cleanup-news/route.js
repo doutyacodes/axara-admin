@@ -19,9 +19,9 @@ export async function GET(req) {
     const authHeader = req.headers.get('authorization');
     const vercelCronHeader = req.headers.get('x-vercel-cron');
 
+    console.log(`[CRON] vercelCronHeader ${vercelCronHeader}`);
     const isAuthorized = 
-    authHeader === `Bearer ${process.env.CRON_SECRET_TOKEN}` || 
-    vercelCronHeader === '1';
+    authHeader === `Bearer ${process.env.CRON_SECRET_TOKEN}` || vercelCronHeader === '1';
 
     if (!isAuthorized) {
       console.warn('[CRON] Unauthorized attempt');
