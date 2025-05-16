@@ -775,7 +775,7 @@ const handleSubmit = async (e) => {
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
             <h3 className="text-lg font-medium text-gray-900 mb-3">Confirm Delete</h3>
             <p className="text-gray-600 mb-4">
-              Are you sure you want to delete the custom source "{sourceToDelete.name}"? 
+              Are you sure you want to delete the custom source &quot;{sourceToDelete.name}&quot;? 
               This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
@@ -798,7 +798,6 @@ const handleSubmit = async (e) => {
           </div>
         </div>
       )}
-
     </div>
   );
 }
