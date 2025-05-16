@@ -1604,6 +1604,13 @@ export const ADULT_NEWS_REPORTS = mysqlTable("adult_news_reports", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+export const CUSTOM_SOURCES = mysqlTable("custom_sources", {
+  id: int("id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 100 }).unique().notNull(),
+  added_by: int("added_by").references(() => ADMIN_DETAILS.id),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
 // map_news table schema
 export const MAP_NEWS = mysqlTable("map_news", {
   id: int("id").primaryKey().autoincrement(),

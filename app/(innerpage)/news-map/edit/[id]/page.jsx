@@ -34,6 +34,13 @@ export default function EditNewsPage({ params }) {
   const [adminRole, setAdminRole] = useState('');
   const [sourceNames, setSourceNames] = useState([]);
   const [customSource, setCustomSource] = useState(false);
+  const [newCustomSourceName, setNewCustomSourceName] = useState('');
+  const [addingCustomSource, setAddingCustomSource] = useState(false);
+  const [editingSourceId, setEditingSourceId] = useState(null);
+  const [editingSourceName, setEditingSourceName] = useState('');
+  const [sourceActionLoading, setSourceActionLoading] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [sourceToDelete, setSourceToDelete] = useState(null);
 
 
   useEffect(() => {
@@ -126,17 +133,142 @@ export default function EditNewsPage({ params }) {
     }
   };
 
+  // Update the toggleCustomSource function to better handle source selection
   const toggleCustomSource = () => {
     setCustomSource(!customSource);
     if (customSource) {
       // When switching back to dropdown, reset the source name
       if (sourceNames.length > 0) {
+        // Find the current source in the source names if possible
+        const currentSourceExists = sourceNames.some(source => source.name === formData.source_name);
+        if (currentSourceExists) {
+          // Keep the current source if it exists in the dropdown
+          return;
+        }
         setFormData(prev => ({ ...prev, source_name: sourceNames[0].name }));
       } else {
         setFormData(prev => ({ ...prev, source_name: '' }));
       }
+    } else {
+      // When switching to custom entry, keep the current source name as editable
+      // No need to clear it as it might be useful to edit the existing name
     }
+    // Reset other states
+    setAddingCustomSource(false);
+    setEditingSourceId(null);
   };
+
+  const handleAddCustomSource = async () => {
+  if (!newCustomSourceName.trim()) return;
+  
+  setSourceActionLoading(true);
+  try {
+    const res = await fetch('/api/news-map/custom-sources', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name: newCustomSourceName }),
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || 'Failed to add custom source');
+    }
+    
+    // Refresh source names
+    await fetchAdminInfo();
+    setNewCustomSourceName('');
+    setAddingCustomSource(false);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setSourceActionLoading(false);
+  }
+};
+
+// Start editing a custom source
+const handleStartEditSource = (source) => {
+  setEditingSourceId(source.id);
+  setEditingSourceName(source.name);
+  setAddingCustomSource(false);
+};
+
+// Update custom source
+const handleUpdateCustomSource = async () => {
+  if (!editingSourceName.trim() || !editingSourceId) return;
+  
+  setSourceActionLoading(true);
+  try {
+    const res = await fetch('/api/news-map/custom-sources', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        id: editingSourceId,
+        name: editingSourceName 
+      }),
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || 'Failed to update custom source');
+    }
+    
+    // Refresh source names
+    await fetchAdminInfo();
+    setEditingSourceId(null);
+    setEditingSourceName('');
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setSourceActionLoading(false);
+  }
+};
+
+// Show delete confirmation
+const confirmDeleteSource = (source) => {
+  setSourceToDelete(source);
+  setShowConfirmDelete(true);
+};
+
+// Cancel delete
+const cancelDelete = () => {
+  setSourceToDelete(null);
+  setShowConfirmDelete(false);
+};
+
+// Delete custom source
+const handleDeleteCustomSource = async () => {
+  if (!sourceToDelete) return;
+  
+  setSourceActionLoading(true);
+  try {
+    const res = await fetch(`/api/news-map/custom-sources?id=${sourceToDelete.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || 'Failed to delete custom source');
+    }
+    
+    // Refresh source names
+    await fetchAdminInfo();
+    setShowConfirmDelete(false);
+    setSourceToDelete(null);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setSourceActionLoading(false);
+  }
+};
   
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -182,6 +314,7 @@ export default function EditNewsPage({ params }) {
     }
   };
 
+  // Update the handleSubmit function to automatically save custom source names
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormSubmitting(true);
@@ -191,6 +324,7 @@ export default function EditNewsPage({ params }) {
       let imageUrl = formData.image_url;
       let shouldDeleteOldImage = false;
       let oldImagePath = null;
+      let finalSourceName = formData.source_name;
       
       // If it's a file upload and there's a new file, upload to cPanel first
       if (uploadType === 'file' && file) {
@@ -210,9 +344,31 @@ export default function EditNewsPage({ params }) {
         oldImagePath = originalImageUrl;
       }
       
+      // If it's a custom source name that doesn't exist yet, add it
+      if (customSource && !sourceNames.some(source => source.name === finalSourceName)) {
+        try {
+          const res = await fetch('/api/news-map/custom-sources', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: finalSourceName }),
+          });
+          
+          if (!res.ok) {
+            const errorData = await res.json();
+            console.warn("Note: Custom source wasn't saved, but continuing with news update:", errorData.message);
+          }
+        } catch (err) {
+          console.warn("Note: Custom source wasn't saved, but continuing with news update:", err.message);
+        }
+      }
+      
       const dataToSubmit = {
         ...formData,
         image_url: imageUrl,
+        source_name: finalSourceName,
         latitude: formData.latitude ? parseFloat(formData.latitude) : null,
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
         category_id: formData.category_id ? parseInt(formData.category_id) : null,
@@ -455,23 +611,130 @@ export default function EditNewsPage({ params }) {
                   )}
                 </div>
                 
-                {adminRole === "newsmap_admin" || !customSource ? (
-                  <select
-                    id="source_name"
-                    name="source_name"
-                    value={formData.source_name}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
-                    disabled={adminRole === "newsmap_admin"}
-                  >
-                    <option value="" disabled>Select a source</option>
-                    {sourceNames.map((source, index) => (
-                      <option key={index} value={source.name}>
-                        {source.name}
-                      </option>
-                    ))}
-                  </select>
+                {!customSource ? (
+                  <div className="space-y-3">
+                    {/* Dropdown for selecting existing sources */}
+                    <select
+                      id="source_name"
+                      name="source_name"
+                      value={formData.source_name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                      disabled={adminRole === "newsmap_admin"}
+                    >
+                      <option value="" disabled>Select a source</option>
+                      {sourceNames.map((source, index) => (
+                        <option key={index} value={source.name}>
+                          {source.name} {source.isCustom ? "(Custom)" : ""}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Source management for admins - only shown when not in custom source entry mode */}
+                    {(adminRole === "superadmin" || adminRole === "admin") && (
+                      <div className="border rounded-md p-3 bg-gray-50">
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Manage Custom Sources</h4>
+                        
+                        {/* List of custom sources with edit/delete options */}
+                        <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                          {sourceNames.filter(source => source.isCustom).length === 0 ? (
+                            <p className="text-sm text-gray-500">No custom sources yet</p>
+                          ) : (
+                            sourceNames.filter(source => source.isCustom).map((source) => (
+                              <div key={source.id} className="flex items-center justify-between p-2 bg-white border rounded-md">
+                                {editingSourceId === source.id ? (
+                                  <div className="flex-grow flex items-center space-x-2">
+                                    <input
+                                      type="text"
+                                      value={editingSourceName}
+                                      onChange={(e) => setEditingSourceName(e.target.value)}
+                                      className="flex-grow px-2 py-1 text-sm border border-gray-300 rounded"
+                                      placeholder="Source name"
+                                    />
+                                    <button 
+                                      type="button" 
+                                      onClick={handleUpdateCustomSource}
+                                      disabled={sourceActionLoading}
+                                      className="text-xs bg-green-600 text-white py-1 px-2 rounded hover:bg-green-700"
+                                    >
+                                      Save
+                                    </button>
+                                    <button 
+                                      type="button" 
+                                      onClick={() => setEditingSourceId(null)}
+                                      className="text-xs bg-gray-300 text-gray-700 py-1 px-2 rounded hover:bg-gray-400"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <span className="text-sm">{source.name}</span>
+                                    <div className="flex space-x-2">
+                                      <button 
+                                        type="button" 
+                                        onClick={() => handleStartEditSource(source)}
+                                        className="text-xs text-blue-600 hover:text-blue-800"
+                                      >
+                                        Edit
+                                      </button>
+                                      <button 
+                                        type="button" 
+                                        onClick={() => confirmDeleteSource(source)}
+                                        className="text-xs text-red-600 hover:text-red-800"
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        
+                        {/* Add new custom source interface */}
+                        {/* {addingCustomSource ? (
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="text"
+                              value={newCustomSourceName}
+                              onChange={(e) => setNewCustomSourceName(e.target.value)}
+                              className="flex-grow px-3 py-2 text-sm border border-gray-300 rounded"
+                              placeholder="New source name"
+                            />
+                            <button 
+                              type="button" 
+                              onClick={handleAddCustomSource}
+                              disabled={sourceActionLoading || !newCustomSourceName.trim()}
+                              className="text-sm bg-red-600 text-white py-1 px-3 rounded hover:bg-red-700 disabled:bg-red-300"
+                            >
+                              Add
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => setAddingCustomSource(false)}
+                              className="text-sm bg-gray-300 text-gray-700 py-1 px-3 rounded hover:bg-gray-400"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              setAddingCustomSource(true);
+                              setEditingSourceId(null);
+                            }}
+                            className="text-sm bg-gray-200 text-gray-700 py-1 px-3 rounded hover:bg-gray-300"
+                          >
+                            + Add New Source
+                          </button>
+                        )} */}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <input
                     type="text"
@@ -484,6 +747,7 @@ export default function EditNewsPage({ params }) {
                     placeholder="Enter custom source name"
                   />
                 )}
+                
                 {adminRole === "newsmap_admin" && (
                   <p className="mt-1 text-xs text-gray-500">
                     As a News Page admin, you can only post news under your company name.
@@ -623,6 +887,37 @@ export default function EditNewsPage({ params }) {
           </form>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal - Add this at the end of the component, just before the final closing div */}
+      {showConfirmDelete && sourceToDelete && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 className="text-lg font-medium text-gray-900 mb-3">Confirm Delete</h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete the custom source "{sourceToDelete.name}"? 
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={cancelDelete}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteCustomSource}
+                disabled={sourceActionLoading}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-300"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
