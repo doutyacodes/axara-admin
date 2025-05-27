@@ -299,7 +299,7 @@ export async function POST(request) {
       Interviewer and Interviewee Dialogue:
       "${description}"
 
-      Rewrite this interview in a way that is understandable for each age group (3 to 12 years old). The rewritten content should:
+      Rewrite this interview in a way that is understandable for each age group (4 to 13 years old). The rewritten content should:
 
       1. Maintain the original interview format, keeping all questions and answers intact.
       2. Change the text to make it simplified and age-appropriate for each specified age group.
@@ -316,24 +316,24 @@ export async function POST(request) {
 
       [
         {
-          "age": 3,
+          "age": 4,
           "title": "<title for 3-year-olds>",
           "description": "<for 3-year-olds>",
-          "questions": ["<question1>", "<question2>"],
-          "wordDefinitions": [
-            { "word": "<term>", "definition": "<explanation for 3-year-olds>" }
-          ]
-        },
-        {
-          "age": 4,
-          "title": "<title for 4-year-olds>",
-          "description": "<for 4-year-olds>",
           "questions": ["<question1>", "<question2>"],
           "wordDefinitions": [
             { "word": "<term>", "definition": "<explanation for 4-year-olds>" }
           ]
         },
-        // Repeat for each age group from 5 to 12, ensuring a clear, engaging tone appropriate for each.
+        {
+          "age": 5,
+          "title": "<title for 4-year-olds>",
+          "description": "<for 4-year-olds>",
+          "questions": ["<question1>", "<question2>"],
+          "wordDefinitions": [
+            { "word": "<term>", "definition": "<explanation for 5-year-olds>" }
+          ]
+        },
+        // Repeat for each age group from 6 to 13, ensuring a clear, engaging tone appropriate for each.
       ]
       `
       : `
@@ -341,10 +341,10 @@ export async function POST(request) {
         Title: "${title}"
         Description: "${description}"
 
-      Rewrite this news for each age (3 to 12 years old). The rewritten content should contain:
+      Rewrite this news for each age (4 to 13 years old). The rewritten content should contain:
 
         1. A engaging Title tailored to that age 
-        2. A simplified and age-appropriate version of this news for kids aged 3 to 12, in a paragraph or 2,  summarizing the content in a way each age can easily understand. For each individual age, craft a unique version that fits their comprehension level and attention span.
+        2. A simplified and age-appropriate version of this news for kids aged 4 to 13, in a paragraph or 2,  summarizing the content in a way each age can easily understand. For each individual age, craft a unique version that fits their comprehension level and attention span.
         3. Two engaging questions to make the child think or talk about the news.
         ${
           region_id ==2 || region_id == 3 && `4. The news should be in the perspective of ${region_id==2 ? "an Indian user" :"an American user"}.`
@@ -355,17 +355,17 @@ export async function POST(request) {
         Respond in JSON format:
         [
           {
-            "age": 3,
-            "title": "<title for 3-year-olds>",
+            "age": 4,
+            "title": "<title for 4-year-olds>",
             "description": "<The news appropriate fr the age>",
             "questions": ["<question1>", "<question2>"],
             "wordDefinitions": [
-              { "word": "<term>", "definition": "<explanation for 3-year-olds>" }
+              { "word": "<term>", "definition": "<explanation for 4-year-olds>" }
             ]
           },
           {
-            "age": 4,
-            // Repeat for each age up to 12, ensuring logical and fun tone for every age
+            "age": 5,
+            // Repeat for each age up to 13, ensuring logical and fun tone for every age
           }
         ]
         `;

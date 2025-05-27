@@ -13,3 +13,9 @@ export async function GET() {
 
   return response;
 }
+
+
+
+// box , reullt , primpt ,
+
+// hyperlocal - NewsAdminPanel,  10km area only - people can add news , cititizen report, no link, web page e po

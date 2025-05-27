@@ -19,11 +19,6 @@ export async function middleware(req) {
     return res;
   }
 
-  // // ✅ Allow root ("/") to be accessed by all logged-in roles
-  // if (path === '/') {
-  //   return res;
-  // }
-
   // Check for token
   const token = req.cookies.get('auth_token')?.value;
   if (!token) {

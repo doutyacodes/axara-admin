@@ -31,7 +31,7 @@ import { useRouter } from 'next/navigation';
 // import { datas } from './data';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-const ageOptions = Array.from({ length: 10 }, (_, i) => i + 3);
+const ageOptions = Array.from({ length: 10 }, (_, i) => i + 4);
 
 function AddNews() {
   const [selectedAge, setSelectedAge] = useState(3);
