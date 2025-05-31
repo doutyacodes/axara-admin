@@ -22,10 +22,8 @@ export async function POST(request) {
     title,
     description,
     showOnTop,
-    image,
-    isImageEdited,
-    oldImage,
     main_news,
+    fileName,
     regionId,
   } = await request.json();
 
@@ -40,6 +38,7 @@ export async function POST(request) {
         title,
         description,
         show_on_top: showOnTop,
+        image_url: fileName,
       })
       .where(eq(NEWS.id, id));
 
@@ -57,70 +56,6 @@ export async function POST(request) {
       }));
 
       await db.insert(NEWS_TO_CATEGORIES).values(newMappings);
-    }
-
-    let fileName = oldImage; // Default to the existing image name
-
-    // Step 4: Handle image upload if it was edited
-    if (isImageEdited) {
-      const sftp = new SFTPClient();
-      await sftp.connect({
-        host: "68.178.163.247",
-        port: 22,
-        username: "devusr",
-        password: "Wowfyuser#123",
-      });
-
-      const cPanelDirectory = "/home/devusr/public_html/testusr/images";
-
-      // Step 4.1: Delete the old image from cPanel directory
-      try {
-        await sftp.delete(`${cPanelDirectory}/${oldImage}`);
-        console.log(`Old image deleted successfully: ${oldImage}`);
-      } catch (error) {
-        if (error.code === "ENOENT") {
-          console.log(
-            `File not found: ${oldImage}. Proceeding without deletion.`
-          );
-        } else {
-          console.error(`Error deleting the file: ${error.message}`);
-        }
-      }
-
-      // Step 4.2: Define a unique name for the new image
-      const timestamp = Date.now();
-      fileName = `${timestamp}-${id}-${title.replace(/\s+/g, "-")}.png`;
-
-      const localFilePath = path.join(localTempDir, fileName);
-
-      // Ensure the local temp directory exists
-      if (!fs.existsSync(localTempDir)) {
-        fs.mkdirSync(localTempDir, { recursive: true });
-      }
-
-      // Step 4.3: Decode base64 image and save temporarily on server
-      const base64Image = image.split(";base64,").pop();
-      fs.writeFileSync(localFilePath, base64Image, { encoding: "base64" });
-
-      // Step 4.4: Upload image to cPanel directory
-      await sftp.put(localFilePath, `${cPanelDirectory}/${fileName}`);
-
-      // Clean up temporary file
-      fs.unlinkSync(localFilePath);
-
-      // Close SFTP connection
-      await sftp.end();
-
-      // Step 4.5: Update the database with the new image URL
-      const newData = await db.select().from(NEWS).where(eq(NEWS.id, id));
-      const news_group_id = newData[0].news_group_id;
-      await db
-        .update(NEWS)
-        .set({
-          image_url: fileName,
-          main_news: main_news,
-        })
-        .where(eq(NEWS.news_group_id, news_group_id));
     }
 
     return NextResponse.json(

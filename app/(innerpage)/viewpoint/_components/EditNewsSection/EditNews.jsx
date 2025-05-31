@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { BsTrash2Fill } from "react-icons/bs";
 import { GoAlertFill } from "react-icons/go";
-function EditNews({ selectedNews, selectedAge, setShowEditSection,fetchNews }) {
+function EditNews({ selectedNews, selectedAge, setShowEditSection, fetchNews }) {
   const [categories, setCategories] = useState([]);
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [errors, setErrors] = useState({});
@@ -176,6 +176,42 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection,fetchNews }) {
     }
   };
 
+    const uploadMediaToCPanel = async (file) => {
+      const formData = new FormData();
+      const isVideo = file.type.startsWith('video/');
+      
+      if (isVideo) {
+        formData.append('videoFile', file);
+      } else {
+        formData.append('coverImage', file);
+      }
+      
+      const uploadUrl = isVideo 
+        ? 'https://wowfy.in/testusr/upload2.php' 
+        : 'https://wowfy.in/testusr/upload.php';
+      
+      try {
+        const response = await fetch(uploadUrl, {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to upload file');
+        }
+        
+        const data = await response.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        return data.filePath; // This should be the filename returned from PHP
+      } catch (error) {
+        throw new Error(`File upload failed: ${error.message}`);
+      }
+    };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -186,6 +222,13 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection,fetchNews }) {
     setIsSubmitting(true);
 
     try {
+
+      let fileName = selectedNews.image_url
+      // Upload file directly to cPanel if media is selected
+      if (isImageEdited) {
+        fileName = await uploadMediaToCPanel(newsForm.image);
+      }
+
       const body = {
         id: selectedNews.id, // Add the news ID for updating
         categoryId: newsForm.categories,
@@ -193,9 +236,7 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection,fetchNews }) {
         description: newsForm.description,
         showOnTop: newsForm.showOnTop,
         main_news: newsForm.main_news,
-        // Only send base64 image if it's been edited, otherwise send original image namedeleteShow ? base64Image : selectedNews.image_url,
-        oldImage: selectedNews.image_url,
-        isImageEdited: isImageEdited,
+        fileName,
         regionId
       };
 
@@ -469,7 +510,7 @@ function EditNews({ selectedNews, selectedAge, setShowEditSection,fetchNews }) {
                   <p className="text-sm text-red-500">{errors.image}</p>
                 )}
               </div>
-              <CardTitle>{`Edit News Article (Age : ${selectedAge})`}</CardTitle>
+              {/* <CardTitle>{`Edit News Article (Age : ${selectedAge})`}</CardTitle> */}
 
               {/* Title */}
               <div className="space-y-2">

@@ -301,7 +301,7 @@ export default function ViewAllNews() {
                   py-3 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-orange-600
                   text-base font-medium transition duration-300"
               >
-                {[3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((age) => (
+                {[4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((age) => (
                   <option
                     key={age}
                     value={age}

@@ -163,18 +163,6 @@ function AddNews() {
 
   const handleEdition = (editionId) => {
     setNewsForm({ ...newsForm, region_id: editionId, categories: [] });
-    // if (editionId !== 1) {
-    //   const filteredCategories = categories.filter((cat) => {
-    //     if (
-    //       cat.region === "no" ||
-    //       (cat.region == "yes" && cat.region_id == editionId)
-    //     ) {
-    //       return true; // Include all categories where region is "no"
-    //     }
-    //     return false; // Exclude any other cases if they exist
-    //   });
-    //   setCategories(filteredCategories);
-    // }
   };
 
   const handleNewsImage = (event) => {
@@ -259,7 +247,7 @@ function AddNews() {
         throw new Error("Failed to submit article");
       }
       const data = await response.json();
-      const payload = { ...data, image: base64Image }; // Include the image in the payload
+      const payload = { ...data, image: base64Image, fileData: newsForm.image }; // Include the image in the payload
       setDataFromPage(payload);
       router.push("/news/news-preview");
       setNewsForm({

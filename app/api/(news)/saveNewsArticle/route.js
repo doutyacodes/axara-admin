@@ -25,7 +25,7 @@ export async function POST(request) {
   const userData = authResult.decoded_Data;
   const userId = userData.id;
 
-  const { result, imageData, fileName, slotId } = await request.json(); // Receive the new data structure
+  const { result, fileName, slotId } = await request.json(); // Receive the new data structure
   const entries = Object.values(result); // Convert the data object into an array of entries
   const localTempDir = os.tmpdir(); // Define the local temp directory dynamically based on platform
 
@@ -140,28 +140,6 @@ export async function POST(request) {
         await db.insert(WORDS_MEANINGS).values(wordDefinitionRecords);
       }
     }
-
-    // Handle SFTP Upload
-    const sftp = new SFTPClient();
-    await sftp.connect({
-      host: "68.178.163.247",
-      port: 22,
-      username: "devusr",
-      password: "Wowfyuser#123",
-    });
-
-    const localFilePath = path.join(localTempDir, fileName);
-    const cPanelDirectory = "/home/devusr/public_html/testusr/images";
-
-    if (!fs.existsSync(localTempDir)) {
-      fs.mkdirSync(localTempDir, { recursive: true });
-    }
-
-    const base64Image = imageData.split(";base64,").pop();
-    fs.writeFileSync(localFilePath, base64Image, { encoding: "base64" });
-    await sftp.put(localFilePath, `${cPanelDirectory}/${fileName}`);
-    fs.unlinkSync(localFilePath);
-    await sftp.end();
 
     return NextResponse.json(
       { message: "News articles saved successfully" },

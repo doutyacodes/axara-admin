@@ -139,8 +139,8 @@ async function uploadToSFTP(filePath, fileName) {
     await sftp.connect({
       host: "68.178.163.247",
       port: 22,
-      username: "devusr",
-      password: "Wowfyuser#123",
+      username: "devuser",
+      password: "Wowfy#user",
       readyTimeout: 5000, // 5 second timeout for connection
     });
 

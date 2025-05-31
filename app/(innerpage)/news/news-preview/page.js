@@ -46,8 +46,9 @@ function AddNews() {
   // const data = datas
   const [base64Image, setBase64Image] = useState(data?.image || null);
   const [imageData, setImageData] = useState(null);
-  const [fileName, setFileName] = useState(null)
   const isFirstRender = useRef(true);
+  const [selectedFile, setSelectedFile] = useState(null);
+
 
   const router = useRouter();
 
@@ -123,19 +124,19 @@ function AddNews() {
       });
       setFormStates(initialStates);
       setImageData(data.image);
-  
+      setSelectedFile(data.fileData)
     }
   }, [data]);
   console.log("formStates:", formStates);
 
-  useEffect(()=>{
-    const category = formStates[selectedAge]?.category
-    const title = formStates[selectedAge]?.title
-    if(category && title){
-      const fileName = `${Date.now()}-${category}-${title.replace(/\s+/g, '-')}.png`;
-      setFileName(fileName)
-    }
-  },[formStates])
+  // useEffect(()=>{
+  //   const category = formStates[selectedAge]?.category
+  //   const title = formStates[selectedAge]?.title
+  //   if(category && title){
+  //     const fileName = `${Date.now()}-${category}-${title.replace(/\s+/g, '-')}.png`;
+  //     setFileName(fileName)
+  //   }
+  // },[formStates])
 
   const getNewsCategories = async () => {
     setCategoryLoading(true);
@@ -149,24 +150,6 @@ function AddNews() {
       if (response.status === 200) {
         const fetchedCategories = response.data.categories;
         setCategories(fetchedCategories);
-
-        // Match categoryId with categories
-        // const defaultCategoryId = data?.originalData?.categoryId;
-        // console.log("defaultCategory Test");
-        // if (defaultCategoryId) {
-        //   console.log("defaultCategory Test 2");
-
-        //   const defaultCategory = fetchedCategories.find(cat => cat.id.toString() === defaultCategoryId.toString());
-        //   console.log("defaultCategory", defaultCategory);
-          
-        //   if (defaultCategory) {
-        //     // Update all ages with the same category
-        //     ageOptions.forEach(age => {
-        //       updateFormState(age, 'category', defaultCategory.id.toString());
-        //     });
-        //   }
-        // }
-        
       }
     } catch (err) {
       console.log(err);
@@ -193,7 +176,7 @@ function AddNews() {
       };
       reader.readAsDataURL(file);
     }
-
+    setSelectedFile(file)
     setShowImageDialog(false);
   };
 
@@ -222,26 +205,6 @@ function AddNews() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // const handleCategoryToggle = (age, categoryId) => {
-  //   setFormStates(prev => {
-  //     const currentCategories = prev[age]?.category || [];
-  //     const isSelected = currentCategories.includes(categoryId);
-      
-  //     // If already selected, remove. If not, add.
-  //     const updatedCategories = isSelected 
-  //       ? currentCategories.filter(id => id !== categoryId)
-  //       : [...currentCategories, categoryId];
-      
-  //     return {
-  //       ...prev,
-  //       [age]: {
-  //         ...prev[age],
-  //         category: updatedCategories
-  //       }
-  //     };
-  //   });
-  // };
-
   const handleCategoryToggle = (categoryId) => {
     setFormStates(prev => {
       const updatedFormStates = {};
@@ -268,6 +231,43 @@ function AddNews() {
     });
   };
 
+  
+  const uploadMediaToCPanel = async (file) => {
+    const formData = new FormData();
+    const isVideo = file.type.startsWith('video/');
+    
+    if (isVideo) {
+      formData.append('videoFile', file);
+    } else {
+      formData.append('coverImage', file);
+    }
+    
+    const uploadUrl = isVideo 
+      ? 'https://wowfy.in/testusr/upload2.php' 
+      : 'https://wowfy.in/testusr/upload.php';
+    
+    try {
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload file');
+      }
+      
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      return data.filePath; // This should be the filename returned from PHP
+    } catch (error) {
+      throw new Error(`File upload failed: ${error.message}`);
+    }
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
@@ -276,10 +276,15 @@ function AddNews() {
     }
     setIsSubmitting(true);
     try {
+
+      let fileName = null;
+      // Upload file directly to cPanel if media is selected
+      if (selectedFile) {
+        fileName = await uploadMediaToCPanel(selectedFile);
+      }
       
       const payload = {
         result: formStates,
-        imageData,
         fileName,
         slotId: data.originalData.mainNewsSlot
       };

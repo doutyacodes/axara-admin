@@ -225,6 +225,8 @@ function AddNews() {
     });
   };
 
+  console.log(newsForm.media)
+
   const handleMediaUpload = (event) => {
     const selectedFile = event.target.files[0];
     console.log(selectedFile)
@@ -339,7 +341,7 @@ function AddNews() {
         throw new Error("Failed to submit article");
       }
       const data = await response.json();
-      const payload = { ...data, mediaData: base64Media }; // Include the image in the payload
+      const payload = { ...data, mediaData: base64Media, fileData: newsForm.media }; // Include the image in the payload
       setDataFromPage(payload);
       router.push("/viewpoint/news-preview");
       setNewsForm({

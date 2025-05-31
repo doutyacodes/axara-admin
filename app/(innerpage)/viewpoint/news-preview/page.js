@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useData } from "@/context/DataContext";
-import { chunkFile } from "@/utils/uploadHelpers";
 import { Check, FileText, Loader2, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -34,6 +33,7 @@ function AddNews() {
   const [base64Media, setBase64Media] = useState(null);
   const [isVideo, setIsVideo] = useState(false);
   const [mediaType, setMediaType] = useState('image'); // 'image' or 'video'
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -83,6 +83,7 @@ console.log("base64Media", base64Media);
       setFormStates(initialStates);
       setViewpoints(data.results.map(result => result.viewpoint));
       setBase64Media(data.mediaData);
+      setSelectedFile(data.fileData)
       setIsVideo(data.originalData.mediaType === 'video');
       setMediaType(data.originalData.mediaType || 'image');
     }
@@ -133,13 +134,18 @@ console.log("base64Media", base64Media);
     }
   }, [formStates, isVideo]);
   
+  // Modified handleMediaChange function
   const handleMediaChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       const isVideoFile = file.type.startsWith('video/');
       setIsVideo(isVideoFile);
       setMediaType(isVideoFile ? 'video' : 'image');
-  
+
+      // Store the actual file object instead of base64
+      setSelectedFile(file);
+
+      // For preview purposes, still create the base64
       const reader = new FileReader();
       reader.onloadend = () => {
         setBase64Media(reader.result);
@@ -150,18 +156,7 @@ console.log("base64Media", base64Media);
     setShowMediaDialog(false);
   };
 
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setBase64Image(reader.result);
-        setImageData(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-    setShowImageDialog(false);
-  };
+  console.log('selectedFile', selectedFile)
 
   const updateFormState = (viewpoint, field, value) => {
     setFormStates((prev) => ({
@@ -184,338 +179,38 @@ console.log("base64Media", base64Media);
     return Object.keys(newErrors).length === 0;
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!validateForm()) {
-  //     toast.error("Please fill in all required fields for all viewpoints");
-  //     return;
-  //   }
-  //   setIsSubmitting(true);
-  //   try {
-
-  //     const extension = isVideo ? '.mp4' : '.png';
-  //     const payload = {
-  //       result: formStates,
-  //       mediaData: base64Media,
-  //       mediaType: mediaType,
-  //       fileName: `${Date.now()}-axara${extension}`,
-  //       slotId: data.originalData.mainNewsSlot,
-  //     };
-
-
-  //     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-  //     const response = await fetch("/api/adult/saveNewsArticle", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify(payload),
-  //     });
-
-  //     if (!response.ok) {
-  //       toast.error(data.message || "Failed to submit article. Please try again.");
-  //       return;
-  //     }
-  //     toast.success("News Added Successfully");
-  //     router.push("/viewpoint");
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error("Network error occurred. Please try again.");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-  // Utility function to split base64 string into chunks
-const splitIntoChunks = (base64String, chunkSize) => {
-  const chunks = [];
-  for (let i = 0; i < base64String.length; i += chunkSize) {
-    chunks.push(base64String.slice(i, i + chunkSize));
-  }
-  return chunks;
-};
-
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!validateForm()) {
-  //     toast.error("Please fill in all required fields for all viewpoints");
-  //     return;
-  //   }
-  
-  //   setIsSubmitting(true);
-  //   const uploadToast = toast.loading("Uploading media...");
-  
-  //   try {
-  //     const extension = isVideo ? '.mp4' : '.png';
-  //     const fileName = `${Date.now()}-axara${extension}`;
-  //     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  
-  //     // Split the base64 media into chunks (3MB each)
-  //     const CHUNK_SIZE = 3 * 1024 * 1024;
-  //     const chunks = splitIntoChunks(base64Media, CHUNK_SIZE);
-  //     let uploadedChunks = 0;
-  
-  //     // Upload each chunk
-  //     for (let i = 0; i < chunks.length; i++) {
-  //       const chunkPayload = {
-  //         chunk: chunks[i],
-  //         chunkIndex: i,
-  //         totalChunks: chunks.length,
-  //         fileName,
-  //         sessionId: Date.now().toString(), // Unique session ID for this upload
-  //       };
-  
-  //       const chunkResponse = await fetch("/api/adult/upload-chunk", {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //         body: JSON.stringify(chunkPayload),
-  //       });
-  
-  //       if (!chunkResponse.ok) {
-  //         throw new Error(`Failed to upload chunk ${i + 1}`);
-  //       }
-  
-  //       uploadedChunks++;
-  //       const progress = Math.round((uploadedChunks / chunks.length) * 100);
-  //       toast.loading(`Uploading: ${progress}%`, { id: uploadToast });
-  //     }
-  
-  //     // After all chunks are uploaded, save the news article
-  //     const payload = {
-  //       result: formStates,
-  //       fileName,
-  //       mediaType,
-  //       slotId: data.originalData.mainNewsSlot,
-  //     };
-  
-  //     const response = await fetch("/api/adult/saveNewsArticle", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify(payload),
-  //     });
-  
-  //     const responseData = await response.json();
-  
-  //     if (!response.ok) {
-  //       throw new Error(responseData.message || "Failed to submit article");
-  //     }
-  
-  //     toast.success("News Added Successfully", { id: uploadToast });
-  //     router.push("/viewpoint");
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error(error.message || "Network error occurred. Please try again.", { 
-  //       id: uploadToast 
-  //     });
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!validateForm()) {
-  //     toast.error("Please fill in all required fields for all viewpoints");
-  //     return;
-  //   }
+  const uploadMediaToCPanel = async (file) => {
+    const formData = new FormData();
+    const isVideo = file.type.startsWith('video/');
     
-  //   setIsSubmitting(true);
-  //   const uploadToast = toast.loading("Uploading media...");
-  
-  //   try {
-  //     const extension = isVideo ? '.mp4' : '.png';
-  //     const fileName = `${Date.now()}-axara${extension}`;
-      
-  //     const payload = {
-  //       result: formStates,
-  //       mediaData: base64Media,
-  //       mediaType,
-  //       fileName,
-  //       slotId: data.originalData.mainNewsSlot,
-  //     };
-  
-  //     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  
-  //     const response = await fetch("/api/adult/saveNewsArticle", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify(payload),
-  //     });
-  
-  //     const responseData = await response.json();
-  
-  //     if (!response.ok) {
-  //       throw new Error(responseData.error || responseData.message || "Failed to upload file");
-  //     }
-  
-  //     toast.success("News Added Successfully", { id: uploadToast });
-  //     router.push("/viewpoint");
-  //   } catch (error) {
-  //     console.error('Upload error:', error);
-  //     toast.error(error.message || "Failed to upload file. Please try again.", {
-  //       id: uploadToast,
-  //       duration: 5000
-  //     });
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-  /* original */
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!validateForm()) {
-  //     toast.error("Please fill in all required fields for all viewpoints");
-  //     return;
-  //   }
-  //   setIsSubmitting(true);
-  //   try {
-
-  //     const extension = isVideo ? '.mp4' : '.png';
-  //     const payload = {
-  //       result: formStates,
-  //       mediaData: base64Media,
-  //       mediaType: mediaType,
-  //       fileName: `${Date.now()}-axara${extension}`,
-  //       slotId: data.originalData.mainNewsSlot,
-  //     };
-
-  //     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-  //     const response = await fetch("/api/adult/saveNewsArticle", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify(payload),
-  //     });
-
-  //     if (!response.ok) {
-  //       toast.error(data.message || "Failed to submit article. Please try again.");
-  //       return;
-  //     }
-  //     toast.success("News Added Successfully");
-  //     router.push("/viewpoint");
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error("Network error occurred. Please try again.");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-/* working */
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!validateForm()) {
-  //     toast.error("Please fill in all required fields for all viewpoints");
-  //     return;
-  //   }
+    if (isVideo) {
+      formData.append('videoFile', file);
+    } else {
+      formData.append('coverImage', file);
+    }
     
-  //   setIsSubmitting(true);
-  //   try {
-  //     const extension = isVideo ? '.mp4' : '.png';
-  //     const fileName = `${Date.now()}-axara${extension}`;
+    const uploadUrl = isVideo 
+      ? 'https://wowfy.in/testusr/upload2.php' 
+      : 'https://wowfy.in/testusr/upload.php';
+    
+    try {
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+      });
       
-  //     // First, upload the media file if it exists
-  //     if (base64Media) {
-  //       // Convert base64 to Blob
-  //       const base64Response = await fetch(base64Media);
-  //       const blob = await base64Response.blob();
-        
-  //       // Split into chunks
-  //       const chunks = chunkFile(blob);
-  //       const totalChunks = chunks.length;
-        
-  //       // Upload each chunk
-  //       for (let i = 0; i < chunks.length; i++) {
-  //         const formData = new FormData();
-  //         formData.append('file', chunks[i]);
-  //         formData.append('fileName', fileName);
-  //         formData.append('chunkIndex', i);
-  //         formData.append('totalChunks', totalChunks);
-          
-  //         const uploadResponse = await fetch('/api/adult/uploadChunk', {
-  //           method: 'POST',
-            
-  //           body: formData,
-  //         });
-
-  //         // headers: {
-  //         //   Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //         // },
-          
-  //         if (!uploadResponse.ok) {
-  //           throw new Error('Failed to upload file chunk');
-  //         }
-  //       }
-  //     }
-      
-  //     // Then submit the article data
-  //     const payload = {
-  //       result: formStates,
-  //       fileName,
-  //       mediaType,
-  //       slotId: data.originalData.mainNewsSlot,
-  //     };
-      
-  //     const response = await fetch("/api/adult/saveNewsArticle", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //       },
-  //       body: JSON.stringify(payload),
-  //     });
-  
-  //     if (!response.ok) {
-  //       throw new Error(response.statusText);
-  //     }
-      
-  //     toast.success("News Added Successfully");
-  //     router.push("/viewpoint");
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error("Upload failed. Please try again.");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-  const uploadChunkWithRetry = async (chunk, fileName, chunkIndex, totalChunks, maxRetries = 3) => {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const formData = new FormData();
-        formData.append('file', chunk);
-        formData.append('fileName', fileName);
-        formData.append('chunkIndex', chunkIndex);
-        formData.append('totalChunks', totalChunks);
-
-        const response = await fetch('/api/adult/uploadChunk', {
-          method: 'POST',
-          body: formData,
-          timeout: chunkIndex === totalChunks - 1 ? 30000 : 10000,
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-      } catch (error) {
-        if (attempt === maxRetries) throw error;
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+      if (!response.ok) {
+        throw new Error('Failed to upload file');
       }
+      
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      return data.filePath; // This should be the filename returned from PHP
+    } catch (error) {
+      throw new Error(`File upload failed: ${error.message}`);
     }
   };
 
@@ -527,38 +222,27 @@ const splitIntoChunks = (base64String, chunkSize) => {
     }
     
     setIsSubmitting(true);
-    setUploadProgress(0); // Reset progress at start
+    setUploadProgress(0);
     
     try {
-      const extension = isVideo ? '.mp4' : '.png';
-      const fileName = `${Date.now()}-axara${extension}`;
+      let fileName = null;
       
-      if (base64Media) {
-        const base64Response = await fetch(base64Media);
-        const blob = await base64Response.blob();
-        
-        // Create smaller chunks (1MB each)
-        const chunkSize = 1024 * 1024;
-        const chunks = [];
-        for (let i = 0; i < blob.size; i += chunkSize) {
-          chunks.push(blob.slice(i, i + chunkSize));
-        }
-        
-        // Upload chunks with progress tracking
-        for (let i = 0; i < chunks.length; i++) {
-          await uploadChunkWithRetry(chunks[i], fileName, i, chunks.length);
-          // Update progress after each chunk
-          setUploadProgress(Math.round((i + 1) * 100 / chunks.length));
-        }
+      // Upload file directly to cPanel if media is selected
+      if (selectedFile) {
+        setUploadProgress(25); // Show some progress
+        fileName = await uploadMediaToCPanel(selectedFile);
+        setUploadProgress(50); // Update progress after upload
       }
       
-      // Rest of your form submission logic...
+      // Prepare payload for API
       const payload = {
         result: formStates,
         fileName,
         mediaType,
         slotId: data.originalData.mainNewsSlot,
       };
+
+      setUploadProgress(75); // Update progress before API call
 
       const response = await fetch("/api/adult/saveNewsArticle", {
         method: "POST",
@@ -573,16 +257,19 @@ const splitIntoChunks = (base64String, chunkSize) => {
         throw new Error('Failed to save article');
       }
       
+      setUploadProgress(100); // Complete progress
       toast.success("News Added Successfully");
       router.push("/viewpoint");
+      
     } catch (error) {
       console.error(error);
-      toast.error("Upload failed. Please try again.");
+      toast.error(error.message || "Upload failed. Please try again.");
     } finally {
       setIsSubmitting(false);
       setUploadProgress(0); // Reset progress after completion
     }
   };
+
   
   return (
     <>
