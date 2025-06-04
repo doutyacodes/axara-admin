@@ -105,26 +105,30 @@ export default function AdminNewsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">News Management</h1>
-          <Link 
-            href="/news-map/create" 
-            className="flex items-center px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-700 transition"
-          >
-            <Plus className="mr-2 h-5 w-5" /> Create News
-          </Link>
-        </div>
-
-        {news.length === 0 ? (
-          <div className="bg-white p-8 rounded-lg shadow-md text-center">
-            <p className="text-gray-600 mb-4">No news articles found.</p>
-            <Link 
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center sm:text-left">
+              News Management
+            </h1>
+            <a 
               href="/news-map/create" 
-              className="inline-flex items-center px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-700 transition"
+              className="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-700 transition"
             >
-              <Plus className="mr-2 h-5 w-5" /> Add Your First News Article
-            </Link>
+              <Plus className="mr-2 h-5 w-5" /> Create News
+            </a>
           </div>
+
+          {/* Empty state with responsive padding and button */}
+          {news.length === 0 ? (
+            <div className="bg-white p-4 sm:p-8 rounded-lg shadow-md text-center">
+              <p className="text-gray-600 mb-4">No news articles found.</p>
+              <a 
+                href="/news-map/create" 
+                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-700 transition"
+              >
+                <Plus className="mr-2 h-5 w-5" /> Add Your First News Article
+              </a>
+            </div>
+
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {news.map(newsItem => (

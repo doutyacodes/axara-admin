@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, Loader2, AlertCircle, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import MapLocationPicker from '../../_components/MapLocationPicker';
 
 export default function EditNewsPage({ params }) {
   const unwrappedParams = use(params);  // Unwrap the params Promise
@@ -18,7 +19,10 @@ export default function EditNewsPage({ params }) {
     latitude: '',
     longitude: '',
     category_id: '',
-    delete_after_hours: 24, 
+    language_id: '',
+    delete_after_hours: 24,
+    is_high_priority: false,
+
   });
   
   const [categories, setCategories] = useState([]);
@@ -30,6 +34,7 @@ export default function EditNewsPage({ params }) {
   const [uploading, setUploading] = useState(false);
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [originalImageUrl, setOriginalImageUrl] = useState('');
+  const [languages, setLanguages] = useState([]);
 
   const [adminRole, setAdminRole] = useState('');
   const [sourceNames, setSourceNames] = useState([]);
@@ -47,6 +52,7 @@ export default function EditNewsPage({ params }) {
     Promise.all([
       fetchNewsItem(),
       fetchCategories(),
+      fetchLanguages(),
       fetchAdminInfo()
     ]).then(() => {
       setLoading(false);
@@ -101,6 +107,8 @@ export default function EditNewsPage({ params }) {
         latitude: newsItem.latitude !== null ? String(newsItem.latitude) : '',
         longitude: newsItem.longitude !== null ? String(newsItem.longitude) : '',
         category_id: newsItem.category_id !== null ? String(newsItem.category_id) : '',
+        language_id: newsItem.language_id !== null ? String(newsItem.language_id) : '',
+        is_high_priority: newsItem.is_high_priority || false,
         delete_after_hours: newsItem.delete_after_hours !== null ? newsItem.delete_after_hours : '',
       });
       
@@ -132,6 +140,19 @@ export default function EditNewsPage({ params }) {
       throw err;
     }
   };
+
+    const fetchLanguages = async () => {
+      try {
+        const res = await fetch('/api/news-map/languages');
+        if (!res.ok) {
+          throw new Error('Failed to fetch languages');
+        }
+        const data = await res.json();
+        setLanguages(data.languages);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
 
   // Update the toggleCustomSource function to better handle source selection
   const toggleCustomSource = () => {
@@ -269,20 +290,28 @@ const handleDeleteCustomSource = async () => {
     setSourceActionLoading(false);
   }
 };
-  
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      const previewUrl = URL.createObjectURL(selectedFile);
-      setFilePreview(previewUrl);
-    }
-  };
+const handleLocationChange = (lat, lng) => {
+  setFormData(prev => ({
+      ...prev,
+      latitude: lat,
+      longitude: lng
+  }));
+};
+
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  setFormData(prev => ({ ...prev, [name]: value }));
+};
+
+const handleFileChange = (e) => {
+  const selectedFile = e.target.files[0];
+  if (selectedFile) {
+    setFile(selectedFile);
+    const previewUrl = URL.createObjectURL(selectedFile);
+    setFilePreview(previewUrl);
+  }
+};
 
   console.log("formData", formData)
 
@@ -432,7 +461,7 @@ const handleDeleteCustomSource = async () => {
               onClick={() => {
                 setLoading(true);
                 setError(null);
-                Promise.all([fetchNewsItem(), fetchCategories()])
+                Promise.all([fetchNewsItem(), fetchCategories(), fetchLanguages(),])
                   .then(() => setLoading(false))
                   .catch(err => {
                     setError(err.message);
@@ -531,6 +560,7 @@ const handleDeleteCustomSource = async () => {
                     value={formData.image_url}
                     onChange={handleInputChange}
                     required={uploadType === 'url'}
+                    autoComplete="off"
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
                     placeholder="Enter image URL"
                   />
@@ -586,6 +616,7 @@ const handleDeleteCustomSource = async () => {
                   name="article_url"
                   value={formData.article_url}
                   onChange={handleInputChange}
+                  autoComplete="off"
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
                   placeholder="Enter article URL"
@@ -606,7 +637,7 @@ const handleDeleteCustomSource = async () => {
                       onClick={toggleCustomSource}
                       className="text-xs text-red-600 hover:text-red-800 underline"
                     >
-                      {customSource ? "Select from list" : "Enter custom source"}
+                      {customSource ? "Select from list" : "Enter new source"}
                     </button>
                   )}
                 </div>
@@ -626,7 +657,7 @@ const handleDeleteCustomSource = async () => {
                       <option value="" disabled>Select a source</option>
                       {sourceNames.map((source, index) => (
                         <option key={index} value={source.name}>
-                          {source.name} {source.isCustom ? "(Custom)" : ""}
+                          {source.name} {source.isCustom ? "(Others)" : ""}
                         </option>
                       ))}
                     </select>
@@ -634,12 +665,12 @@ const handleDeleteCustomSource = async () => {
                     {/* Source management for admins - only shown when not in custom source entry mode */}
                     {(adminRole === "superadmin" || adminRole === "admin") && (
                       <div className="border rounded-md p-3 bg-gray-50">
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Manage Custom Sources</h4>
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Manage Other Sources</h4>
                         
                         {/* List of custom sources with edit/delete options */}
                         <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
                           {sourceNames.filter(source => source.isCustom).length === 0 ? (
-                            <p className="text-sm text-gray-500">No custom sources yet</p>
+                            <p className="text-sm text-gray-500">No other sources yet</p>
                           ) : (
                             sourceNames.filter(source => source.isCustom).map((source) => (
                               <div key={source.id} className="flex items-center justify-between p-2 bg-white border rounded-md">
@@ -742,9 +773,10 @@ const handleDeleteCustomSource = async () => {
                     name="source_name"
                     value={formData.source_name}
                     onChange={handleInputChange}
+                    autoComplete="off"
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
-                    placeholder="Enter custom source name"
+                    placeholder="Enter new source name"
                   />
                 )}
                 
@@ -756,7 +788,7 @@ const handleDeleteCustomSource = async () => {
               </div>
                             
               {/* Location */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Location <MapPin className="h-4 w-4 inline text-red-800 ml-1" />
                 </label>
@@ -772,6 +804,7 @@ const handleDeleteCustomSource = async () => {
                       name="latitude"
                       value={formData.latitude}
                       onChange={handleInputChange}
+                      autoComplete="off"
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
                       placeholder="E.g., 28.6139"
                     />
@@ -787,12 +820,19 @@ const handleDeleteCustomSource = async () => {
                       name="longitude"
                       value={formData.longitude}
                       onChange={handleInputChange}
+                      autoComplete="off"
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
                       placeholder="E.g., 77.2090"
                     />
                   </div>
                 </div>
-              </div>
+              </div> */}
+
+              <MapLocationPicker
+                  latitude={formData.latitude}
+                  longitude={formData.longitude}
+                  onLocationChange={handleLocationChange}
+              />
               
               {/* Category */}
               <div>
@@ -814,6 +854,52 @@ const handleDeleteCustomSource = async () => {
                   ))}
                 </select>
               </div>
+
+              {/* Language */}
+              <div>
+                <label htmlFor="language_id" className="block text-sm font-medium text-gray-700 mb-1">
+                  Language
+                </label>
+                <select
+                  id="language_id"
+                  name="language_id"
+                  value={formData.language_id}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                >
+                  <option value="">Select a language</option>
+                  {languages.map(language => (
+                    <option key={language.id} value={language.id}>
+                      {language.name} ({language.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+            {/* High Priority Toggle */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                High Priority
+              </label>
+              <div className="flex items-center">
+                <input
+                  id="high-priority-toggle"
+                  name="is_high_priority"
+                  type="checkbox"
+                  checked={formData.is_high_priority}
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_high_priority: e.target.checked })
+                  }
+                  className="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                />
+                <label
+                  htmlFor="high-priority-toggle"
+                  className="ml-2 block text-sm text-gray-700"
+                >
+                  Mark as high priority
+                </label>
+              </div>
+            </div>
 
               {/* Delete After Hours */}
               <div className="mt-4">

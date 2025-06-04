@@ -1604,11 +1604,18 @@ export const ADULT_NEWS_REPORTS = mysqlTable("adult_news_reports", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+
 export const CUSTOM_SOURCES = mysqlTable("custom_sources", {
   id: int("id").primaryKey().autoincrement(),
   name: varchar("name", { length: 100 }).unique().notNull(),
   added_by: int("added_by").references(() => ADMIN_DETAILS.id),
   created_at: timestamp("created_at").defaultNow(),
+});
+
+export const LANGUAGES = mysqlTable("languages", {
+  id: int("id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 100 }).notNull(),  // e.g., "English", "Hindi"
+  code: varchar("code", { length: 10 }).notNull(),   // e.g., "en", "hi"
 });
 
 // map_news table schema
@@ -1621,6 +1628,8 @@ export const MAP_NEWS = mysqlTable("map_news", {
   latitude: decimal("latitude", { precision: 10, scale: 7 }),
   longitude: decimal("longitude", { precision: 10, scale: 7 }),
   category_id: int("category_id").references(() => MAP_NEWS_CATEGORIES.id),
+  language_id: int("language_id").notNull().references(() => LANGUAGES.id),
+  is_high_priority: boolean("is_high_priority").notNull().default(false),
   delete_after_hours: int("delete_after_hours").notNull().default(24),
   created_by: int("created_by").references(() => ADMIN_DETAILS.id),
   created_at: timestamp("created_at").defaultNow(),

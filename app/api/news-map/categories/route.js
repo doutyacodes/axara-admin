@@ -1,16 +1,9 @@
 import { db } from "@/utils";
 import { MAP_NEWS_CATEGORIES } from "@/utils/schema";
 import { NextResponse } from "next/server";
-import { authenticate } from "@/lib/jwtMiddleware";
 import { asc } from "drizzle-orm";
 
 export async function GET(req) {
-  // Authenticate user
-  // const authResult = await authenticate(req);
-  // if (!authResult.authenticated) {
-  //   return authResult.response;
-  // }
-
   try {
     // Fetch all categories
     const categories = await db

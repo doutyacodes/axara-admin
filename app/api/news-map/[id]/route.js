@@ -77,6 +77,8 @@ export async function PUT(req, { params }) {
       latitude,
       longitude,
       category_id,
+      language_id,
+      is_high_priority,
       delete_after_hours,
       deleteOldImage,
       oldImagePath
@@ -143,6 +145,8 @@ export async function PUT(req, { params }) {
         latitude: latitude || null,
         longitude: longitude || null,
         category_id: category_id || null,
+        language_id: language_id || null,
+        is_high_priority,
         delete_after_hours
       })
       .where(eq(MAP_NEWS.id, newsId))
