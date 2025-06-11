@@ -145,7 +145,7 @@ export default function EditNewsPage({ params }) {
 
     const fetchLanguages = async () => {
       try {
-        const res = await fetch('/api/newstech/news-map/languages');
+        const res = await fetch('/api/news-map/languages');
         if (!res.ok) {
           throw new Error('Failed to fetch languages');
         }
@@ -224,7 +224,7 @@ const handleUpdateCustomSource = async () => {
   
   setSourceActionLoading(true);
   try {
-    const res = await fetch('/api/newstech/news-map/custom-sources', {
+    const res = await fetch('/api/news-map/custom-sources', {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
