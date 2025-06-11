@@ -16,6 +16,7 @@ export default function EditNewsPage({ params }) {
     image_url: '',
     article_url: '',
     source_name: '',
+    article_text: '',
     latitude: '',
     longitude: '',
     category_id: '',
@@ -103,6 +104,7 @@ export default function EditNewsPage({ params }) {
         title: newsItem.title || '',
         image_url: newsItem.image_url || '',
         article_url: newsItem.article_url || '',
+        article_text: newsItem.summary || '',
         source_name: newsItem.source_name || '',
         latitude: newsItem.latitude !== null ? String(newsItem.latitude) : '',
         longitude: newsItem.longitude !== null ? String(newsItem.longitude) : '',
@@ -143,7 +145,7 @@ export default function EditNewsPage({ params }) {
 
     const fetchLanguages = async () => {
       try {
-        const res = await fetch('/api/news-map/languages');
+        const res = await fetch('/api/newstech/news-map/languages');
         if (!res.ok) {
           throw new Error('Failed to fetch languages');
         }
@@ -222,7 +224,7 @@ const handleUpdateCustomSource = async () => {
   
   setSourceActionLoading(true);
   try {
-    const res = await fetch('/api/news-map/custom-sources', {
+    const res = await fetch('/api/newstech/news-map/custom-sources', {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -372,7 +374,7 @@ const handleFileChange = (e) => {
         shouldDeleteOldImage = true;
         oldImagePath = originalImageUrl;
       }
-      
+
       // If it's a custom source name that doesn't exist yet, add it
       if (customSource && !sourceNames.some(source => source.name === finalSourceName)) {
         try {
@@ -398,6 +400,7 @@ const handleFileChange = (e) => {
         ...formData,
         image_url: imageUrl,
         source_name: finalSourceName,
+        article_text: formData.article_text,
         latitude: formData.latitude ? parseFloat(formData.latitude) : null,
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
         category_id: formData.category_id ? parseInt(formData.category_id) : null,
@@ -620,6 +623,27 @@ const handleFileChange = (e) => {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
                   placeholder="Enter article URL"
+                />
+              </div>
+
+            {/* Article Text */}
+              <div>
+                <label htmlFor="article_text" className="block text-sm font-medium text-gray-700 mb-1">
+                    Article Text <span className="text-red-500">*</span>
+                    <span className="text-sm text-gray-500 block">
+                        (Required to generate AI summary for the news)
+                    </span>
+                </label>
+                <textarea
+                    id="article_text"
+                    name="article_text"
+                    value={formData.article_text}
+                    onChange={handleInputChange}
+                    required
+                    rows={8}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 resize-none overflow-y-auto"
+                    placeholder="Paste the complete article text here. This will be used to generate an AI summary..."
+                    style={{ minHeight: '200px', maxHeight: '300px' }}
                 />
               </div>
               

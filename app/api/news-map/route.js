@@ -3,6 +3,10 @@ import { MAP_NEWS, MAP_NEWS_CATEGORIES } from "@/utils/schema";
 import { NextResponse } from "next/server";
 import { authenticate } from "@/lib/jwtMiddleware";
 import { desc, eq } from "drizzle-orm";
+import axios from "axios";
+
+export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
 
 // GET - Fetch all news
 export async function GET(req) {
@@ -24,6 +28,7 @@ export async function GET(req) {
       title: MAP_NEWS.title,
       image_url: MAP_NEWS.image_url,
       article_url: MAP_NEWS.article_url,
+      article_text: MAP_NEWS.summary,
       source_name: MAP_NEWS.source_name,
       latitude: MAP_NEWS.latitude,
       longitude: MAP_NEWS.longitude,
@@ -66,6 +71,7 @@ export async function POST(req) {
       image_url,
       article_url,
       source_name,
+      article_text,
       latitude,
       longitude,
       category_id,
@@ -82,11 +88,16 @@ export async function POST(req) {
       );
     }
 
+    // Generate AI summary
+    const summary = await generateSummaryWithOpenAI(article_text);
+
+
     // Create new news item
     const newNews = await db.insert(MAP_NEWS).values({
       title,
       image_url,
       article_url,
+      summary,
       source_name: source_name || null,
       latitude: latitude || null,
       longitude: longitude || null,
@@ -107,5 +118,46 @@ export async function POST(req) {
       { message: "Error creating news", details: error.message },
       { status: 500 }
     );
+  }
+}
+
+async function generateSummaryWithOpenAI(articleText) {
+  try {
+    const prompt = `
+      Generate a concise news summary from the following article text. 
+      The summary must be exactly between 220-230 characters (including spaces and punctuation).
+      Make it engaging and informative, capturing the key points of the news.
+      Return only the summary text, nothing else.
+      
+      Article text: ${articleText}
+    `;
+
+    const response = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 2500,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(`Input tokens: ${response.data.usage.prompt_tokens}`);
+    console.log(`Output tokens: ${response.data.usage.completion_tokens}`);
+    console.log(`Total tokens: ${response.data.usage.total_tokens}`);
+
+    let summary = response.data.choices[0].message.content.trim();
+    summary = summary.replace(/```json|```/g, "").trim();
+    console.log("Generated summary:", summary);
+    
+    return summary;
+  } catch (error) {
+    console.error("Error generating summary:", error);
+    throw new Error("Failed to generate summary");
   }
 }

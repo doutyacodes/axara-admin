@@ -13,6 +13,7 @@ export default function CreateNewsPage() {
     image_url: '',
     article_url: '',
     source_name: '',
+    article_text: '',
     latitude: '',
     longitude: '',
     category_id: '',
@@ -289,7 +290,7 @@ export default function CreateNewsPage() {
     }));
   };
 
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setFormSubmitting(true);
     setError(null);
@@ -303,7 +304,7 @@ const handleSubmit = async (e) => {
         const uploadedFileName = await uploadImageToCPanel(file);
         imageUrl = `https://wowfy.in/testusr/images/${uploadedFileName}`;
       }
-      
+
       // If it's a custom source name that doesn't exist yet, add it
       if (customSource && !sourceNames.some(source => source.name === finalSourceName)) {
         try {
@@ -329,6 +330,7 @@ const handleSubmit = async (e) => {
         ...formData,
         image_url: imageUrl,
         source_name: finalSourceName,
+        article_text: formData.article_text,
         latitude: formData.latitude ? parseFloat(formData.latitude) : null,
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
         category_id: formData.category_id ? parseInt(formData.category_id) : null,
@@ -500,6 +502,27 @@ const handleSubmit = async (e) => {
                 />
               </div>
               
+              {/* Article Text */}
+              <div>
+                <label htmlFor="article_text" className="block text-sm font-medium text-gray-700 mb-1">
+                    Article Text <span className="text-red-500">*</span>
+                    <span className="text-sm text-gray-500 block">
+                        (Required to generate AI summary for the news)
+                    </span>
+                </label>
+                <textarea
+                    id="article_text"
+                    name="article_text"
+                    value={formData.article_text}
+                    onChange={handleInputChange}
+                    required
+                    rows={8}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 resize-none overflow-y-auto"
+                    placeholder="Paste the complete article text here. This will be used to generate an AI summary..."
+                    style={{ minHeight: '200px', maxHeight: '300px' }}
+                />
+              </div>
+
               {/* Source Name */}
               <div>
                 <div className="flex justify-between items-center mb-1">
