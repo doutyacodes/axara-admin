@@ -2,7 +2,7 @@ import { db } from "@/utils";
 import { MAP_NEWS, MAP_NEWS_CATEGORIES } from "@/utils/schema";
 import { NextResponse } from "next/server";
 import { authenticate } from "@/lib/jwtMiddleware";
-import { desc, eq } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 import axios from "axios";
 
 export const maxDuration = 300;
@@ -78,7 +78,23 @@ export async function POST(req) {
       language_id,
       delete_after_hours,
       is_high_priority,
+      is_breaking_news,
+      breaking_news_hours, 
     } = await req.json();
+
+    if (is_breaking_news) {
+      // Check if breaking news limit is exceeded
+      const breakingNewsCount = await db.select({ count: count() })
+        .from(MAP_NEWS)
+        .where(eq(MAP_NEWS.is_breaking, true));
+        
+      if (breakingNewsCount[0].count >= 3) {
+        return NextResponse.json(
+          { message: "Breaking news limit exceeded. Maximum 3 breaking news allowed." },
+          { status: 400 }
+        );
+      }
+    }
 
     // Validate required fields
     if (!title || !image_url || !article_url) {
@@ -90,6 +106,11 @@ export async function POST(req) {
 
     // Generate AI summary
     const summary = await generateSummaryWithOpenAI(article_text);
+
+    // Calculate breaking news expiry time
+    const breakingExpireAt = is_breaking_news 
+      ? new Date(Date.now() + (parseInt(breaking_news_hours) || 2) * 60 * 60 * 1000)
+      : null;
 
 
     // Create new news item
@@ -106,6 +127,8 @@ export async function POST(req) {
       language_id: language_id || null,
       delete_after_hours: delete_after_hours || 24, // with fallback to default
       is_high_priority: is_high_priority || false,
+      is_breaking: is_breaking_news || false,          // Add this
+      breaking_expire_at: breakingExpireAt, // Add this line
     });
 
     return NextResponse.json(

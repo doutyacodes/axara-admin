@@ -1633,6 +1633,10 @@ export const MAP_NEWS = mysqlTable("map_news", {
   language_id: int("language_id").notNull().references(() => LANGUAGES.id),
   is_high_priority: boolean("is_high_priority").notNull().default(false),
   delete_after_hours: int("delete_after_hours").notNull().default(24),
+
+  is_breaking: boolean("is_breaking").notNull().default(false),
+  breaking_expire_at: timestamp("breaking_expire_at"),
+
   created_by: int("created_by").references(() => ADMIN_DETAILS.id),
   created_at: timestamp("created_at").defaultNow(),
 });

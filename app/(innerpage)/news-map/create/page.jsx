@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, Loader2, AlertCircle, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import MapLocationPicker from '../_components/MapLocationPicker';
+import BreakingNewsModal from '../_components/BreakingNewsModal';
 
 export default function CreateNewsPage() {
   const router = useRouter();
@@ -20,6 +21,8 @@ export default function CreateNewsPage() {
     language_id: '',
     delete_after_hours: 24,
     is_high_priority: false,
+    is_breaking_news: false,
+    breaking_news_hours: 2,
   });
   
   const [categories, setCategories] = useState([]);
@@ -45,11 +48,40 @@ export default function CreateNewsPage() {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [sourceToDelete, setSourceToDelete] = useState(null);
 
+  const [isBreakingNews, setIsBreakingNews] = useState(false);
+  const [breakingNewsHours, setBreakingNewsHours] = useState(2);
+  const [breakingNewsCount, setBreakingNewsCount] = useState(0);
+  const [existingBreakingNews, setExistingBreakingNews] = useState([]);
+  const [showBreakingNewsModal, setShowBreakingNewsModal] = useState(false);
+
   useEffect(() => {
     fetchCategories();
     fetchLanguages();
     fetchAdminInfo();
   }, []);
+
+  // Add this useEffect to fetch breaking news count on component mount
+  useEffect(() => {
+    fetchBreakingNewsCount();
+  }, []);
+
+  const fetchBreakingNewsCount = async () => {
+    try {
+      const response = await fetch('/api/news-map/breaking-count', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setBreakingNewsCount(data.count);
+        setExistingBreakingNews(data.breakingNews || []);
+      }
+    } catch (error) {
+      console.error('Error fetching breaking news count:', error);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -290,11 +322,36 @@ export default function CreateNewsPage() {
     }));
   };
 
+  // Add these handler functions
+  const handleBreakingNewsToggle = (e) => {
+    const isChecked = e.target.checked;
+    setFormData({ ...formData, is_breaking_news: isChecked });
+    
+    if (isChecked && breakingNewsCount >= 3) {
+      setShowBreakingNewsModal(true);
+      setFormData({ ...formData, is_breaking_news: false }); // Reset the toggle
+    }
+  };
+
+  const handleRemoveBreakingNews = (removedNewsId) => {
+    setExistingBreakingNews(prev => prev.filter(news => news.id !== removedNewsId));
+    setBreakingNewsCount(prev => prev - 1);
+    setShowBreakingNewsModal(false);
+    // Re-enable the breaking news toggle
+    setFormData({ ...formData, is_breaking_news: true });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormSubmitting(true);
     setError(null);
-    
+
+    if (formData.is_breaking_news && breakingNewsCount >= 3) {
+      setShowBreakingNewsModal(true);
+      setFormSubmitting(false);
+      return;
+    }
+
     try {
       let imageUrl = formData.image_url;
       let finalSourceName = formData.source_name;
@@ -335,6 +392,8 @@ export default function CreateNewsPage() {
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
         category_id: formData.category_id ? parseInt(formData.category_id) : null,
         language_id: formData.language_id ? parseInt(formData.language_id) : null,
+        is_breaking_news: formData.is_breaking_news,
+        breaking_news_hours: formData.breaking_news_hours,
       };
       
       const res = await fetch('/api/news-map', {
@@ -801,6 +860,61 @@ export default function CreateNewsPage() {
               </div>
             </div>
 
+            {/* Breaking News Toggle */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Breaking News
+              </label>
+              <div className="flex items-center">
+                <input
+                  id="breaking-news-toggle"
+                  name="is_breaking_news"
+                  type="checkbox"
+                  checked={formData.is_breaking_news}
+                  onChange={handleBreakingNewsToggle}
+                  className="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                />
+                <label
+                  htmlFor="breaking-news-toggle"
+                  className="ml-2 block text-sm text-gray-700"
+                >
+                  Mark as breaking news
+                </label>
+              </div>
+              {breakingNewsCount >= 3 && (
+                <p className="mt-1 text-sm text-red-600">
+                  Breaking news limit reached ({breakingNewsCount}/3)
+                </p>
+              )}
+            </div>
+
+            {/* Breaking News Duration */}
+            {formData.is_breaking_news && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Breaking News Duration
+                </label>
+                <div className="flex space-x-6">
+                  {[2, 6, 12].map((hours) => (
+                    <div key={hours} className="flex items-center">
+                      <input
+                        id={`breaking-${hours}`}
+                        name="breaking_news_hours"
+                        type="radio"
+                        value={hours}
+                        checked={formData.breaking_news_hours === hours}
+                        onChange={(e) => setFormData({...formData, breaking_news_hours: parseInt(e.target.value)})}
+                        className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"
+                      />
+                      <label htmlFor={`breaking-${hours}`} className="ml-2 block text-sm text-gray-700">
+                        {hours} hours
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
               {/* Delete After Hours */}
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -903,6 +1017,14 @@ export default function CreateNewsPage() {
           </div>
         </div>
       )}
+
+      <BreakingNewsModal
+        isOpen={showBreakingNewsModal}
+        onClose={() => setShowBreakingNewsModal(false)}
+        breakingNews={existingBreakingNews}
+        onRemoveBreakingNews={handleRemoveBreakingNews}
+      />
+
     </div>
   );
 }
