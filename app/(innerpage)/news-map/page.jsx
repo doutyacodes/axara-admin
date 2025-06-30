@@ -14,35 +14,38 @@ export default function AdminNewsPage() {
   const [newsToDelete, setNewsToDelete] = useState(null);
   const router = useRouter();
 
-  // Fetch news data
-  const fetchNews = useCallback(async () => {
-    try {
+const fetchNews = useCallback(async (showLoader = true) => {
+  try {
+    if (showLoader) {
       setLoading(true);
-      const res = await fetch('/api/news-map', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-      });
-      if (!res.ok) {
-        throw new Error('Failed to fetch news');
-      }
-      const data = await res.json();
-      setNews(data.news);
-    } catch (err) {
-      setError(err.message);
-    } finally {
+    }
+    const res = await fetch('/api/news-map', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+    });
+    if (!res.ok) {
+      throw new Error('Failed to fetch news');
+    }
+    const data = await res.json();
+    setNews(data.news);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    if (showLoader) {
       setLoading(false);
     }
-  }, []);
+  }
+}, []);
 
-  useEffect(() => {
-    fetchNews();
-    
-    // Set up interval to refresh data every 30 seconds
-    const interval = setInterval(fetchNews, 30000);
-    
-    return () => clearInterval(interval);
-  }, [fetchNews]);
+useEffect(() => {
+  fetchNews(true); // Show loading for initial fetch
+  
+  // Set up interval to refresh data every 30 seconds without loading screen
+  const interval = setInterval(() => fetchNews(false), 30000);
+  
+  return () => clearInterval(interval);
+}, [fetchNews]);
 
   // Calculate time remaining for a news item
   const calculateTimeRemaining = (createdAt) => {
@@ -200,7 +203,7 @@ export default function AdminNewsPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-800">All News Articles</h2>
           <button 
-            onClick={fetchNews}
+            onClick={() => fetchNews(false)} // No loading for manual refresh either
             className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
           >
             <Clock className="h-4 w-4" />
