@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Trash2, Edit, Plus, AlertCircle } from 'lucide-react';
+import { Trash2, Edit, Plus, AlertCircle, AlertTriangle } from 'lucide-react';
 
 export default function AdminNewsPage() {
   const [news, setNews] = useState([]);
@@ -105,10 +105,17 @@ export default function AdminNewsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center sm:text-left">
-              News Management
-            </h1>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center sm:text-left">
+            News Management
+          </h1>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <a 
+              href="/news-map/breaking-news" 
+              className="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-red-700 text-white rounded-md hover:bg-red-600 transition"
+            >
+              <AlertTriangle className="mr-2 h-5 w-5" /> Manage Breaking News
+            </a>
             <a 
               href="/news-map/create" 
               className="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-700 transition"
@@ -116,7 +123,7 @@ export default function AdminNewsPage() {
               <Plus className="mr-2 h-5 w-5" /> Create News
             </a>
           </div>
-
+        </div>
           {/* Empty state with responsive padding and button */}
           {news.length === 0 ? (
             <div className="bg-white p-4 sm:p-8 rounded-lg shadow-md text-center">

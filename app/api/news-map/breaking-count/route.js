@@ -1,7 +1,7 @@
 import { authenticate } from "@/lib/jwtMiddleware";
 import { db } from "@/utils";
 import { MAP_NEWS } from "@/utils/schema";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, or } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -14,7 +14,15 @@ export async function GET(req) {
     // Get count and list of breaking news
     const breakingNews = await db.select()
       .from(MAP_NEWS)
-      .where(eq(MAP_NEWS.is_breaking, true))
+      .where(
+        and(
+          eq(MAP_NEWS.is_breaking, true),
+          or(
+            isNull(MAP_NEWS.breaking_expire_at),
+            gt(MAP_NEWS.breaking_expire_at, new Date())
+          )
+        )
+      )
       .orderBy(desc(MAP_NEWS.created_at));
 
     return NextResponse.json({
