@@ -8,7 +8,7 @@ import axios from "axios";
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
-// GET - Fetch all news
+// GET - Fetch all news with time remaining calculation
 export async function GET(req) {
   // Authenticate user
   const authResult = await authenticate(req);
@@ -18,32 +18,60 @@ export async function GET(req) {
 
   const userData = authResult.decoded_Data;
   const adminId = userData.id;
-  console.log("user id", adminId)
+  console.log("user id", adminId);
 
   try {
     // Fetch all news items with their associated categories
-    const news = await db
-    .select({
-      id: MAP_NEWS.id,
-      title: MAP_NEWS.title,
-      image_url: MAP_NEWS.image_url,
-      article_url: MAP_NEWS.article_url,
-      article_text: MAP_NEWS.summary,
-      source_name: MAP_NEWS.source_name,
-      latitude: MAP_NEWS.latitude,
-      longitude: MAP_NEWS.longitude,
-      category_id: MAP_NEWS.category_id,
-      created_at: MAP_NEWS.created_at,
-      category_name: MAP_NEWS_CATEGORIES.name,
-    })
-    .from(MAP_NEWS)
-    .leftJoin(MAP_NEWS_CATEGORIES, eq(MAP_NEWS.category_id, MAP_NEWS_CATEGORIES.id))
-    .where(eq(MAP_NEWS.created_by, adminId))
-    .orderBy(desc(MAP_NEWS.created_at));
+    const allNews = await db
+      .select({
+        id: MAP_NEWS.id,
+        title: MAP_NEWS.title,
+        image_url: MAP_NEWS.image_url,
+        article_url: MAP_NEWS.article_url,
+        article_text: MAP_NEWS.summary,
+        source_name: MAP_NEWS.source_name,
+        latitude: MAP_NEWS.latitude,
+        longitude: MAP_NEWS.longitude,
+        category_id: MAP_NEWS.category_id,
+        created_at: MAP_NEWS.created_at,
+        category_name: MAP_NEWS_CATEGORIES.name,
+      })
+      .from(MAP_NEWS)
+      .leftJoin(MAP_NEWS_CATEGORIES, eq(MAP_NEWS.category_id, MAP_NEWS_CATEGORIES.id))
+      .where(eq(MAP_NEWS.created_by, adminId))
+      .orderBy(desc(MAP_NEWS.created_at));
+    
+    // Just add expiration info without filtering
+    const newsWithExpiration = allNews.map(newsItem => {
+      const createdAt = new Date(newsItem.created_at);
+      const expirationTime = new Date(createdAt.getTime() + (24 * 60 * 60 * 1000));
+      
+      return {
+        ...newsItem,
+        expires_at: expirationTime.toISOString()
+      };
+    });
+    // Optional: Clean up expired news from database ()
+    /*
+    const expiredNews = allNews.filter(newsItem => {
+      const createdAt = new Date(newsItem.created_at);
+      const expirationTime = new Date(createdAt.getTime() + (EXPIRATION_HOURS * 60 * 60 * 1000));
+      return currentTime >= expirationTime;
+    });
 
-    // Send the news items as a JSON response
+    if (expiredNews.length > 0) {
+      const expiredIds = expiredNews.map(news => news.id);
+      await db.delete(MAP_NEWS).where(inArray(MAP_NEWS.id, expiredIds));
+      console.log(`Cleaned up ${expiredNews.length} expired news items`);
+    }
+    */
+
+    // Send the active news items as a JSON response
     return NextResponse.json(
-      { news },
+      { 
+        news: newsWithExpiration,
+        total: newsWithExpiration.length
+      },
       { status: 200 }
     );
   } catch (error) {
@@ -54,7 +82,6 @@ export async function GET(req) {
     );
   }
 }
-
 // POST - Create a new news item
 export async function POST(req) {
   // Authenticate user

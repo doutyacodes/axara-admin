@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Trash2, Edit, Plus, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Trash2, Edit, Plus, AlertCircle, AlertTriangle, Clock, Radio } from 'lucide-react';
 
 export default function AdminNewsPage() {
   const [news, setNews] = useState([]);
@@ -14,11 +14,8 @@ export default function AdminNewsPage() {
   const [newsToDelete, setNewsToDelete] = useState(null);
   const router = useRouter();
 
-  useEffect(() => {
-    fetchNews();
-  }, []);
-
-  const fetchNews = async () => {
+  // Fetch news data
+  const fetchNews = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/news-map', {
@@ -36,6 +33,32 @@ export default function AdminNewsPage() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    fetchNews();
+    
+    // Set up interval to refresh data every 30 seconds
+    const interval = setInterval(fetchNews, 30000);
+    
+    return () => clearInterval(interval);
+  }, [fetchNews]);
+
+  // Calculate time remaining for a news item
+  const calculateTimeRemaining = (createdAt) => {
+    const currentTime = new Date();
+    const newsCreatedTime = new Date(createdAt);
+    const expirationTime = new Date(newsCreatedTime.getTime() + (24 * 60 * 60 * 1000)); // 24 hours
+    const timeRemaining = expirationTime - currentTime;
+    
+    if (timeRemaining <= 0) {
+      return { hours: 0, minutes: 0, expired: true }; // Show expired status
+    }
+    
+    const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return { hours, minutes, expired: false };
   };
 
   const handleDelete = async () => {
@@ -53,8 +76,9 @@ export default function AdminNewsPage() {
         throw new Error('Failed to delete news');
       }
       
-      // Remove the deleted news from the state
+      // Remove the deleted news from both states
       setNews(news.filter(item => item.id !== newsToDelete.id));
+      // setLiveNews(liveNews.filter(item => item.id !== newsToDelete.id));
       setShowDeleteModal(false);
       setNewsToDelete(null);
     } catch (err) {
@@ -71,6 +95,42 @@ export default function AdminNewsPage() {
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
+  };
+
+  // Component for countdown timer
+  const CountdownTimer = ({ createdAt }) => {
+    const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining(createdAt));
+
+    useEffect(() => {
+      const timer = setInterval(() => {
+        const remaining = calculateTimeRemaining(createdAt);
+        setTimeRemaining(remaining);
+      }, 60000); // Update every minute
+
+      return () => clearInterval(timer);
+    }, [createdAt]);
+
+    if (!timeRemaining) {
+      return null;
+    }
+
+    if (timeRemaining.expired) {
+      return (
+        <div className="flex items-center text-xs text-red-600 bg-red-50 px-2 py-1 rounded-full">
+          <AlertCircle className="mr-1 h-3 w-3" />
+          <span className="font-medium">Expired</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
+        <Clock className="mr-1 h-3 w-3" />
+        <span className="font-medium">
+          {timeRemaining.hours}h {timeRemaining.minutes}m left
+        </span>
+      </div>
+    );
   };
 
   if (loading) {
@@ -124,18 +184,40 @@ export default function AdminNewsPage() {
             </a>
           </div>
         </div>
-          {/* Empty state with responsive padding and button */}
-          {news.length === 0 ? (
-            <div className="bg-white p-4 sm:p-8 rounded-lg shadow-md text-center">
-              <p className="text-gray-600 mb-4">No news articles found.</p>
-              <a 
-                href="/news-map/create" 
-                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-700 transition"
-              >
-                <Plus className="mr-2 h-5 w-5" /> Add Your First News Article
-              </a>
-            </div>
+        
+      {/* Current News Count */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Radio className="h-5 w-5 text-red-600 animate-pulse" />
+          <h2 className="text-xl font-semibold text-gray-800">Active News</h2>
+          <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            {news.length} Total
+          </span>
+        </div>
+      </div>
 
+        {/* All News Section */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-800">All News Articles</h2>
+          <button 
+            onClick={fetchNews}
+            className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+          >
+            <Clock className="h-4 w-4" />
+            Refresh
+          </button>
+        </div>
+
+        {news.length === 0 ? (
+          <div className="bg-white p-4 sm:p-8 rounded-lg shadow-md text-center">
+            <p className="text-gray-600 mb-4">No news articles found.</p>
+            <a 
+              href="/news-map/create" 
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-700 transition"
+            >
+              <Plus className="mr-2 h-5 w-5" /> Add Your First News Article
+            </a>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {news.map(newsItem => (
@@ -144,9 +226,11 @@ export default function AdminNewsPage() {
                   <img
                     src={newsItem.image_url.startsWith('http') ? newsItem.image_url : `https://wowfy.in/testusr/images/${newsItem.image_url}`} 
                     alt={newsItem.title}
-                    
                     className="object-cover w-full h-full" 
                   />
+                  <div className="absolute top-2 right-2">
+                    <CountdownTimer createdAt={newsItem.created_at} />
+                  </div>
                 </div>
                 <div className="p-4 flex-grow">
                   <h2 className="text-xl font-semibold text-gray-800 mb-2 line-clamp-2">{newsItem.title}</h2>
