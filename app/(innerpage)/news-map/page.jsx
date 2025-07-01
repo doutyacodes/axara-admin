@@ -100,22 +100,38 @@ useEffect(() => {
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
-  // Component for countdown timer
-  const CountdownTimer = ({ createdAt }) => {
-    const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining(createdAt));
+  const CountdownTimer = ({ createdAt, deleteAfterHours = 24 }) => {
+    const calculateTimeRemaining = () => {
+      const createdTime = new Date(createdAt).getTime();
+      const expirationTime = createdTime + deleteAfterHours * 60 * 60 * 1000;
+      const now = Date.now();
+      const diff = expirationTime - now;
+
+      if (diff <= 0) {
+        return { expired: true };
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      return {
+        expired: false,
+        hours,
+        minutes,
+      };
+    };
+
+    const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining());
 
     useEffect(() => {
       const timer = setInterval(() => {
-        const remaining = calculateTimeRemaining(createdAt);
-        setTimeRemaining(remaining);
+        setTimeRemaining(calculateTimeRemaining());
       }, 60000); // Update every minute
 
       return () => clearInterval(timer);
-    }, [createdAt]);
+    }, [createdAt, deleteAfterHours]);
 
-    if (!timeRemaining) {
-      return null;
-    }
+    if (!timeRemaining) return null;
 
     if (timeRemaining.expired) {
       return (
@@ -231,8 +247,12 @@ useEffect(() => {
                     alt={newsItem.title}
                     className="object-cover w-full h-full" 
                   />
+
                   <div className="absolute top-2 right-2">
-                    <CountdownTimer createdAt={newsItem.created_at} />
+                    <CountdownTimer
+                      createdAt={newsItem.created_at}
+                      deleteAfterHours={newsItem.delete_after_hours}
+                    />
                   </div>
                 </div>
                 <div className="p-4 flex-grow">

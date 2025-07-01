@@ -35,6 +35,7 @@ export async function GET(req) {
         category_id: MAP_NEWS.category_id,
         created_at: MAP_NEWS.created_at,
         category_name: MAP_NEWS_CATEGORIES.name,
+        delete_after_hours: MAP_NEWS.delete_after_hours,
       })
       .from(MAP_NEWS)
       .leftJoin(MAP_NEWS_CATEGORIES, eq(MAP_NEWS.category_id, MAP_NEWS_CATEGORIES.id))
@@ -44,13 +45,15 @@ export async function GET(req) {
     // Just add expiration info without filtering
     const newsWithExpiration = allNews.map(newsItem => {
       const createdAt = new Date(newsItem.created_at);
-      const expirationTime = new Date(createdAt.getTime() + (24 * 60 * 60 * 1000));
+      const expirationHours = newsItem.delete_after_hours ?? 24; // fallback if missing
+      const expirationTime = new Date(createdAt.getTime() + (expirationHours * 60 * 60 * 1000));
       
       return {
         ...newsItem,
         expires_at: expirationTime.toISOString()
       };
     });
+
     // Optional: Clean up expired news from database ()
     /*
     const expiredNews = allNews.filter(newsItem => {
