@@ -2,7 +2,7 @@ import { db } from "@/utils";
 import { MAP_NEWS, MAP_NEWS_CATEGORIES } from "@/utils/schema";
 import { NextResponse } from "next/server";
 import { authenticate } from "@/lib/jwtMiddleware";
-import { count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, gt, isNull, or } from "drizzle-orm";
 import axios from "axios";
 
 export const maxDuration = 300;
@@ -113,7 +113,16 @@ export async function POST(req) {
       // Check if breaking news limit is exceeded
       const breakingNewsCount = await db.select({ count: count() })
         .from(MAP_NEWS)
-        .where(eq(MAP_NEWS.is_breaking, true));
+        .where(
+          and(
+            eq(MAP_NEWS.is_breaking, true),
+            // Only include items that are not expired (breaking_expire_at is null or in the future)
+            or(
+              isNull(MAP_NEWS.breaking_expire_at),
+              gt(MAP_NEWS.breaking_expire_at, new Date())
+            )
+          )
+        )
         
       if (breakingNewsCount[0].count >= 3) {
         return NextResponse.json(
