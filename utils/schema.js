@@ -21,7 +21,9 @@ export const ADMIN_DETAILS = mysqlTable("admin_details", {
   name: varchar("name", { length: 255 }).notNull(),
   username: varchar("username", { length: 255 }).notNull().unique(),
   password: varchar("password", { length: 255 }).notNull(),
-  role: mysqlEnum("role", ["superadmin", "admin", "newsmap_admin"]).default("admin").notNull(),
+  role: mysqlEnum("role", ["superadmin", "admin", "newsmap_admin"])
+    .default("admin")
+    .notNull(),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
   is_active: boolean("is_active").default(true),
@@ -1563,10 +1565,7 @@ export const ADULT_NEWS = mysqlTable("adult_news", {
   show_date: datetime("show_date").notNull(),
   show_on_top: boolean("show_on_top").default(false),
   main_news: boolean("main_news").default(false),
-  media_type: mysqlEnum("media_type", [
-    "video",
-    "image",
-  ])
+  media_type: mysqlEnum("media_type", ["video", "image"])
     .notNull()
     .default("image"),
   created_at: timestamp("created_at").defaultNow(), // Timestamp for record creation
@@ -1604,7 +1603,6 @@ export const ADULT_NEWS_REPORTS = mysqlTable("adult_news_reports", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
-
 export const CUSTOM_SOURCES = mysqlTable("custom_sources", {
   id: int("id").primaryKey().autoincrement(),
   name: varchar("name", { length: 100 }).unique().notNull(),
@@ -1614,10 +1612,9 @@ export const CUSTOM_SOURCES = mysqlTable("custom_sources", {
 
 export const LANGUAGES = mysqlTable("languages", {
   id: int("id").primaryKey().autoincrement(),
-  name: varchar("name", { length: 100 }).notNull(),  // e.g., "English", "Hindi"
-  code: varchar("code", { length: 10 }).notNull(),   // e.g., "en", "hi"
+  name: varchar("name", { length: 100 }).notNull(), // e.g., "English", "Hindi"
+  code: varchar("code", { length: 10 }).notNull(), // e.g., "en", "hi"
 });
-
 
 // map_news table schema
 export const MAP_NEWS = mysqlTable("map_news", {
@@ -1630,7 +1627,9 @@ export const MAP_NEWS = mysqlTable("map_news", {
   latitude: decimal("latitude", { precision: 10, scale: 7 }),
   longitude: decimal("longitude", { precision: 10, scale: 7 }),
   category_id: int("category_id").references(() => MAP_NEWS_CATEGORIES.id),
-  language_id: int("language_id").notNull().references(() => LANGUAGES.id),
+  language_id: int("language_id")
+    .notNull()
+    .references(() => LANGUAGES.id),
   is_high_priority: boolean("is_high_priority").notNull().default(false),
   delete_after_hours: int("delete_after_hours").notNull().default(24),
 
@@ -1644,4 +1643,27 @@ export const MAP_NEWS = mysqlTable("map_news", {
 export const MAP_NEWS_CATEGORIES = mysqlTable("map_news_categories", {
   id: int("id").primaryKey().autoincrement(),
   name: varchar("name", { length: 100 }).notNull(),
+});
+
+// Add this to your schema.js file
+
+export const PROMPT_HISTORY = mysqlTable("prompt_history", {
+  id: int("id").primaryKey().autoincrement(),
+  original_title: varchar("original_title", { length: 255 }).notNull(),
+  original_description: text("original_description").notNull(),
+  category_ids: json("category_ids").notNull(), // Array of category IDs
+  viewpoints: json("viewpoints").notNull(), // Array of viewpoints
+  prompt_text: text("prompt_text").notNull(), // Complete prompt sent to OpenAI
+  openai_response: text("openai_response"), // Raw response from OpenAI
+  parsed_results: json("parsed_results"), // Parsed and structured results
+  processing_status: mysqlEnum("processing_status", [
+    "pending",
+    "completed",
+    "failed",
+  ]).default("pending"),
+  error_message: text("error_message"), // Error message if processing failed
+  created_by: int("created_by").references(() => ADMIN_DETAILS.id), // Admin who created this
+  news_id: int("news_id"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });

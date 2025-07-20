@@ -16,7 +16,7 @@
 // async function uploadFileToSFTP(localFilePath, fileName) {
 //   const sftp = new SFTPClient();
 //   const cPanelDirectory = "/home/devusr/public_html/testusr/images";
-  
+
 //   try {
 //     await sftp.connect({
 //       host: "68.178.163.247",
@@ -40,7 +40,7 @@
 
 //     // Upload file
 //     await sftp.put(
-//       localFilePath, 
+//       localFilePath,
 //       `${cPanelDirectory}/${fileName}`,
 //       {
 //         mode: 0o644, // File permissions
@@ -61,7 +61,6 @@
 //   }
 // }
 
-
 // export async function POST(request) {
 //   const authResult = await authenticate(request, true);
 //   if (!authResult.authenticated) {
@@ -75,13 +74,13 @@
 //   const { result, mediaData, fileName, mediaType, slotId } = await request.json();
 
 //   // const { result, tempFilePath, fileName, mediaType, slotId } = await request.json();
-  
+
 //   // const { result, imageData, fileName, slotId } = await request.json(); // Receive the new data structure
 //   const entries = Object.values(result); // Convert the data object into an array of entries
 
 //   const localTempDir = path.join(os.tmpdir(), 'uploads');
 //   const localFilePath = path.join(localTempDir, fileName);
-  
+
 // console.log("fileName",fileName)
 //   try {
 
@@ -169,7 +168,6 @@
 //       }
 //     }
 
-
 //      // Clean up temp file
 //      try {
 //       fs.unlinkSync(localFilePath);
@@ -177,7 +175,6 @@
 //       console.error('Error cleaning up temp file:', cleanupError);
 //       // Don't throw here as the upload was successful
 //     }
-
 
 //     // const localFilePath = path.join(localTempDir, fileName);
 //     // const cPanelDirectory = "/home/devusr/public_html/testusr/images";
@@ -198,7 +195,7 @@
 //     );
 //   } catch (error) {
 //     console.error('Error uploading image or saving data:', error);
-    
+
 //     // Clean up temp file if it exists
 //     if (fs.existsSync(localFilePath)) {
 //       try {
@@ -209,9 +206,9 @@
 //     }
 
 //     return NextResponse.json(
-//       { 
-//         message: "Failed to upload file or save data", 
-//         error: error.message 
+//       {
+//         message: "Failed to upload file or save data",
+//         error: error.message
 //       },
 //       { status: 500 }
 //     );
@@ -372,6 +369,7 @@ import {
   ADULT_NEWS,
   ADULT_NEWS_GROUP,
   ADULT_NEWS_TO_CATEGORIES,
+  PROMPT_HISTORY,
 } from "@/utils/schema";
 import { authenticate } from "@/lib/jwtMiddleware";
 import { db } from "@/utils";
@@ -387,7 +385,8 @@ export async function POST(request) {
   const userId = userData.id;
 
   // Note: mediaData is no longer part of the payload since it's handled by chunked upload
-  const { result, fileName, mediaType, slotId } = await request.json();
+  const { result, fileName, mediaType, slotId, originalDataId } =
+    await request.json();
   const entries = Object.values(result);
 
   try {
@@ -408,7 +407,11 @@ export async function POST(request) {
         .where(eq(ADULT_NEWS.news_group_id, slotId));
     }
 
-    const { showOnTop = false, main_news = false, region_id } = entries[0] || {};
+    const {
+      showOnTop = false,
+      main_news = false,
+      region_id,
+    } = entries[0] || {};
 
     // Insert news group
     const newsGroupRecord = await db.insert(ADULT_NEWS_GROUP).values({
@@ -441,11 +444,18 @@ export async function POST(request) {
 
       const newsId = newsRecord[0].insertId;
 
+      await db
+        .update(PROMPT_HISTORY)
+        .set({
+          news_id: newsGroupId,
+        })
+        .where(eq(PROMPT_HISTORY.id, originalDataId));
+
       if (Array.isArray(category) && category.length > 0) {
         const categoryRecords = category.map((categoryId) => ({
           news_id: newsId,
           news_category_id: categoryId,
-          region_id
+          region_id,
         }));
         await db.insert(ADULT_NEWS_TO_CATEGORIES).values(categoryRecords);
       }
@@ -455,9 +465,8 @@ export async function POST(request) {
       { message: "News articles saved successfully" },
       { status: 200 }
     );
-    
   } catch (error) {
-    console.error('Error saving news article:', error);
+    console.error("Error saving news article:", error);
     return NextResponse.json(
       { message: "Failed to save news articles" },
       { status: 500 }

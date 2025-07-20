@@ -56,7 +56,7 @@ function AddNews() {
       setViewpoints(updatedViewpoints);
     }
   };
-  console.log("newsForm", newsForm);
+  // console.log("newsForm", newsForm);
 
   const getNewsCategories = async () => {
     setCategoryLoading(true);
@@ -97,7 +97,7 @@ function AddNews() {
       const response = await GlobalApi.GetNewsCount(token);
       if (response.status === 200) {
         setCountData(response.data);
-        console.log(response.data);
+        // console.log(response.data);
       }
     } catch (err) {
       console.log(err);
@@ -225,11 +225,11 @@ function AddNews() {
     });
   };
 
-  console.log(newsForm.media)
+  // console.log(newsForm.media)
 
   const handleMediaUpload = (event) => {
     const selectedFile = event.target.files[0];
-    console.log(selectedFile)
+    // console.log(selectedFile)
     setNewsForm({ ...newsForm, media: selectedFile });
     
     // Clear media error if exists
@@ -300,7 +300,7 @@ function AddNews() {
   };
 
   const handleSubmit = async (e) => {
-    console.log("handleing");
+    // console.log("handleing");
 
     e.preventDefault();
 
@@ -323,10 +323,10 @@ function AddNews() {
         mediaType: isVideo ? 'video' : 'image',
         // mediaData: base64Media
       };
-      console.log("handleing w2");
+      // console.log("handleing w2");
       const token =
         typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        console.log("handleing3");
+        // console.log("handleing3");
       const response = await fetch("/api/adult/createNewsArticle", {
         method: "POST",
         headers: {
@@ -337,10 +337,11 @@ function AddNews() {
       });
       // console.log(response.data,"response.data")
       if (!response.ok) {
-        console.log("not ok");
+        // console.log("not ok");
         throw new Error("Failed to submit article");
       }
       const data = await response.json();
+      console.log("received data",data)
       const payload = { ...data, mediaData: base64Media, fileData: newsForm.media }; // Include the image in the payload
       setDataFromPage(payload);
       router.push("/viewpoint/news-preview");
