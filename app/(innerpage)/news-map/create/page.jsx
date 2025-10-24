@@ -54,6 +54,8 @@ export default function CreateNewsPage() {
   const [existingBreakingNews, setExistingBreakingNews] = useState([]);
   const [showBreakingNewsModal, setShowBreakingNewsModal] = useState(false);
 
+  const [validationErrors, setValidationErrors] = useState({});
+
   useEffect(() => {
     fetchCategories();
     fetchLanguages();
@@ -345,6 +347,27 @@ export default function CreateNewsPage() {
     e.preventDefault();
     setFormSubmitting(true);
     setError(null);
+    setValidationErrors({}); // Clear previous validation errors
+
+    // Validation checks
+    const errors = {};
+
+    // Validate category
+    if (!formData.category_id) {
+      errors.category_id = 'Please select a category';
+    }
+
+    // Validate language
+    if (!formData.language_id) {
+      errors.language_id = 'Please select a language';
+    }
+
+    // If there are validation errors, stop submission
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setFormSubmitting(false);
+      return;
+    }
 
     if (formData.is_breaking_news && breakingNewsCount >= 3) {
       setShowBreakingNewsModal(true);
@@ -418,7 +441,6 @@ export default function CreateNewsPage() {
       setFormSubmitting(false);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -796,14 +818,17 @@ export default function CreateNewsPage() {
               {/* Category */}
               <div>
                 <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
+                  Category <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="category_id"
                   name="category_id"
                   value={formData.category_id}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                  required
+                  className={`w-full px-4 py-2 border rounded-md focus:ring-red-500 focus:border-red-500 ${
+                    validationErrors.category_id ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 >
                   <option value="">Select a category</option>
                   {categories.map(category => (
@@ -812,19 +837,25 @@ export default function CreateNewsPage() {
                     </option>
                   ))}
                 </select>
+                {validationErrors.category_id && (
+                  <p className="mt-1 text-sm text-red-600">{validationErrors.category_id}</p>
+                )}
               </div>
 
               {/* Language */}
               <div>
                 <label htmlFor="language_id" className="block text-sm font-medium text-gray-700 mb-1">
-                  Language
+                  Language <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="language_id"
                   name="language_id"
                   value={formData.language_id}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                  required
+                  className={`w-full px-4 py-2 border rounded-md focus:ring-red-500 focus:border-red-500 ${
+                    validationErrors.language_id ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 >
                   <option value="">Select a language</option>
                   {languages.map(language => (
@@ -833,6 +864,9 @@ export default function CreateNewsPage() {
                     </option>
                   ))}
                 </select>
+                {validationErrors.language_id && (
+                  <p className="mt-1 text-sm text-red-600">{validationErrors.language_id}</p>
+                )}
               </div>
 
             {/* High Priority Toggle */}

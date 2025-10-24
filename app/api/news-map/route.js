@@ -223,3 +223,16 @@ async function generateSummaryWithOpenAI(articleText) {
     throw new Error("Failed to generate summary");
   }
 }
+
+// async function generateSummaryWithOpenAI(articleText) {
+//   try {
+//     // For now, return a dummy summary instead of calling OpenAI
+//     const dummySummary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus vel odio nec purus ultricies suscipit. Nulla facilisi. Praesent tincidunt, magna et dictum volutpat, erat est.";
+    
+//     console.log("Generated dummy summary:", dummySummary);
+//     return dummySummary;
+//   } catch (error) {
+//     console.error("Error generating dummy summary:", error);
+//     throw new Error("Failed to generate summary");
+//   }
+// }
