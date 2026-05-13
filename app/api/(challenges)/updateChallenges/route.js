@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import SFTPClient from 'ssh2-sftp-client';
+// import SFTPClient from 'ssh2-sftp-client';
 import os from 'os';
 import { db } from '@/utils';
 import { authenticate } from "@/lib/jwtMiddleware";
@@ -38,13 +38,13 @@ export async function PUT(request) {
             fs.writeFileSync(localFilePath, base64Image, { encoding: 'base64' });
         
             // Connect to SFTP
-            const sftp = new SFTPClient();
-            await sftp.connect({
-              host: '68.178.163.247',
-              port: 22,
-              username: 'devusr',
-              password: 'Wowfyuser#123',
-            });
+            // const sftp = new SFTPClient();
+            // await sftp.connect({
+            //   host: '68.178.163.247',
+            //   port: 22,
+            //   username: 'devusr',
+            //   password: 'Wowfyuser#123',
+            // });
         
             // Delete old image if it exists
             if (oldImageName) {

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import SFTPClient from 'ssh2-sftp-client';
+// import SFTPClient from 'ssh2-sftp-client';
 import os from 'os';
 import { db } from '@/utils';
 import { authenticate } from '@/lib/jwtMiddleware';
@@ -113,14 +113,14 @@ export async function POST(request) {
       }
     }
 
-    // Upload image to SFTP server
-    const sftp = new SFTPClient();
-    await sftp.connect({
-      host: '68.178.163.247',
-      port: 22,
-      username: 'devusr',
-      password: 'Wowfyuser#123',
-    });
+    // // Upload image to SFTP server
+    // const sftp = new SFTPClient();
+    // await sftp.connect({
+    //   host: '68.178.163.247',
+    //   port: 22,
+    //   username: 'devusr',
+    //   password: 'Wowfyuser#123',
+    // });
 
     const cPanelDirectory = '/home/devusr/public_html/testusr/images';
     await sftp.put(localFilePath, `${cPanelDirectory}/${fileName}`);
