@@ -1,323 +1,388 @@
-// import React, { useState, useCallback, useRef, useEffect } from 'react';
-// import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
-// import { MapPin, Search, Crosshair } from 'lucide-react';
+// components/MapLocationPicker.jsx
+//
+// Drop-in replacement for the Google Maps version.
+// Same props interface:
+//   latitude, longitude, onLocationChange, className
+//
+// Replaces:
+//   GoogleMap + LoadScript + Marker + Autocomplete  →  Leaflet + OpenStreetMap tiles
+//   Google Places Autocomplete                      →  Nominatim autocomplete (free, no key)
+//   google.maps.Geocoder                            →  Nominatim reverse/forward geocode
+//
+// No API key required.
+//
+// Requirements (already installed from the CommunityView migration):
+//   npm install leaflet
+//   globals.css: @import 'leaflet/dist/leaflet.css';
 
-// const MapLocationPicker = ({ 
-//   latitude, 
-//   longitude, 
-//   onLocationChange, 
-//   className = "" 
-// }) => {
+"use client";
 
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
+import { MapPin, Search, Crosshair, X, Loader2 } from "lucide-react";
 
+// ─── Leaflet lazy-load (SSR-safe) ────────────────────────────────────────────
+let L = null;
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { GoogleMap, LoadScript, Marker, Autocomplete } from '@react-google-maps/api';
-import { MapPin, Search, Crosshair, X } from 'lucide-react';
+async function loadLeaflet() {
+  if (L) return;
+  L = (await import("leaflet")).default;
 
-const MapLocationPicker = ({ 
-  latitude, 
-  longitude, 
-  onLocationChange, 
-  className = "" 
-}) => {
-    
-   const googleMapsApiKey= process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-  const [mapCenter, setMapCenter] = useState({
-    lat: latitude ? parseFloat(latitude) : 28.6139, // Default to Delhi
-    lng: longitude ? parseFloat(longitude) : 77.2090
+  // Fix Webpack-mangled default icon paths
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+    iconUrl:       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+    shadowUrl:     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   });
-  
+}
+
+// ─── Nominatim helpers (replaces Google Geocoder + Places Autocomplete) ───────
+const NOMINATIM = "https://nominatim.openstreetmap.org";
+
+async function nominatimSearch(query) {
+  const url = `${NOMINATIM}/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`;
+  const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+  if (!res.ok) throw new Error("Nominatim search failed");
+  return res.json(); // array of { lat, lon, display_name, … }
+}
+
+async function nominatimReverseGeocode(lat, lng) {
+  const url = `${NOMINATIM}/reverse?format=json&lat=${lat}&lon=${lng}`;
+  const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data?.display_name ?? null;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+const MapLocationPicker = ({
+  latitude,
+  longitude,
+  onLocationChange,
+  className = "",
+}) => {
+  const DEFAULT_CENTER = { lat: 28.6139, lng: 77.209 }; // Delhi fallback
+
+  const [mapCenter, setMapCenter] = useState({
+    lat: latitude  ? parseFloat(latitude)  : DEFAULT_CENTER.lat,
+    lng: longitude ? parseFloat(longitude) : DEFAULT_CENTER.lng,
+  });
+
   const [markerPosition, setMarkerPosition] = useState(
-    latitude && longitude 
+    latitude && longitude
       ? { lat: parseFloat(latitude), lng: parseFloat(longitude) }
       : null
   );
-  
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [autocomplete, setAutocomplete] = useState(null);
-  const mapRef = useRef(null);
-  
-  // Libraries needed for Google Maps
-  const libraries = ['places'];
-  
-  // Map configuration
-  const mapContainerStyle = {
-    width: '100%',
-    height: '400px',
-    borderRadius: '8px'
-  };
-  
-  const mapOptions = {
-    disableDefaultUI: false,
-    zoomControl: true,
-    streetViewControl: false,
-    mapTypeControl: true,
-    fullscreenControl: false,
-    gestureHandling: 'greedy', // Allows one-finger scrolling on mobile
-    clickableIcons: true,
-    // Custom cursor styles
-    draggableCursor: 'default',
-    draggingCursor: 'default',
-    styles: [
-      {
-        featureType: 'poi',
-        elementType: 'labels',
-        stylers: [{ visibility: 'on' }]
-      }
-    ]
-  };
 
-  // Update marker position when props change
+  // Search state
+  const [searchQuery, setSearchQuery]       = useState("");
+  const [suggestions, setSuggestions]       = useState([]);
+  const [isSearching, setIsSearching]       = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isGeolocating, setIsGeolocating]   = useState(false);
+  const debounceRef   = useRef(null);
+  const searchBoxRef  = useRef(null);
+
+  // Leaflet refs
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef  = useRef(null);
+  const markerRef       = useRef(null);
+  const [mapReady, setMapReady]             = useState(false);
+
+  // ── 1. Boot Leaflet map once ─────────────────────────────────────────────────
   useEffect(() => {
-    if (latitude && longitude) {
-      const newPos = { lat: parseFloat(latitude), lng: parseFloat(longitude) };
-      setMarkerPosition(newPos);
-      setMapCenter(newPos);
-    }
-  }, [latitude, longitude]);
+    let cancelled = false;
 
-  // Handle map click
-  const handleMapClick = useCallback((event) => {
-    const lat = event.latLng.lat();
-    const lng = event.latLng.lng();
-    
-    const newPosition = { lat, lng };
-    setMarkerPosition(newPosition);
-    
-    // Call the parent callback with the new coordinates
-    onLocationChange(lat.toString(), lng.toString());
-  }, [onLocationChange]);
+    (async () => {
+      await loadLeaflet();
+      if (cancelled || !mapContainerRef.current || mapInstanceRef.current) return;
 
-  // Handle marker drag
-  const handleMarkerDrag = useCallback((event) => {
-    const lat = event.latLng.lat();
-    const lng = event.latLng.lng();
-    
-    const newPosition = { lat, lng };
-    setMarkerPosition(newPosition);
-    
-    // Call the parent callback with the new coordinates
-    onLocationChange(lat.toString(), lng.toString());
-  }, [onLocationChange]);
-
-  // Handle autocomplete load
-  const onAutocompleteLoad = (autocompleteInstance) => {
-    setAutocomplete(autocompleteInstance);
-  };
-
-  // Handle place selection from autocomplete
-  const onPlaceChanged = () => {
-    if (autocomplete !== null) {
-      const place = autocomplete.getPlace();
-      
-      if (place.geometry && place.geometry.location) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-        
-        const newPosition = { lat, lng };
-        setMarkerPosition(newPosition);
-        setMapCenter(newPosition);
-        onLocationChange(lat.toString(), lng.toString());
-        
-        // Update search query with selected place name
-        setSearchQuery(place.formatted_address || place.name || '');
-        
-        // Center map on selected location with appropriate zoom
-        if (mapRef.current && mapRef.current.state && mapRef.current.state.map) {
-          const map = mapRef.current.state.map;
-          map.panTo(newPosition);
-          map.setZoom(15);
-        }
-      } else {
-        alert('No location data available for this place.');
-      }
-    }
-  };
-
-  // Manual search fallback (for when autocomplete doesn't work)
-  const handleManualSearch = async () => {
-    if (!searchQuery.trim() || !window.google) return;
-    
-    setIsSearching(true);
-    const geocoder = new window.google.maps.Geocoder();
-    
-    try {
-      const result = await new Promise((resolve, reject) => {
-        geocoder.geocode({ address: searchQuery }, (results, status) => {
-          if (status === 'OK' && results[0]) {
-            resolve(results[0]);
-          } else {
-            reject(new Error('Location not found'));
-          }
-        });
+      const map = L.map(mapContainerRef.current, {
+        center:             [mapCenter.lat, mapCenter.lng],
+        zoom:               markerPosition ? 15 : 10,
+        zoomControl:        true,
+        attributionControl: true,
       });
-      
-      const location = result.geometry.location;
-      const lat = location.lat();
-      const lng = location.lng();
-      
-      const newPosition = { lat, lng };
-      setMarkerPosition(newPosition);
-      setMapCenter(newPosition);
-      onLocationChange(lat.toString(), lng.toString());
-      
-      // Center map on found location
-      if (mapRef.current && mapRef.current.state && mapRef.current.state.map) {
-        const map = mapRef.current.state.map;
-        map.panTo(newPosition);
-        map.setZoom(15);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom:     19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+
+      // Click to place / move marker
+      map.on("click", (e) => {
+        const { lat, lng } = e.latlng;
+        placeMarker(map, { lat, lng });
+        onLocationChange(lat.toString(), lng.toString());
+      });
+
+      // If we already have a position, drop a marker immediately
+      if (markerPosition) {
+        const m = L.marker([markerPosition.lat, markerPosition.lng], { draggable: true }).addTo(map);
+        m.on("dragend", (e) => {
+          const { lat, lng } = e.target.getLatLng();
+          setMarkerPosition({ lat, lng });
+          onLocationChange(lat.toString(), lng.toString());
+        });
+        markerRef.current = m;
       }
-    } catch (error) {
-      console.error('Search failed:', error);
-      alert('Location not found. Please try a different search term or use the dropdown suggestions.');
+
+      mapInstanceRef.current = map;
+      setMapReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── 2. Sync external lat/lng prop changes ────────────────────────────────────
+  useEffect(() => {
+    if (!latitude || !longitude) return;
+    const pos = { lat: parseFloat(latitude), lng: parseFloat(longitude) };
+    setMarkerPosition(pos);
+    setMapCenter(pos);
+    if (mapReady && mapInstanceRef.current) {
+      placeMarker(mapInstanceRef.current, pos);
+      mapInstanceRef.current.setView([pos.lat, pos.lng], 15);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latitude, longitude, mapReady]);
+
+  // ── Helper: place / move the draggable marker ────────────────────────────────
+  const placeMarker = useCallback((map, pos) => {
+    setMarkerPosition(pos);
+
+    if (markerRef.current) {
+      markerRef.current.setLatLng([pos.lat, pos.lng]);
+    } else {
+      const m = L.marker([pos.lat, pos.lng], { draggable: true }).addTo(map);
+      m.on("dragend", (e) => {
+        const { lat, lng } = e.target.getLatLng();
+        setMarkerPosition({ lat, lng });
+        onLocationChange(lat.toString(), lng.toString());
+      });
+      markerRef.current = m;
+    }
+
+    map.panTo([pos.lat, pos.lng]);
+  }, [onLocationChange]);
+
+  // ── 3. Debounced autocomplete (Nominatim) ────────────────────────────────────
+  const handleSearchInput = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (!val.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const results = await nominatimSearch(val);
+        setSuggestions(results);
+        setShowSuggestions(true);
+      } catch {
+        // silently ignore network errors in autocomplete
+      }
+    }, 350); // 350 ms debounce — respects Nominatim usage policy
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    const lat = parseFloat(suggestion.lat);
+    const lng = parseFloat(suggestion.lon);
+    const label = suggestion.display_name;
+
+    setSearchQuery(label);
+    setSuggestions([]);
+    setShowSuggestions(false);
+
+    if (mapReady && mapInstanceRef.current) {
+      placeMarker(mapInstanceRef.current, { lat, lng });
+      mapInstanceRef.current.setView([lat, lng], 15);
+    }
+    onLocationChange(lat.toString(), lng.toString());
+  };
+
+  // ── 4. Manual search (Enter / button) ───────────────────────────────────────
+  const handleManualSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    try {
+      const results = await nominatimSearch(searchQuery);
+      if (!results.length) {
+        alert("Location not found. Please try a different search term.");
+        return;
+      }
+      handleSuggestionClick(results[0]);
+    } catch {
+      alert("Search failed. Please check your connection and try again.");
     } finally {
       setIsSearching(false);
     }
   };
 
-  // Get current location
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          
-          const newPosition = { lat, lng };
-          setMarkerPosition(newPosition);
-          setMapCenter(newPosition);
-          onLocationChange(lat.toString(), lng.toString());
-          
-          // Fixed: Use the correct way to access the map instance
-          if (mapRef.current && mapRef.current.state && mapRef.current.state.map) {
-            const map = mapRef.current.state.map;
-            map.panTo(newPosition);
-            map.setZoom(15);
-          }
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          let errorMessage = 'Unable to get your current location. ';
-          switch(error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage += 'Please allow location access and try again.';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage += 'Location information is unavailable.';
-              break;
-            case error.TIMEOUT:
-              errorMessage += 'Location request timed out.';
-              break;
-            default:
-              errorMessage += 'An unknown error occurred.';
-              break;
-          }
-          alert(errorMessage);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000
-        }
-      );
-    } else {
-      alert('Geolocation is not supported by this browser.');
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
       e.preventDefault();
+      setShowSuggestions(false);
       handleManualSearch();
+    }
+    if (e.key === "Escape") {
+      setShowSuggestions(false);
     }
   };
 
   const clearSearch = () => {
-    setSearchQuery('');
+    setSearchQuery("");
+    setSuggestions([]);
+    setShowSuggestions(false);
   };
 
+  // ── 5. Current location (unchanged logic) ────────────────────────────────────
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by this browser.");
+      return;
+    }
+
+    setIsGeolocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        if (mapReady && mapInstanceRef.current) {
+          placeMarker(mapInstanceRef.current, { lat, lng });
+          mapInstanceRef.current.setView([lat, lng], 15);
+        }
+        onLocationChange(lat.toString(), lng.toString());
+        setIsGeolocating(false);
+      },
+      (error) => {
+        setIsGeolocating(false);
+        const messages = {
+          [error.PERMISSION_DENIED]:    "Please allow location access and try again.",
+          [error.POSITION_UNAVAILABLE]: "Location information is unavailable.",
+          [error.TIMEOUT]:              "Location request timed out.",
+        };
+        alert("Unable to get your current location. " + (messages[error.code] ?? "An unknown error occurred."));
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  };
+
+  // ── Close suggestion dropdown when clicking outside ──────────────────────────
+  useEffect(() => {
+    const handler = (e) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className={`space-y-4 ${className}`}>
       <label className="block text-sm font-medium text-gray-700 mb-2">
         Location <MapPin className="h-4 w-4 inline text-red-800 ml-1" />
       </label>
-      
-      {/* Search and Current Location Controls */}
+
+      {/* Search + Current Location */}
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <div className="flex-1 relative">
-          <LoadScript googleMapsApiKey={googleMapsApiKey} libraries={libraries}>
-            <Autocomplete
-              onLoad={onAutocompleteLoad}
-              onPlaceChanged={onPlaceChanged}
-            >
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Search for a location... (try typing 'India' or 'New York')"
-                className="w-full px-4 py-2 pr-20 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
-              />
-            </Autocomplete>
-          </LoadScript>
-          
-          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-            {searchQuery && (
+        {/* Search box with Nominatim autocomplete */}
+        <div className="flex-1 relative" ref={searchBoxRef}>
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchInput}
+              onKeyDown={handleKeyDown}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              placeholder="Search for a location... (e.g. 'India' or 'New York')"
+              className="w-full px-4 py-2 pr-20 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+            />
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="text-gray-400 hover:text-gray-600 p-1"
+                  title="Clear search"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
               <button
                 type="button"
-                onClick={clearSearch}
-                className="text-gray-400 hover:text-gray-600 p-1"
-                title="Clear search"
+                onClick={handleManualSearch}
+                disabled={isSearching}
+                className="text-gray-400 hover:text-red-600 disabled:opacity-50 p-1"
+                title="Search"
               >
-                <X className="h-3 w-3" />
+                {isSearching
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Search className="h-4 w-4" />
+                }
               </button>
-            )}
-            <button
-              type="button"
-              onClick={handleManualSearch}
-              disabled={isSearching}
-              className="text-gray-400 hover:text-red-600 disabled:opacity-50 p-1"
-              title="Search"
-            >
-              <Search className="h-4 w-4" />
-            </button>
+            </div>
           </div>
+
+          {/* Autocomplete dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <ul className="absolute z-[9999] w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-56 overflow-y-auto">
+              {suggestions.map((s, i) => (
+                <li
+                  key={i}
+                  onMouseDown={() => handleSuggestionClick(s)} // mousedown fires before blur
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 cursor-pointer truncate border-b border-gray-100 last:border-0"
+                  title={s.display_name}
+                >
+                  <MapPin className="h-3 w-3 inline mr-1 text-red-400 flex-shrink-0" />
+                  {s.display_name}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
+
+        {/* Current Location button */}
         <button
           type="button"
           onClick={getCurrentLocation}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 flex items-center gap-2 whitespace-nowrap"
+          disabled={isGeolocating}
+          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 flex items-center gap-2 whitespace-nowrap disabled:opacity-60"
         >
-          <Crosshair className="h-4 w-4" />
+          {isGeolocating
+            ? <Loader2 className="h-4 w-4 animate-spin" />
+            : <Crosshair className="h-4 w-4" />
+          }
           Current Location
         </button>
       </div>
 
       {/* Map Container */}
       <div className="border border-gray-300 rounded-lg overflow-hidden shadow-sm">
-        <LoadScript googleMapsApiKey={googleMapsApiKey} libraries={libraries}>
-          <GoogleMap
-            ref={mapRef}
-            mapContainerStyle={mapContainerStyle}
-            center={mapCenter}
-            zoom={markerPosition ? 15 : 10}
-            options={mapOptions}
-            onClick={handleMapClick}
-            onLoad={() => setIsMapLoaded(true)}
-          >
-            {markerPosition && (
-              <Marker
-                position={markerPosition}
-                draggable={true}
-                onDragEnd={handleMarkerDrag}
-                animation={window.google?.maps?.Animation?.DROP}
-              />
-            )}
-          </GoogleMap>
-        </LoadScript>
+        <div
+          ref={mapContainerRef}
+          style={{ width: "100%", height: "400px", borderRadius: "8px" }}
+        />
       </div>
 
       {/* Coordinates Display */}
@@ -329,7 +394,7 @@ const MapLocationPicker = ({
           <input
             type="text"
             id="display-latitude"
-            value={markerPosition ? markerPosition.lat.toFixed(6) : ''}
+            value={markerPosition ? markerPosition.lat.toFixed(6) : ""}
             readOnly
             className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600"
             placeholder="Click on map to set location"
@@ -342,7 +407,7 @@ const MapLocationPicker = ({
           <input
             type="text"
             id="display-longitude"
-            value={markerPosition ? markerPosition.lng.toFixed(6) : ''}
+            value={markerPosition ? markerPosition.lng.toFixed(6) : ""}
             readOnly
             className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600"
             placeholder="Click on map to set location"
