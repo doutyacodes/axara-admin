@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/utils';
 import { NEWS, NEWS_QUESTIONS } from '@/utils/schema';
-import SFTPClient from 'ssh2-sftp-client';
 import { eq } from 'drizzle-orm';
 import { authenticate } from '@/lib/jwtMiddleware';
 
